@@ -15,9 +15,10 @@ interface Page {
 
 interface Props {
   brandId?: string;
+  hideCreateButtons?: boolean;
 }
 
-export function PageManagementView({ brandId: propBrandId }: Props = {}) {
+export function PageManagementView({ brandId: propBrandId, hideCreateButtons = false }: Props = {}) {
   const { user } = useAuth();
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
@@ -158,14 +159,16 @@ export function PageManagementView({ brandId: propBrandId }: Props = {}) {
           <h1 className="text-3xl font-bold text-gray-900">Pagina Beheer</h1>
           <p className="text-gray-600 mt-2">Beheer alle pagina's van je website</p>
         </div>
-        <button
-          onClick={createNewPage}
-          className="inline-flex items-center space-x-2 px-6 py-3 text-white rounded-lg font-medium transition-colors hover:bg-blue-700"
-          style={{ backgroundColor: '#0ea5e9' }}
-        >
-          <Plus size={20} />
-          <span>Nieuwe Pagina</span>
-        </button>
+        {!hideCreateButtons && (
+          <button
+            onClick={createNewPage}
+            className="inline-flex items-center space-x-2 px-6 py-3 text-white rounded-lg font-medium transition-colors hover:bg-blue-700"
+            style={{ backgroundColor: '#0ea5e9' }}
+          >
+            <Plus size={20} />
+            <span>Nieuwe Pagina</span>
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -176,13 +179,15 @@ export function PageManagementView({ brandId: propBrandId }: Props = {}) {
       ) : pages.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
           <p className="text-gray-600 mb-4">Je hebt nog geen pagina's aangemaakt</p>
-          <button
-            onClick={createNewPage}
-            className="inline-flex items-center space-x-2 px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg font-medium transition-colors hover:bg-blue-50"
-          >
-            <Plus size={20} />
-            <span>Maak je eerste pagina</span>
-          </button>
+          {!hideCreateButtons && (
+            <button
+              onClick={createNewPage}
+              className="inline-flex items-center space-x-2 px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg font-medium transition-colors hover:bg-blue-50"
+            >
+              <Plus size={20} />
+              <span>Maak je eerste pagina</span>
+            </button>
+          )}
         </div>
       ) : (
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
