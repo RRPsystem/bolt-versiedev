@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { verifyBearerToken } from "../_shared/jwt.ts";
+import { verifyBearerToken } from "./_shared/jwt.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -165,6 +165,46 @@ Deno.serve(async (req: Request) => {
 
       return new Response(
         JSON.stringify({ ok: true, url }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // DELETE /api/pages/{page_id}
+    if (req.method === "DELETE") {
+      const claims = await verifyBearerToken(req);
+      const pageId = pathParts[pathParts.length - 1];
+
+      if (!pageId || pageId === "pages-api") {
+        return new Response(
+          JSON.stringify({ error: "page_id is required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: page, error: fetchError } = await supabase
+        .from("pages")
+        .select("brand_id")
+        .eq("id", pageId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      if (page.brand_id !== claims.brand_id) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized: brand_id mismatch" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { error: deleteError } = await supabase
+        .from("pages")
+        .delete()
+        .eq("id", pageId);
+
+      if (deleteError) throw deleteError;
+
+      return new Response(
+        JSON.stringify({ ok: true }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

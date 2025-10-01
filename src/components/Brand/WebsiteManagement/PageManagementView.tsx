@@ -66,14 +66,21 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
   const loadPages = async (brandId: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('pages')
-        .select('id, title, slug, status, updated_at, published_at')
-        .eq('brand_id', brandId)
-        .order('updated_at', { ascending: false });
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api?brand_id=${brandId}`;
 
-      if (error) throw error;
-      setPages(data || []);
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load pages');
+      }
+
+      const data = await response.json();
+      setPages(data.items || []);
     } catch (error) {
       console.error('Error loading pages:', error);
     } finally {
@@ -134,7 +141,21 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     if (!confirm('Weet je zeker dat je deze pagina wilt verwijderen?')) return;
 
     try {
-      await supabase.from('pages').delete().eq('id', pageId);
+      const token = await generateBuilderJWT(brandId, user!.id);
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/${pageId}`;
+
+      const response = await fetch(apiUrl, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete page');
+      }
+
       await loadPages(brandId);
     } catch (error) {
       console.error('Error deleting page:', error);
