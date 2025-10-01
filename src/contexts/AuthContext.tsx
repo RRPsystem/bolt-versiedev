@@ -77,46 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    // Check for demo credentials first
-    if (email === 'admin@travel.com' && password === 'admin123') {
-      setUser({
-        id: 'admin-1',
-        email: 'admin@travel.com',
-        role: 'admin',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-      return;
-    }
-    
-    if (email === 'brand@travel.com' && password === 'brand123') {
-      setUser({
-        id: 'brand-1',
-        email: 'brand@travel.com',
-        role: 'brand',
-        brand_id: '550e8400-e29b-41d4-a716-446655440001',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-      return;
-    }
-    
-    if (email === 'operator@travel.com' && password === 'operator123') {
-      setUser({
-        id: 'operator-1',
-        email: 'operator@travel.com',
-        role: 'operator',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-      return;
-    }
-
     if (!supabase) {
       throw new Error('Invalid email or password');
     }
 
-    // Real Supabase authentication
+    // Use real Supabase authentication for all users
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
