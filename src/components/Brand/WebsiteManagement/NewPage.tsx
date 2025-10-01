@@ -25,27 +25,29 @@ const templates = [
   }
 ];
 
-export function NewPage() {
+interface Props {
+  brandId?: string;
+}
+
+export function NewPage({ brandId: propBrandId }: Props = {}) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();
 
   const handleOpenPageBuilder = async () => {
-    if (!user) return;
+    if (!user || !propBrandId) return;
 
-    const brandId = 'temp-brand-id';
-    const token = await generateBuilderJWT(brandId, user.id);
-    const deeplink = generateBuilderDeeplink(brandId, token);
+    const token = await generateBuilderJWT(propBrandId, user.id);
+    const deeplink = generateBuilderDeeplink(propBrandId, token);
 
     window.open(deeplink, '_blank');
   };
 
   const handleUseTemplate = async (templateId: number) => {
-    if (!user) return;
+    if (!user || !propBrandId) return;
 
-    const brandId = 'temp-brand-id';
-    const token = await generateBuilderJWT(brandId, user.id);
-    const deeplink = generateBuilderDeeplink(brandId, token, {
+    const token = await generateBuilderJWT(propBrandId, user.id);
+    const deeplink = generateBuilderDeeplink(propBrandId, token, {
       templateId: templateId.toString()
     });
 

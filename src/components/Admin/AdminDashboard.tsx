@@ -7,6 +7,7 @@ import { BrandForm } from './BrandForm';
 import { PageManagementView } from '../Brand/WebsiteManagement/PageManagementView';
 import { MenuBuilderView } from '../Brand/WebsiteManagement/MenuBuilderView';
 import { FooterBuilderView } from '../Brand/WebsiteManagement/FooterBuilderView';
+import { NewPage } from '../Brand/WebsiteManagement/NewPage';
 import { Users, Building2, FileText, Settings, Plus, Search, Filter, CreditCard as Edit, Trash2, Bot, Sparkles, Download, Import as FileImport, Globe, LayoutGrid as Layout, Menu } from 'lucide-react'
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
@@ -20,6 +21,7 @@ export function AdminDashboard() {
   const [brands, setBrands] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
+  const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
 
   React.useEffect(() => {
     if (['new-page', 'page-management', 'menu-builder', 'footer-builder'].includes(activeSection)) {
@@ -382,23 +384,32 @@ export function AdminDashboard() {
           {activeSection === 'content' && <ContentManagement />}
 
           {/* Website Management Content */}
+          {activeSection === 'new-page' && <NewPage brandId={SYSTEM_BRAND_ID} />}
+
           {['page-management', 'menu-builder', 'footer-builder'].includes(activeSection) && (
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Selecteer Brand
               </label>
-              <select
-                value={selectedBrandId || ''}
-                onChange={(e) => setSelectedBrandId(e.target.value || null)}
-                className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-              >
-                <option value="">-- Kies een brand --</option>
-                {brands.map((brand) => (
-                  <option key={brand.id} value={brand.id}>
-                    {brand.name}
-                  </option>
-                ))}
-              </select>
+              {loading ? (
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-600"></div>
+                  <span>Brands laden...</span>
+                </div>
+              ) : (
+                <select
+                  value={selectedBrandId || ''}
+                  onChange={(e) => setSelectedBrandId(e.target.value || null)}
+                  className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                >
+                  <option value="">-- Kies een brand --</option>
+                  {brands.map((brand) => (
+                    <option key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           )}
 
