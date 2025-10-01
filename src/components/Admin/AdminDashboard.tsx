@@ -18,9 +18,6 @@ export function AdminDashboard() {
   const [showWebsiteSubmenu, setShowWebsiteSubmenu] = useState(false);
   const [showBrandForm, setShowBrandForm] = useState(false);
   const [editingBrand, setEditingBrand] = useState<any>(null);
-  const [brands, setBrands] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [selectedBrandId, setSelectedBrandId] = useState<string | null>(null);
   const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
 
   React.useEffect(() => {
@@ -383,57 +380,11 @@ export function AdminDashboard() {
           {activeSection === 'agents' && <AgentManagement />}
           {activeSection === 'content' && <ContentManagement />}
 
-          {/* Website Management Content */}
+          {/* Website Management Content - Admin uses System Templates brand */}
           {activeSection === 'new-page' && <NewPage brandId={SYSTEM_BRAND_ID} />}
-
-          {['page-management', 'menu-builder', 'footer-builder'].includes(activeSection) && (
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Selecteer Brand
-              </label>
-              {loading ? (
-                <div className="flex items-center space-x-2 text-gray-600">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-600"></div>
-                  <span>Brands laden...</span>
-                </div>
-              ) : (
-                <select
-                  value={selectedBrandId || ''}
-                  onChange={(e) => setSelectedBrandId(e.target.value || null)}
-                  className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                >
-                  <option value="">-- Kies een brand --</option>
-                  {brands.map((brand) => (
-                    <option key={brand.id} value={brand.id}>
-                      {brand.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-          )}
-
-          {activeSection === 'page-management' && selectedBrandId && (
-            <PageManagementView brandId={selectedBrandId} />
-          )}
-          {activeSection === 'menu-builder' && selectedBrandId && (
-            <MenuBuilderView brandId={selectedBrandId} />
-          )}
-          {activeSection === 'footer-builder' && selectedBrandId && (
-            <FooterBuilderView brandId={selectedBrandId} />
-          )}
-
-          {['page-management', 'menu-builder', 'footer-builder'].includes(activeSection) && !selectedBrandId && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-8 text-center">
-              <Building2 className="w-16 h-16 mx-auto mb-4 text-orange-600" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Selecteer een brand
-              </h3>
-              <p className="text-gray-600">
-                Kies een brand uit het dropdown menu hierboven om te beginnen.
-              </p>
-            </div>
-          )}
+          {activeSection === 'page-management' && <PageManagementView brandId={SYSTEM_BRAND_ID} />}
+          {activeSection === 'menu-builder' && <MenuBuilderView brandId={SYSTEM_BRAND_ID} />}
+          {activeSection === 'footer-builder' && <FooterBuilderView brandId={SYSTEM_BRAND_ID} />}
 
           {activeSection === 'destinations' && (
             <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
