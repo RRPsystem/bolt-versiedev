@@ -18,52 +18,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    if (supabase) {
-      setLoading(true);
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          fetchUserProfile(session.user.id);
-        } else {
-          setUser(null);
-          setLoading(false);
-        }
-      });
-
-      // Listen for auth changes
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
-        } else {
-          setUser(null);
-          setLoading(false);
-        }
-      });
-
-      return () => subscription.unsubscribe();
-    } else {
-      // No Supabase configuration, just set loading to false
-      setUser(null);
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchUserProfile = async (userId: string) => {
     if (!supabase) {
+      setUser(null);
       setLoading(false);
       return;
     }
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('No session found');
-      }
+    let isMounted = true;
 
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (isMounted && session?.access_token) {
+          await fetchUserProfile(session.access_token);
+        } else if (isMounted) {
+          setLoading(false);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return;
+
+      if (session?.access_token) {
+        fetchUserProfile(session.access_token);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const fetchUserProfile = async (accessToken: string) => {
+    try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const response = await fetch(`${supabaseUrl}/functions/v1/get-user-profile`, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
         }
       });
@@ -77,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(user);
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      throw error;
+      setUser(null);
     } finally {
       setLoading(false);
     }
