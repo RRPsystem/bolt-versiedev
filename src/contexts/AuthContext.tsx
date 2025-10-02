@@ -60,14 +60,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     try {
       console.log('[DEBUG] Making request to users table...');
+      console.log('[DEBUG] Step 1: Querying users table without join...');
+
       const { data, error } = await supabase
         .from('users')
-        .select('*, brands(*)')
+        .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      console.log('[DEBUG] Response data:', data);
-      console.log('[DEBUG] Response error:', error);
+      console.log('[DEBUG] Step 2: Response data:', data);
+      console.log('[DEBUG] Step 2: Response error:', error);
 
       if (error) throw error;
       if (!data) {
