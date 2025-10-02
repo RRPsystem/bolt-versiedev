@@ -65,14 +65,15 @@ export function generateBuilderDeeplink(
     footerId?: string;
   } = {}
 ): string {
-  const builderBaseUrl = 'https://sitebuilderprod-sywg.vercel.app/index.html';
+  const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const apiBaseUrl = supabaseUrl ? supabaseUrl.replace('/functions/v1', '') : window.location.origin;
 
   const params = new URLSearchParams({
     brand_id: brandId,
     token: token,
-    api: apiBaseUrl
+    api: apiBaseUrl,
+    tc_api: 'https://website-builder-git-main-alex-9461s-projects.vercel.app'
   });
 
   if (options.pageId) {
