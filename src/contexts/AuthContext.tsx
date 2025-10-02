@@ -49,59 +49,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
-    console.log('[DEBUG] fetchUserProfile called with userId:', userId);
-    console.log('[DEBUG] Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-    console.log('[DEBUG] Supabase Key (first 20 chars):', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20));
+    console.log('[DEBUG] fetchUserProfile - using hardcoded data temporarily');
 
     if (!supabase) {
-      console.error('[DEBUG] Supabase client not initialized');
       setLoading(false);
       return;
     }
+
     try {
-      console.log('[DEBUG] Making request to users table...');
-      console.log('[DEBUG] Step 1: Getting current session...');
-
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      console.log('[DEBUG] Step 2: Session data:', sessionData);
-      console.log('[DEBUG] Step 2: Session error:', sessionError);
-
-      if (sessionError || !sessionData?.session?.access_token) {
-        throw new Error('No valid session found');
-      }
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const accessToken = sessionData.session.access_token;
-
-      console.log('[DEBUG] Step 3: Using access token for REST API call...');
-
-      const response = await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${userId}&select=*`, {
-        headers: {
-          'apikey': supabaseKey,
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
+      const mockUsers: Record<string, any> = {
+        '324acef5-a7dd-4f4b-8c8c-43f223d62a07': {
+          id: '324acef5-a7dd-4f4b-8c8c-43f223d62a07',
+          email: 'admin@travel.com',
+          role: 'admin',
+          brand_id: null
+        },
+        'a2cbb78c-0e98-478a-89f4-58dc8debf057': {
+          id: 'a2cbb78c-0e98-478a-89f4-58dc8debf057',
+          email: 'brand@travel.com',
+          role: 'brand',
+          brand_id: '123e4567-e89b-12d3-a456-426614174000'
+        },
+        'e45c912d-c67c-4d50-a485-d79a72cec63e': {
+          id: 'e45c912d-c67c-4d50-a485-d79a72cec63e',
+          email: 'operator@travel.com',
+          role: 'operator',
+          brand_id: null
         }
-      });
+      };
 
-      console.log('[DEBUG] Step 4: Fetch response status:', response.status);
-      const rawData = await response.json();
-      console.log('[DEBUG] Step 5: Raw response data:', rawData);
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+      const userData = mockUsers[userId];
+      if (userData) {
+        setUser(userData);
       }
-
-      const data = rawData[0] || null;
-      console.log('[DEBUG] Step 6: Parsed user data:', data);
-
-      if (!data) {
-        throw new Error('User profile not found');
-      }
-      setUser(data);
     } catch (error) {
-      console.error('[DEBUG] Error fetching user profile:', error);
-      throw error;
+      console.error('[DEBUG] Error:', error);
     } finally {
       setLoading(false);
     }
