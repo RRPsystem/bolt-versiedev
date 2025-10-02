@@ -60,18 +60,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     try {
       console.log('[DEBUG] Making request to users table...');
-      console.log('[DEBUG] Step 1: Querying users table without join...');
+      console.log('[DEBUG] Step 1: Testing direct REST API call...');
 
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      console.log('[DEBUG] Step 2: Response data:', data);
-      console.log('[DEBUG] Step 2: Response error:', error);
+      const response = await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${userId}&select=*`, {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-      if (error) throw error;
+      console.log('[DEBUG] Step 2: Fetch response status:', response.status);
+      const rawData = await response.json();
+      console.log('[DEBUG] Step 3: Raw response data:', rawData);
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
+      const data = rawData[0] || null;
+      console.log('[DEBUG] Step 4: Parsed user data:', data);
+
       if (!data) {
         throw new Error('User profile not found');
       }
