@@ -5,6 +5,8 @@ import './index.css';
 
 console.log('🚀 App starting...');
 console.log('📍 Current Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+console.log('📍 Supabase Key (first 20):', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20));
+console.log('📍 All env vars:', import.meta.env);
 
 const CURRENT_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const VERSION_KEY = 'app_version';
