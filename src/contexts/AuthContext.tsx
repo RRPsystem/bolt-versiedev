@@ -28,26 +28,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        console.log('🔐 Auth Init - Session check:', {
-          hasSession: !!session,
-          hasToken: !!session?.access_token,
-          error: error?.message,
-          userId: session?.user?.id
-        });
-
-        if (error || !session?.access_token) {
-          if (isMounted) {
-            setUser(null);
-            setLoading(false);
-          }
-          return;
-        }
+        await supabase.auth.signOut();
+        console.log('🔐 Auth Init - Forced logout on page load');
 
         if (isMounted) {
-          console.log('🔐 Fetching user profile for:', session.user.id);
-          await fetchUserProfile(session.access_token);
+          setUser(null);
+          setLoading(false);
         }
       } catch (error) {
         console.error('🔐 Auth init error:', error);
