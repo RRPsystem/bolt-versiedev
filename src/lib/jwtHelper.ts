@@ -16,18 +16,20 @@ export async function generateBuilderJWT(
 ): Promise<string> {
   const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-builder-jwt`;
 
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-  const userToken = localStorage.getItem('supabase.auth.token');
+  let authToken = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-  let authToken = supabaseAnonKey;
-  if (userToken) {
+  const sessionKey = Object.keys(localStorage).find(key =>
+    key.startsWith('sb-') && key.includes('-auth-token')
+  );
+
+  if (sessionKey) {
     try {
-      const tokenData = JSON.parse(userToken);
-      if (tokenData.access_token) {
-        authToken = tokenData.access_token;
+      const sessionData = JSON.parse(localStorage.getItem(sessionKey) || '{}');
+      if (sessionData.access_token) {
+        authToken = sessionData.access_token;
       }
     } catch (e) {
-      console.warn('Failed to parse user token');
+      console.warn('Failed to parse session token:', e);
     }
   }
 
@@ -43,8 +45,9 @@ export async function generateBuilderJWT(
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to generate JWT');
+    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+    console.error('JWT generation failed:', errorData);
+    throw new Error(errorData.error || 'Failed to generate JWT');
   }
 
   const data = await response.json();
