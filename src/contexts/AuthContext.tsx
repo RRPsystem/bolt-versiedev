@@ -29,12 +29,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initAuth = async () => {
       try {
-        await supabase.auth.signOut();
-        console.log('🔐 Auth Init - Forced logout on page load');
+        const { data: { session } } = await supabase.auth.getSession();
 
-        if (isMounted) {
-          setUser(null);
-          setLoading(false);
+        if (session?.access_token) {
+          console.log('🔐 Auth Init - Session found, loading profile');
+          await fetchUserProfile(session.access_token);
+        } else {
+          console.log('🔐 Auth Init - No session found');
+          if (isMounted) {
+            setUser(null);
+            setLoading(false);
+          }
         }
       } catch (error) {
         console.error('🔐 Auth init error:', error);
