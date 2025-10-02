@@ -38,22 +38,6 @@ export class OpenAIService {
     this.apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
     const isPlaceholder = this.apiKey === 'your-openai-api-key' || this.apiKey.startsWith('your-openai');
     const hasValidKey = this.apiKey && this.apiKey.startsWith('sk-') && !isPlaceholder;
-    console.log('🤖 OpenAI API Key configured:', hasValidKey ? '✅ Yes' : '❌ No');
-    console.log('🔑 API Key starts with:', hasValidKey ? this.apiKey.substring(0, 10) + '...' : '❌ Not configured or invalid');
-    console.log('Key format check:', {
-      exists: !!this.apiKey,
-      startsWithSk: this.apiKey.startsWith('sk-'),
-      isNotPlaceholder: !isPlaceholder,
-      length: this.apiKey.length
-    });
-    
-    if (!hasValidKey) {
-      console.log('');
-      console.log('💡 To configure OpenAI:');
-      console.log('  1. Login as operator@travel.com / operator123');
-      console.log('  2. Go to Operator Dashboard → API Settings');
-      console.log('  3. Add your real OpenAI API key (starts with sk-)');
-    }
   }
 
   async generateContent(
@@ -324,8 +308,6 @@ export class GoogleSearchService {
     this.searchEngineId = import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID || '';
     const isPlaceholderKey = this.apiKey === 'your-google-search-api-key' || this.apiKey.startsWith('your-google');
     const isPlaceholderEngineId = this.searchEngineId === 'your-search-engine-id' || this.searchEngineId.startsWith('your-search');
-    console.log('Google Search API Key configured:', this.apiKey && !isPlaceholderKey ? 'Yes' : 'No');
-    console.log('Google Search Engine ID configured:', this.searchEngineId && !isPlaceholderEngineId ? 'Yes' : 'No');
   }
 
   async searchTravel(query: string, location?: string): Promise<GoogleSearchResult[]> {
@@ -391,7 +373,6 @@ export class GoogleMapsService {
   constructor() {
     this.apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
     const isPlaceholder = this.apiKey === 'your-google-maps-api-key' || this.apiKey.startsWith('your-google');
-    console.log('Google Maps API Key configured:', this.apiKey && !isPlaceholder ? 'Yes' : 'No');
   }
 
   async searchPlaces(query: string, location?: string): Promise<GoogleMapsPlace[]> {

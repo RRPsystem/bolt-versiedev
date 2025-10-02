@@ -8,8 +8,6 @@ import { OperatorDashboard } from './components/Operator/OperatorDashboard';
 function AppContent() {
   const { user, loading, isAdmin, isBrand, isOperator } = useAuth();
 
-  console.log('App state:', { user, loading, isAdmin, isBrand, isOperator });
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -19,11 +17,8 @@ function AppContent() {
   }
 
   if (!user) {
-    console.log('No user, showing login form');
     return <LoginForm />;
   }
-
-  console.log('User found:', user);
 
   if (isAdmin) {
     return <AdminDashboard />;
@@ -32,7 +27,7 @@ function AppContent() {
   if (isBrand) {
     return <BrandDashboard />;
   }
-  
+
   if (isOperator) {
     return <OperatorDashboard />;
   }
