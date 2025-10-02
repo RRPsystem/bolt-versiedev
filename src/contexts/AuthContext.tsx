@@ -49,16 +49,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
+    console.log('[DEBUG] fetchUserProfile called with userId:', userId);
+    console.log('[DEBUG] Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+    console.log('[DEBUG] Supabase Key (first 20 chars):', import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 20));
+
     if (!supabase) {
+      console.error('[DEBUG] Supabase client not initialized');
       setLoading(false);
       return;
     }
     try {
+      console.log('[DEBUG] Making request to users table...');
       const { data, error } = await supabase
         .from('users')
         .select('*, brands(*)')
         .eq('id', userId)
         .maybeSingle();
+
+      console.log('[DEBUG] Response data:', data);
+      console.log('[DEBUG] Response error:', error);
 
       if (error) throw error;
       if (!data) {
@@ -66,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setUser(data);
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('[DEBUG] Error fetching user profile:', error);
       throw error;
     } finally {
       setLoading(false);
@@ -74,15 +83,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    console.log('[DEBUG] signIn called with email:', email);
+    console.log('[DEBUG] Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+
     if (!supabase) {
+      console.error('[DEBUG] Supabase client not initialized');
       throw new Error('Invalid email or password');
     }
 
-    // Use real Supabase authentication for all users
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log('[DEBUG] Calling supabase.auth.signInWithPassword...');
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    console.log('[DEBUG] signInWithPassword response data:', data);
+    console.log('[DEBUG] signInWithPassword response error:', error);
 
     if (error) throw error;
   };
