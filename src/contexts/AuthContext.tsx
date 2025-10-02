@@ -28,14 +28,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (isMounted && session?.access_token) {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        console.log('🔐 Auth Init - Session check:', {
+          hasSession: !!session,
+          hasToken: !!session?.access_token,
+          error: error?.message,
+          userId: session?.user?.id
+        });
+
+        if (error || !session?.access_token) {
+          if (isMounted) {
+            setUser(null);
+            setLoading(false);
+          }
+          return;
+        }
+
+        if (isMounted) {
+          console.log('🔐 Fetching user profile for:', session.user.id);
           await fetchUserProfile(session.access_token);
-        } else if (isMounted) {
-          setLoading(false);
         }
       } catch (error) {
+        console.error('🔐 Auth init error:', error);
         if (isMounted) {
+          setUser(null);
           setLoading(false);
         }
       }
@@ -46,11 +63,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!isMounted) return;
 
-      if (session?.access_token) {
-        fetchUserProfile(session.access_token);
-      } else {
+      if (event === 'SIGNED_OUT' || !session?.access_token) {
         setUser(null);
         setLoading(false);
+      } else if (event === 'SIGNED_IN' && session?.access_token) {
+        fetchUserProfile(session.access_token);
       }
     });
 
@@ -76,9 +93,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const { user } = await response.json();
+      console.log('🔐 User profile loaded:', { id: user.id, role: user.role, email: user.email });
       setUser(user);
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('🔐 Error fetching user profile:', error);
       setUser(null);
     } finally {
       setLoading(false);
