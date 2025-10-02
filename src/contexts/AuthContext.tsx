@@ -49,41 +49,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
-    console.log('[DEBUG] fetchUserProfile - using hardcoded data temporarily');
-
     if (!supabase) {
       setLoading(false);
       return;
     }
 
     try {
-      const mockUsers: Record<string, any> = {
-        '324acef5-a7dd-4f4b-8c8c-43f223d62a07': {
-          id: '324acef5-a7dd-4f4b-8c8c-43f223d62a07',
-          email: 'admin@travel.com',
-          role: 'admin',
-          brand_id: null
-        },
-        'a2cbb78c-0e98-478a-89f4-58dc8debf057': {
-          id: 'a2cbb78c-0e98-478a-89f4-58dc8debf057',
-          email: 'brand@travel.com',
-          role: 'brand',
-          brand_id: '123e4567-e89b-12d3-a456-426614174000'
-        },
-        'e45c912d-c67c-4d50-a485-d79a72cec63e': {
-          id: 'e45c912d-c67c-4d50-a485-d79a72cec63e',
-          email: 'operator@travel.com',
-          role: 'operator',
-          brand_id: null
-        }
-      };
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
 
-      const userData = mockUsers[userId];
-      if (userData) {
-        setUser(userData);
-      }
+      if (error) throw error;
+      if (!data) throw new Error('User profile not found');
+
+      setUser(data);
     } catch (error) {
-      console.error('[DEBUG] Error:', error);
+      console.error('Error fetching user profile:', error);
+      throw error;
     } finally {
       setLoading(false);
     }
