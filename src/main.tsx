@@ -3,37 +3,38 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 
+console.log('🚀 App starting...');
+console.log('📍 Current Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+
 const CURRENT_SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const STORED_URL_KEY = 'supabase_url_v1';
+const VERSION_KEY = 'app_version';
+const CURRENT_VERSION = '2.0.0';
 
-const storedUrl = localStorage.getItem(STORED_URL_KEY);
-if (storedUrl !== CURRENT_SUPABASE_URL) {
-  console.log('🔄 Supabase URL changed, clearing all auth data...');
-  console.log('Old URL:', storedUrl);
-  console.log('New URL:', CURRENT_SUPABASE_URL);
+console.log('🔍 Checking localStorage...');
+const storedVersion = localStorage.getItem(VERSION_KEY);
+console.log('Stored version:', storedVersion);
+console.log('Current version:', CURRENT_VERSION);
 
-  const keysToRemove = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && (key.startsWith('supabase') || key.includes('auth'))) {
-      keysToRemove.push(key);
-    }
-  }
+if (storedVersion !== CURRENT_VERSION) {
+  console.log('⚠️ Version mismatch detected!');
+  console.log('🧹 Clearing ALL localStorage and sessionStorage...');
 
-  keysToRemove.forEach(key => {
-    console.log('Removing:', key);
-    localStorage.removeItem(key);
-  });
-
+  localStorage.clear();
   sessionStorage.clear();
 
-  localStorage.setItem(STORED_URL_KEY, CURRENT_SUPABASE_URL);
-  console.log('✅ Storage cleared, page will reload...');
-  window.location.reload();
-}
+  localStorage.setItem(VERSION_KEY, CURRENT_VERSION);
+  console.log('✅ Storage cleared!');
+  console.log('🔄 Reloading page...');
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+  setTimeout(() => {
+    window.location.href = window.location.href.split('?')[0] + '?v=' + Date.now();
+  }, 100);
+} else {
+  console.log('✅ Version check passed, app loading normally');
+
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+}
