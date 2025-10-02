@@ -63,7 +63,8 @@ export function generateBuilderDeeplink(
   } = {}
 ): string {
   const builderBaseUrl = 'https://sitebuilderprod-sywg.vercel.app/index.html';
-  const apiBaseUrl = window.location.origin;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const apiBaseUrl = supabaseUrl ? supabaseUrl.replace('/functions/v1', '') : window.location.origin;
 
   const params = new URLSearchParams({
     brand_id: brandId,
