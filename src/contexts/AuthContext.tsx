@@ -56,21 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select(`
-          *,
-          brands (
-            id,
-            name,
-            slug
-          )
-        `)
+        .select('*, brands(*)')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) {
+        throw new Error('User profile not found');
+      }
       setUser(data);
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      throw error;
     } finally {
       setLoading(false);
     }
