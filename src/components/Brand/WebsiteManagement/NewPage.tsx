@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Grid3x3, Wrench, Search, Plus, Eye } from 'lucide-react';
 import { generateBuilderJWT, generateBuilderDeeplink } from '../../../lib/jwtHelper';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -27,12 +27,48 @@ const templates = [
 
 interface Props {
   brandId?: string;
+  onPageCreated?: () => void;
 }
 
-export function NewPage({ brandId: propBrandId }: Props = {}) {
+export function NewPage({ brandId: propBrandId, onPageCreated }: Props = {}) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [initialPageCount, setInitialPageCount] = useState<number | null>(null);
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (!propBrandId) return;
+
+    const loadPageCount = async () => {
+      try {
+        const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api?brand_id=${propBrandId}`;
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const count = data.items?.length || 0;
+
+          if (initialPageCount === null) {
+            setInitialPageCount(count);
+          } else if (count > initialPageCount && onPageCreated) {
+            onPageCreated();
+          }
+        }
+      } catch (error) {
+        console.error('Error loading page count:', error);
+      }
+    };
+
+    loadPageCount();
+    const interval = setInterval(loadPageCount, 3000);
+
+    return () => clearInterval(interval);
+  }, [propBrandId, initialPageCount, onPageCreated]);
 
   const handleOpenPageBuilder = async () => {
     if (!user || !propBrandId) return;

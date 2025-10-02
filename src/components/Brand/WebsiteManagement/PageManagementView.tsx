@@ -27,7 +27,15 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
 
   useEffect(() => {
     loadBrandAndPages();
-  }, [user, propBrandId]);
+
+    const interval = setInterval(() => {
+      if (brandId) {
+        loadPages(brandId);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [user, propBrandId, brandId]);
 
   const loadBrandAndPages = async () => {
     if (!user) return;

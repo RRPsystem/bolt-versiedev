@@ -276,7 +276,7 @@ export function BrandDashboard() {
 
         {/* Content */}
         <main className="flex-1 overflow-auto">
-          {activeSection === 'new-page' && <NewPage brandId={user?.brand_id} />}
+          {activeSection === 'new-page' && <NewPage brandId={user?.brand_id} onPageCreated={() => setActiveSection('pages')} />}
           {activeSection === 'pages' && <PageManagementView />}
           {activeSection === 'menus' && <MenuBuilderView />}
           {activeSection === 'footers' && <FooterBuilderView />}
