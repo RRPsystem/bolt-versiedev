@@ -18,6 +18,8 @@ export function AdminDashboard() {
   const [showWebsiteSubmenu, setShowWebsiteSubmenu] = useState(false);
   const [showBrandForm, setShowBrandForm] = useState(false);
   const [editingBrand, setEditingBrand] = useState<any>(null);
+  const [brands, setBrands] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
 
   React.useEffect(() => {
