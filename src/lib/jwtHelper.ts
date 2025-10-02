@@ -37,6 +37,9 @@ export async function generateBuilderJWT(
       'Authorization': `Bearer ${authToken}`,
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify({
+      brand_id: brandId
+    })
   });
 
   if (!response.ok) {
