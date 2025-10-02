@@ -1,10 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Eye, 
-  Edit, 
-  Trash2
-} from 'lucide-react';
+import { Plus, Eye, CreditCard as Edit, Trash2 } from 'lucide-react';
 import { db } from '../../lib/supabase';
 
 interface NewsArticle {

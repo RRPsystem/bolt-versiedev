@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  ArrowLeft,
-  Grid3X3,
-  Eye,
-  Plus
-} from 'lucide-react';
+import { ArrowLeft, Grid3x3 as Grid3X3, Eye, Plus } from 'lucide-react';
 
 interface Template {
   id: string;
