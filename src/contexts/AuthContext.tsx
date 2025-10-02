@@ -84,22 +84,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('[DEBUG] signIn called with email:', email);
-    console.log('[DEBUG] Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-
     if (!supabase) {
-      console.error('[DEBUG] Supabase client not initialized');
       throw new Error('Invalid email or password');
     }
 
-    console.log('[DEBUG] Calling supabase.auth.signInWithPassword...');
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
-    console.log('[DEBUG] signInWithPassword response data:', data);
-    console.log('[DEBUG] signInWithPassword response error:', error);
 
     if (error) throw error;
   };

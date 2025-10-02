@@ -3,16 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-console.log('🔍 Supabase Debug Info:');
-console.log('URL:', supabaseUrl || '❌ NOT SET');
-console.log('Key:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : '❌ NOT SET');
-console.log('URL type:', typeof supabaseUrl);
-console.log('Key type:', typeof supabaseAnonKey);
-
-// Check if we have valid Supabase credentials
 const hasValidSupabaseConfig = Boolean(
-  supabaseUrl && 
-  supabaseAnonKey && 
+  supabaseUrl &&
+  supabaseAnonKey &&
   supabaseUrl.trim() !== '' &&
   supabaseAnonKey.trim() !== '' &&
   supabaseUrl !== 'your-project-id.supabase.co' &&
@@ -21,52 +14,9 @@ const hasValidSupabaseConfig = Boolean(
   supabaseAnonKey.startsWith('eyJ')
 );
 
-console.log('✅ Has valid config:', hasValidSupabaseConfig);
-console.log('🔧 Fresh start config check:');
-console.log('  - URL exists:', !!supabaseUrl);
-console.log('  - Key exists:', !!supabaseAnonKey);
-console.log('  - URL format OK:', supabaseUrl ? supabaseUrl.includes('.supabase.co') : false);
-console.log('  - Key format OK:', supabaseAnonKey ? supabaseAnonKey.startsWith('eyJ') : false);
-console.log('  - Is placeholder URL:', supabaseUrl === 'your-project-id.supabase.co');
-console.log('  - Is placeholder key:', supabaseAnonKey === 'your-anon-key');
-
-export const supabase = hasValidSupabaseConfig 
+export const supabase = hasValidSupabaseConfig
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
-
-console.log('🚀 Supabase client created:', !!supabase);
-
-if (!supabase) {
-  console.log('❌ Supabase client NOT created. Reasons:');
-  if (!supabaseUrl) console.log('  - Missing VITE_SUPABASE_URL');
-  if (!supabaseAnonKey) console.log('  - Missing VITE_SUPABASE_ANON_KEY');
-  if (supabaseUrl && !supabaseUrl.includes('.supabase.co')) console.log('  - Invalid URL format');
-  if (supabaseAnonKey && !supabaseAnonKey.startsWith('eyJ')) console.log('  - Invalid key format');
-  console.log('');
-  console.log('💡 To fix this:');
-  console.log('  1. Login as operator@travel.com / operator123');
-  console.log('  2. Go to Operator Dashboard → GPT Management');
-  console.log('  3. Click "setup Supabase for multi-user support"');
-  console.log('  4. Follow the setup wizard');
-} else {
-  console.log('✅ Supabase client successfully created!');
-  console.log('🔗 Testing connection...');
-  
-  // Test the connection
-  supabase.from('gpt_models').select('count', { count: 'exact', head: true })
-    .then(({ count, error }) => {
-      if (error) {
-        console.log('❌ Database connection test failed:', error.message);
-        console.log('💡 Run the SQL migration in Supabase dashboard!');
-      } else {
-        console.log('✅ Database connection successful!');
-        console.log(`📊 Found ${count || 0} GPT models in database`);
-      }
-    })
-    .catch(err => {
-      console.log('❌ Connection test error:', err);
-    });
-}
 
 // Helper functions for database operations
 export const db = {
