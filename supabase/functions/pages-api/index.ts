@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { verifyBearerToken } from "../_shared/jwt.ts";
+import { verifyBearerToken } from "./_shared/jwt.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,8 +20,9 @@ Deno.serve(async (req: Request) => {
 
     const url = new URL(req.url);
     const pathParts = url.pathname.split("/").filter(Boolean);
+    console.log('Request:', req.method, url.pathname, 'pathParts:', pathParts);
 
-    // GET /api/pages?brand_id={BRAND}
+    // GET /pages-api?brand_id={BRAND}
     if (req.method === "GET" && pathParts[pathParts.length - 1] === "pages-api") {
       const brandId = url.searchParams.get("brand_id");
       if (!brandId) {
@@ -45,7 +46,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // POST /api/pages/saveDraft
+    // POST /pages-api/saveDraft
     if (req.method === "POST" && pathParts.includes("saveDraft")) {
       const claims = await verifyBearerToken(req);
       const body = await req.json();
@@ -118,7 +119,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // POST /api/pages/{page_id}/publish
+    // POST /pages-api/{page_id}/publish
     if (req.method === "POST" && pathParts.includes("publish")) {
       const claims = await verifyBearerToken(req);
       const pageId = pathParts[pathParts.length - 2];
@@ -169,7 +170,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // DELETE /api/pages/{page_id}
+    // DELETE /pages-api/{page_id}
     if (req.method === "DELETE") {
       const claims = await verifyBearerToken(req);
       const pageId = pathParts[pathParts.length - 1];
