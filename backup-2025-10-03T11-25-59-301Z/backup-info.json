@@ -1,8 +1,0 @@
-{
-  "timestamp": "2025-10-03T11:25:59.332Z",
-  "backed_up_files": 13,
-  "skipped_files": 0,
-  "backup_directory": "backup-2025-10-03T11-25-59-301Z",
-  "project_name": "Multi-Tenant Travel Website Builder",
-  "note": "Backup created before .env configuration"
-}
