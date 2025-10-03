@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, CreditCard as Edit, Copy, Trash2, Eye, Plus } from 'lucide-react';
+import { ExternalLink, CreditCard as Edit, Copy, Trash2, Eye, Plus, RefreshCw } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { generateBuilderJWT, generateBuilderDeeplink } from '../../../lib/jwtHelper';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -27,15 +27,7 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
 
   useEffect(() => {
     loadBrandAndPages();
-
-    const interval = setInterval(() => {
-      if (brandId) {
-        loadPages(brandId);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [user, propBrandId, brandId]);
+  }, [user, propBrandId]);
 
   const loadBrandAndPages = async () => {
     if (!user) return;
@@ -71,9 +63,9 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     }
   };
 
-  const loadPages = async (brandId: string) => {
+  const loadPages = async (brandId: string, showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api?brand_id=${brandId}`;
 
       const response = await fetch(apiUrl, {
@@ -188,16 +180,26 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
           <h1 className="text-3xl font-bold text-gray-900">Pagina Beheer</h1>
           <p className="text-gray-600 mt-2">Beheer alle pagina's van je website</p>
         </div>
-        {!hideCreateButtons && (
+        <div className="flex items-center space-x-3">
           <button
-            onClick={createNewPage}
-            className="inline-flex items-center space-x-2 px-6 py-3 text-white rounded-lg font-medium transition-colors hover:bg-blue-700"
-            style={{ backgroundColor: '#0ea5e9' }}
+            onClick={() => loadPages(brandId, false)}
+            className="inline-flex items-center space-x-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium transition-colors hover:bg-gray-200"
+            title="Ververs pagina's"
           >
-            <Plus size={20} />
-            <span>Nieuwe Pagina</span>
+            <RefreshCw size={20} />
+            <span>Ververs</span>
           </button>
-        )}
+          {!hideCreateButtons && (
+            <button
+              onClick={createNewPage}
+              className="inline-flex items-center space-x-2 px-6 py-3 text-white rounded-lg font-medium transition-colors hover:bg-blue-700"
+              style={{ backgroundColor: '#0ea5e9' }}
+            >
+              <Plus size={20} />
+              <span>Nieuwe Pagina</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {loading ? (
