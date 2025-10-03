@@ -34,7 +34,7 @@ Deno.serve(async (req: Request) => {
 
       const { data, error } = await supabase
         .from("pages")
-        .select("id, brand_id, title, slug, status, updated_at, published_at, version")
+        .select("id, brand_id, title, slug, status, updated_at, published_at, version, body_html")
         .eq("brand_id", brandId)
         .order("updated_at", { ascending: false });
 

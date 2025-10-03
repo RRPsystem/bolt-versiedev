@@ -11,6 +11,7 @@ interface Page {
   status: string;
   updated_at: string;
   published_at: string | null;
+  body_html?: string;
 }
 
 interface Props {
@@ -24,6 +25,7 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
   const [loading, setLoading] = useState(true);
   const [brandId, setBrandId] = useState<string>('');
   const [brandSlug, setBrandSlug] = useState<string>('');
+  const [previewPage, setPreviewPage] = useState<Page | null>(null);
 
   useEffect(() => {
     loadBrandAndPages();
@@ -276,16 +278,14 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
                       >
                         <Edit size={18} />
                       </button>
-                      {page.status === 'published' && (
-                        <a
-                          href={`/${brandSlug}/${page.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                      {page.status === 'published' && page.body_html && (
+                        <button
+                          onClick={() => setPreviewPage(page)}
                           className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Bekijken (live)"
+                          title="Preview"
                         >
                           <Eye size={18} />
-                        </a>
+                        </button>
                       )}
                       <button
                         onClick={() => duplicatePage(page.id)}
@@ -307,6 +307,29 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {previewPage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={() => setPreviewPage(null)}>
+          <div className="bg-white rounded-lg w-full max-w-6xl h-5/6 flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-bold text-gray-900">{previewPage.title} - Preview</h2>
+              <button
+                onClick={() => setPreviewPage(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <span className="text-2xl">&times;</span>
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <iframe
+                srcDoc={previewPage.body_html}
+                className="w-full h-full border-0"
+                title="Page Preview"
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>
