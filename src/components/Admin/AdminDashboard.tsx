@@ -96,6 +96,10 @@ export function AdminDashboard() {
     { id: 'destinations', label: 'Bestemmingen', icon: Building2 },
   ];
 
+  const handleTravelStudioClick = () => {
+    window.open('https://travelstudio.travelstudio-accept.bookunited.com/login', '_blank');
+  };
+
   if (showBrandForm) {
     return (
       <div className="flex min-h-screen bg-gray-50">
@@ -170,6 +174,17 @@ export function AdminDashboard() {
                     })}
                   </ul>
                 )}
+              </li>
+
+              {/* Travel Studio Link */}
+              <li>
+                <button
+                  onClick={handleTravelStudioClick}
+                  className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors text-slate-300 hover:text-white hover:bg-slate-700"
+                >
+                  <Globe size={20} />
+                  <span>Travel Studio</span>
+                </button>
               </li>
             </ul>
           </nav>
@@ -315,6 +330,17 @@ export function AdminDashboard() {
                   })}
                 </ul>
               )}
+            </li>
+
+            {/* Travel Studio Link */}
+            <li>
+              <button
+                onClick={handleTravelStudioClick}
+                className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors text-slate-300 hover:text-white hover:bg-slate-700"
+              >
+                <Globe size={20} />
+                <span>Travel Studio</span>
+              </button>
             </li>
           </ul>
         </nav>
