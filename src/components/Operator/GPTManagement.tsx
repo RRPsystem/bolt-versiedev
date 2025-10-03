@@ -37,10 +37,12 @@ export function GPTManagement() {
     setError('');
     console.log('🔄 Loading GPT models...');
     console.log('📡 Supabase available:', !!supabase);
-    
+
     try {
       const data = await db.getGPTModels();
       console.log('✅ GPT models loaded from Supabase:', data?.length || 0);
+      console.log('📊 First GPT data:', data?.[0]);
+      console.log('🔍 isActive values:', data?.map(g => ({ name: g.name, isActive: g.isActive, is_active: g.is_active })));
       setGptModels(data || []);
     } catch (err: any) {
       console.error('Error loading GPT models:', err);
@@ -209,19 +211,23 @@ export function GPTManagement() {
     const toggleActive = async () => {
       const gpt = gptModels.find(g => g.id === id);
       if (!gpt) return;
-      
+
+      console.log('🔄 Toggling GPT:', { id, currentIsActive: gpt.isActive, newIsActive: !gpt.isActive });
+
       try {
         // Try Supabase first, fallback to localStorage
         try {
           const updatedGPT = await db.updateGPTModel(id, { is_active: !gpt.isActive });
-          setGptModels(prev => prev.map(g => 
-            g.id === id ? { ...g, isActive: updatedGPT.is_active } : g
+          console.log('📥 Updated GPT from database:', updatedGPT);
+          console.log('🔍 Updated isActive:', updatedGPT.isActive);
+          setGptModels(prev => prev.map(g =>
+            g.id === id ? updatedGPT : g
           ));
           console.log('✅ GPT status updated in Supabase');
         } catch (supabaseError) {
           console.log('⚠️ Supabase not available, using localStorage fallback');
           // Fallback to localStorage
-          const updatedGPTs = gptModels.map(gpt => 
+          const updatedGPTs = gptModels.map(gpt =>
             gpt.id === id ? { ...gpt, isActive: !gpt.isActive } : gpt
           );
           setGptModels(updatedGPTs);
