@@ -4,8 +4,16 @@ import { LoginForm } from './components/Auth/LoginForm';
 import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { BrandDashboard } from './components/Brand/BrandDashboard';
 import { OperatorDashboard } from './components/Operator/OperatorDashboard';
+import { PreviewPage } from './components/Preview/PreviewPage';
 
 function AppContent() {
+  const params = new URLSearchParams(window.location.search);
+  const isPreview = params.has('preview') || params.has('page_id');
+
+  if (isPreview) {
+    return <PreviewPage />;
+  }
+
   const { user, loading, isAdmin, isBrand, isOperator } = useAuth();
 
   if (loading) {
