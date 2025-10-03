@@ -30,7 +30,6 @@ export function BrandDashboard() {
 
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Settings },
-    { id: 'websites', label: 'My Websites', icon: Globe },
     { id: 'agents', label: 'Agents', icon: Users },
     { id: 'settings', label: 'Brand Settings', icon: Settings },
   ];
