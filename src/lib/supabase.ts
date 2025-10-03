@@ -235,9 +235,18 @@ export const db = {
       .from('gpt_models')
       .select('*')
       .order('created_at', { ascending: false });
-    
+
     if (error) throw error;
-    return data;
+
+    return data?.map(gpt => ({
+      ...gpt,
+      isActive: gpt.is_active,
+      contentType: gpt.content_type,
+      systemPrompt: gpt.system_prompt,
+      maxTokens: gpt.max_tokens,
+      usageCount: gpt.usage_count,
+      lastUsed: gpt.last_used || 'Never'
+    }));
   },
 
   async createGPTModel(gptModel: Partial<any>) {
@@ -249,9 +258,17 @@ export const db = {
       .insert([{ ...gptModel, created_by: (await supabase.auth.getUser()).data.user?.id }])
       .select()
       .single();
-    
+
     if (error) throw error;
-    return data;
+    return {
+      ...data,
+      isActive: data.is_active,
+      contentType: data.content_type,
+      systemPrompt: data.system_prompt,
+      maxTokens: data.max_tokens,
+      usageCount: data.usage_count,
+      lastUsed: data.last_used || 'Never'
+    };
   },
 
   async updateGPTModel(id: string, updates: Partial<any>) {
@@ -264,9 +281,17 @@ export const db = {
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
-    return data;
+    return {
+      ...data,
+      isActive: data.is_active,
+      contentType: data.content_type,
+      systemPrompt: data.system_prompt,
+      maxTokens: data.max_tokens,
+      usageCount: data.usage_count,
+      lastUsed: data.last_used || 'Never'
+    };
   },
 
   async deleteGPTModel(id: string) {
