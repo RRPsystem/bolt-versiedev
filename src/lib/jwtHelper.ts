@@ -71,8 +71,7 @@ export function generateBuilderDeeplink(
   const params = new URLSearchParams({
     brand_id: brandId,
     token: token,
-    api: apiBaseUrl,
-    tc_api: 'https://website-builder-git-main-alex-9461s-projects.vercel.app'
+    api: apiBaseUrl
   });
 
   if (options.pageId) {
