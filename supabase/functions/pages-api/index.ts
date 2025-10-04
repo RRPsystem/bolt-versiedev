@@ -22,6 +22,40 @@ Deno.serve(async (req: Request) => {
     const pathParts = url.pathname.split("/").filter(Boolean);
     console.log('Request:', req.method, url.pathname, 'pathParts:', pathParts);
 
+    // GET /pages-api/list?brand_id={BRAND} - For menu builder
+    if (req.method === "GET" && pathParts.includes("list")) {
+      const brandId = url.searchParams.get("brand_id");
+      if (!brandId) {
+        return new Response(
+          JSON.stringify({ error: "brand_id is required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data, error } = await supabase
+        .from("pages")
+        .select("title, slug, show_in_menu, parent_slug, menu_order, status")
+        .eq("brand_id", brandId)
+        .eq("status", "published")
+        .order("menu_order", { ascending: true });
+
+      if (error) throw error;
+
+      const pages = (data || []).map(page => ({
+        title: page.title,
+        slug: page.slug,
+        url: `/${page.slug}`,
+        show_in_menu: page.show_in_menu,
+        parent_slug: page.parent_slug,
+        order: page.menu_order
+      }));
+
+      return new Response(
+        JSON.stringify({ pages }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // GET /pages-api?brand_id={BRAND}
     if (req.method === "GET" && pathParts[pathParts.length - 1] === "pages-api") {
       const brandId = url.searchParams.get("brand_id");
@@ -34,7 +68,7 @@ Deno.serve(async (req: Request) => {
 
       const { data, error } = await supabase
         .from("pages")
-        .select("id, brand_id, title, slug, status, updated_at, published_at, version, body_html")
+        .select("id, brand_id, title, slug, status, updated_at, published_at, version, body_html, show_in_menu, parent_slug, menu_order")
         .eq("brand_id", brandId)
         .order("updated_at", { ascending: false });
 
@@ -46,11 +80,57 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // POST /pages-api/updateMenuSettings - Update menu-related fields
+    if (req.method === "POST" && pathParts.includes("updateMenuSettings")) {
+      const claims = await verifyBearerToken(req);
+      const body = await req.json();
+      const { page_id, show_in_menu, parent_slug, menu_order } = body;
+
+      if (!page_id) {
+        return new Response(
+          JSON.stringify({ error: "page_id is required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: page, error: fetchError } = await supabase
+        .from("pages")
+        .select("brand_id")
+        .eq("id", page_id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      if (page.brand_id !== claims.brand_id) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized: brand_id mismatch" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const updates: any = {};
+      if (show_in_menu !== undefined) updates.show_in_menu = show_in_menu;
+      if (parent_slug !== undefined) updates.parent_slug = parent_slug;
+      if (menu_order !== undefined) updates.menu_order = menu_order;
+
+      const { error: updateError } = await supabase
+        .from("pages")
+        .update(updates)
+        .eq("id", page_id);
+
+      if (updateError) throw updateError;
+
+      return new Response(
+        JSON.stringify({ ok: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // POST /pages-api/saveDraft
     if (req.method === "POST" && pathParts.includes("saveDraft")) {
       const claims = await verifyBearerToken(req);
       const body = await req.json();
-      const { brand_id, page_id, title, slug, content_json } = body;
+      const { brand_id, page_id, title, slug, content_json, show_in_menu, parent_slug, menu_order } = body;
 
       if (claims.brand_id !== brand_id) {
         return new Response(
@@ -77,15 +157,21 @@ Deno.serve(async (req: Request) => {
 
         const newVersion = (currentPage?.version || 0) + 1;
 
+        const updateData: any = {
+          title,
+          slug,
+          content_json,
+          version: newVersion,
+          updated_at: new Date().toISOString(),
+        };
+
+        if (show_in_menu !== undefined) updateData.show_in_menu = show_in_menu;
+        if (parent_slug !== undefined) updateData.parent_slug = parent_slug;
+        if (menu_order !== undefined) updateData.menu_order = menu_order;
+
         const { data, error } = await supabase
           .from("pages")
-          .update({
-            title,
-            slug,
-            content_json,
-            version: newVersion,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq("id", page_id)
           .select("id, slug, version")
           .single();
@@ -94,18 +180,24 @@ Deno.serve(async (req: Request) => {
         result = data;
       } else {
         // Create new page
+        const insertData: any = {
+          brand_id,
+          title,
+          slug,
+          status: "draft",
+          content_json,
+          version: 1,
+          owner_user_id: claims.user_id || claims.sub || brand_id,
+          created_by: claims.user_id || claims.sub,
+        };
+
+        if (show_in_menu !== undefined) insertData.show_in_menu = show_in_menu;
+        if (parent_slug !== undefined) insertData.parent_slug = parent_slug;
+        if (menu_order !== undefined) insertData.menu_order = menu_order;
+
         const { data, error } = await supabase
           .from("pages")
-          .insert({
-            brand_id,
-            title,
-            slug,
-            status: "draft",
-            content_json,
-            version: 1,
-            owner_user_id: claims.user_id || claims.sub || brand_id,
-            created_by: claims.user_id || claims.sub,
-          })
+          .insert(insertData)
           .select("id, slug, version")
           .single();
 
