@@ -20,6 +20,15 @@ interface MenuItem {
   icon: string | null;
 }
 
+interface Page {
+  id: string;
+  title: string;
+  slug: string;
+  menu_label: string | null;
+  menu_order: number;
+  parent_slug: string | null;
+}
+
 interface Props {
   brandId?: string;
 }
@@ -29,12 +38,19 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
   const [menus, setMenus] = useState<Menu[]>([]);
   const [selectedMenu, setSelectedMenu] = useState<Menu | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
   const [brandId, setBrandId] = useState<string>('');
 
   useEffect(() => {
     loadBrandAndMenus();
   }, [user, propBrandId]);
+
+  useEffect(() => {
+    if (brandId) {
+      loadPages(brandId);
+    }
+  }, [brandId]);
 
   useEffect(() => {
     if (selectedMenu) {
@@ -84,6 +100,22 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
       console.error('Error loading menus:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPages = async (brandId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('pages')
+        .select('id, title, slug, menu_label, menu_order, parent_slug')
+        .eq('brand_id', brandId)
+        .eq('show_in_menu', true)
+        .order('menu_order', { ascending: true });
+
+      if (error) throw error;
+      setPages(data || []);
+    } catch (error) {
+      console.error('Error loading pages:', error);
     }
   };
 
@@ -214,7 +246,8 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">{selectedMenu.name}</h2>
                     <p className="text-sm text-gray-600 mt-1">
-                      {menuItems.length} items in dit menu
+                      {pages.length + menuItems.length} items in dit menu
+                      {pages.length > 0 && ` (${pages.length} pagina's, ${menuItems.length} custom items)`}
                     </p>
                   </div>
                   <button
@@ -228,7 +261,35 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
                 </div>
 
                 <div className="p-6">
-                  {menuItems.length === 0 ? (
+                  {pages.length > 0 && (
+                    <div className="mb-6">
+                      <h3 className="text-sm font-semibold text-gray-700 mb-3">Pagina's in menu</h3>
+                      <div className="space-y-2">
+                        {pages.map((page) => (
+                          <div
+                            key={page.id}
+                            className={`flex items-center justify-between p-3 border border-orange-200 bg-orange-50 rounded-lg ${
+                              page.parent_slug ? 'ml-8' : ''
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div>
+                                <div className="font-medium text-gray-900">
+                                  {page.menu_label || page.title}
+                                </div>
+                                <div className="text-sm text-gray-500">/{page.slug}</div>
+                              </div>
+                            </div>
+                            <span className="text-xs text-orange-700 px-2 py-1 bg-orange-100 rounded">
+                              Volgorde: {page.menu_order}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {menuItems.length === 0 && pages.length === 0 ? (
                     <div className="text-center py-8">
                       <MenuIcon size={48} className="mx-auto text-gray-300 mb-4" />
                       <p className="text-gray-600 mb-4">Dit menu heeft nog geen items</p>
@@ -240,29 +301,32 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
                         <span>Items toevoegen in Builder</span>
                       </button>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {menuItems.map((item) => (
-                        <div
-                          key={item.id}
-                          className={`flex items-center justify-between p-3 border border-gray-200 rounded-lg ${
-                            item.parent_id ? 'ml-8 bg-gray-50' : 'bg-white'
-                          }`}
-                        >
-                          <div className="flex items-center space-x-3">
-                            {item.icon && <span className="text-gray-400">{item.icon}</span>}
-                            <div>
-                              <div className="font-medium text-gray-900">{item.label}</div>
-                              <div className="text-sm text-gray-500">{item.url}</div>
+                  ) : menuItems.length > 0 ? (
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700 mb-3">Custom menu items</h3>
+                      <div className="space-y-2">
+                        {menuItems.map((item) => (
+                          <div
+                            key={item.id}
+                            className={`flex items-center justify-between p-3 border border-gray-200 rounded-lg ${
+                              item.parent_id ? 'ml-8 bg-gray-50' : 'bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-3">
+                              {item.icon && <span className="text-gray-400">{item.icon}</span>}
+                              <div>
+                                <div className="font-medium text-gray-900">{item.label}</div>
+                                <div className="text-sm text-gray-500">{item.url}</div>
+                              </div>
                             </div>
+                            <span className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">
+                              {item.target === '_blank' ? 'Nieuw venster' : 'Zelfde venster'}
+                            </span>
                           </div>
-                          <span className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">
-                            {item.target === '_blank' ? 'Nieuw venster' : 'Zelfde venster'}
-                          </span>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             ) : (
