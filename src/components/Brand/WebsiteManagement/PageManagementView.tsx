@@ -193,33 +193,6 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     }
   };
 
-  const updateMenuOrder = async (pageId: string, newOrder: number) => {
-    try {
-      const token = await generateBuilderJWT(brandId, user!.id);
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/updateMenuSettings`;
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          page_id: pageId,
-          menu_order: newOrder,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update menu order');
-      }
-
-      await loadPages(brandId, false);
-    } catch (error) {
-      console.error('Error updating menu order:', error);
-    }
-  };
-
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('nl-NL', {
@@ -295,9 +268,6 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   In Menu
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Menu Volgorde
-                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Laatst gepubliceerd
                 </th>
@@ -340,15 +310,6 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
                     >
                       {page.show_in_menu ? 'Ja' : 'Nee'}
                     </button>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <input
-                      type="number"
-                      value={page.menu_order}
-                      onChange={(e) => updateMenuOrder(page.id, parseInt(e.target.value) || 0)}
-                      className="w-16 px-2 py-1 text-center border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      min="0"
-                    />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {formatDate(page.published_at)}
