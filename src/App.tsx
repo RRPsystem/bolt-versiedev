@@ -7,6 +7,7 @@ import { OperatorDashboard } from './components/Operator/OperatorDashboard';
 import { PreviewPage } from './components/Preview/PreviewPage';
 
 function AppContent() {
+  console.log('🚀 AppContent component rendering');
   const params = new URLSearchParams(window.location.search);
   const isPreview = params.has('preview') || params.has('page_id');
 
@@ -15,6 +16,7 @@ function AppContent() {
   }
 
   const { user, loading, isAdmin, isBrand, isOperator } = useAuth();
+  console.log('🔐 Auth state:', { user: user?.email, loading, isAdmin, isBrand, isOperator });
 
   if (loading) {
     return (
@@ -44,6 +46,7 @@ function AppContent() {
 }
 
 function App() {
+  console.log('🚀 App component rendering');
   return (
     <AuthProvider>
       <AppContent />
