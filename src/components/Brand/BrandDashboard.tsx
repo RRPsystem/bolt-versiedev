@@ -5,7 +5,7 @@ import { NewPage } from './WebsiteManagement/NewPage';
 import PageManagementView from './WebsiteManagement/PageManagementView';
 import MenuBuilderView from './WebsiteManagement/MenuBuilderView';
 import FooterBuilderView from './WebsiteManagement/FooterBuilderView';
-import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout } from 'lucide-react';
+import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText } from 'lucide-react';
 
 export function BrandDashboard() {
   const { user, signOut } = useAuth();
