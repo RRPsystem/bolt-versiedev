@@ -22,9 +22,11 @@ Deno.serve(async (req: Request) => {
     const pathParts = url.pathname.split("/").filter(Boolean);
     console.log('Request:', req.method, url.pathname, 'pathParts:', pathParts);
 
-    // GET /pages-api/list?brand_id={BRAND} - For menu builder
+    // GET /pages-api/list?brand_id={BRAND}&menu_key={KEY} - For menu builder
     if (req.method === "GET" && pathParts.includes("list")) {
       const brandId = url.searchParams.get("brand_id");
+      const menuKey = url.searchParams.get("menu_key");
+
       if (!brandId) {
         return new Response(
           JSON.stringify({ error: "brand_id is required" }),
@@ -32,12 +34,17 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("pages")
         .select("title, slug, show_in_menu, parent_slug, menu_order, status")
         .eq("brand_id", brandId)
-        .eq("status", "published")
-        .order("menu_order", { ascending: true });
+        .eq("status", "published");
+
+      if (menuKey) {
+        query = query.eq("show_in_menu", true);
+      }
+
+      const { data, error } = await query.order("menu_order", { ascending: true });
 
       if (error) throw error;
 
