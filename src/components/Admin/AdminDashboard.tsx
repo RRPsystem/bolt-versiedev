@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../lib/supabase';
-import { ContentManagement } from './ContentManagement';
 import { AgentManagement } from './AgentManagement';
 import { BrandForm } from './BrandForm';
 import { PageManagementView } from '../Brand/WebsiteManagement/PageManagementView';
 import { MenuBuilderView } from '../Brand/WebsiteManagement/MenuBuilderView';
 import { FooterBuilderView } from '../Brand/WebsiteManagement/FooterBuilderView';
 import { NewPage } from '../Brand/WebsiteManagement/NewPage';
-import { Users, Building2, FileText, Settings, Plus, Search, Filter, CreditCard as Edit, Trash2, Bot, Sparkles, Download, Import as FileImport, Globe, LayoutGrid as Layout, Menu } from 'lucide-react'
+import { Users, Settings, Plus, Search, Filter, CreditCard as Edit, Trash2, LayoutGrid as Layout, Menu } from 'lucide-react'
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 export function AdminDashboard() {
   const { user, signOut } = useAuth();
   const [activeSection, setActiveSection] = useState('dashboard');
-  const [showContentSubmenu, setShowContentSubmenu] = useState(false);
   const [showWebsiteSubmenu, setShowWebsiteSubmenu] = useState(false);
   const [showBrandForm, setShowBrandForm] = useState(false);
   const [editingBrand, setEditingBrand] = useState<any>(null);
@@ -25,9 +23,6 @@ export function AdminDashboard() {
   React.useEffect(() => {
     if (['new-page', 'page-management', 'menu-builder', 'footer-builder'].includes(activeSection)) {
       setShowWebsiteSubmenu(true);
-    }
-    if (['content', 'destinations'].includes(activeSection)) {
-      setShowContentSubmenu(true);
     }
   }, [activeSection]);
 
@@ -89,11 +84,6 @@ export function AdminDashboard() {
     { id: 'page-management', label: 'Pagina Beheer', icon: FileText },
     { id: 'menu-builder', label: 'Menu Builder', icon: Menu },
     { id: 'footer-builder', label: 'Footer Builder', icon: Layout },
-  ];
-
-  const contentItems = [
-    { id: 'content', label: 'Nieuwsberichten', icon: FileText },
-    { id: 'destinations', label: 'Bestemmingen', icon: Building2 },
   ];
 
   const handleTravelStudioClick = () => {
@@ -291,47 +281,6 @@ export function AdminDashboard() {
               )}
             </li>
 
-            {/* Content Management Menu */}
-            <li>
-              <button
-                onClick={() => setShowContentSubmenu(!showContentSubmenu)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
-                  ['content', 'destinations'].includes(activeSection)
-                    ? 'bg-slate-700 text-white'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-700'
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <FileText size={20} />
-                  <span>Content Management</span>
-                </div>
-                {showContentSubmenu ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-              </button>
-
-              {showContentSubmenu && (
-                <ul className="mt-2 ml-6 space-y-1">
-                  {contentItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <li key={item.id}>
-                        <button
-                          onClick={() => setActiveSection(item.id)}
-                          className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors text-sm ${
-                            activeSection === item.id
-                              ? 'bg-slate-700 text-white'
-                              : 'text-slate-400 hover:text-white hover:bg-slate-700'
-                          }`}
-                        >
-                          <Icon size={16} />
-                          <span>{item.label}</span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </li>
-
             {/* Travel Studio Link */}
             <li>
               <button
@@ -376,8 +325,6 @@ export function AdminDashboard() {
                 {activeSection === 'page-management' && 'Pagina Beheer'}
                 {activeSection === 'menu-builder' && 'Menu Builder'}
                 {activeSection === 'footer-builder' && 'Footer Builder'}
-                {activeSection === 'content' && 'Nieuwsberichten'}
-                {activeSection === 'destinations' && 'Bestemmingen'}
               </h1>
               <p className="text-gray-600 mt-1">
                 {activeSection === 'brands' && 'Manage all brands in the system'}
@@ -386,8 +333,6 @@ export function AdminDashboard() {
                 {activeSection === 'page-management' && 'Beheer alle pagina\'s van je website'}
                 {activeSection === 'menu-builder' && 'Bouw en organiseer je website navigatie'}
                 {activeSection === 'footer-builder' && 'Ontwerp en beheer je website footer'}
-                {activeSection === 'content' && 'Beheer nieuwsberichten en brand toegang'}
-                {activeSection === 'destinations' && 'Beheer bestemmingen en reislocaties'}
               </p>
             </div>
             
@@ -406,7 +351,6 @@ export function AdminDashboard() {
         {/* Content */}
         <main className="flex-1 p-6">
           {activeSection === 'agents' && <AgentManagement />}
-          {activeSection === 'content' && <ContentManagement />}
 
           {/* Website Management Content - Admin uses System Templates brand */}
           {activeSection === 'new-page' && <NewPage brandId={SYSTEM_BRAND_ID} />}
@@ -414,19 +358,6 @@ export function AdminDashboard() {
           {activeSection === 'menu-builder' && <MenuBuilderView brandId={SYSTEM_BRAND_ID} />}
           {activeSection === 'footer-builder' && <FooterBuilderView brandId={SYSTEM_BRAND_ID} />}
 
-          {activeSection === 'destinations' && (
-            <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Building2 className="w-8 h-8 text-blue-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Bestemmingen Management</h2>
-              <p className="text-gray-600 mb-6">Beheer reisbestemmingen, locaties en attracties</p>
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                Binnenkort Beschikbaar
-              </button>
-            </div>
-          )}
-          
           {activeSection === 'dashboard' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="bg-white p-6 rounded-lg shadow-sm border">

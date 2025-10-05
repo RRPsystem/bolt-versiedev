@@ -1,27 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { BrandContentManagement } from './BrandContentManagement';
 import { AIContentGenerator } from './AIContentGenerator';
 import { NewPage } from './WebsiteManagement/NewPage';
 import PageManagementView from './WebsiteManagement/PageManagementView';
 import MenuBuilderView from './WebsiteManagement/MenuBuilderView';
 import FooterBuilderView from './WebsiteManagement/FooterBuilderView';
-import { Globe, FileText, Users, Settings, Plus, Search, Eye, CreditCard as Edit, Bot, Sparkles, Download, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout } from 'lucide-react';
-import { Building } from 'lucide-react';
+import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout } from 'lucide-react';
 
 export function BrandDashboard() {
   const { user, signOut } = useAuth();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [showAISubmenu, setShowAISubmenu] = useState(false);
-  const [showContentSubmenu, setShowContentSubmenu] = useState(false);
   const [showWebsiteSubmenu, setShowWebsiteSubmenu] = useState(false);
 
   React.useEffect(() => {
     if (['new-page', 'pages', 'menus', 'footers'].includes(activeSection)) {
       setShowWebsiteSubmenu(true);
-    }
-    if (['content', 'destinations'].includes(activeSection)) {
-      setShowContentSubmenu(true);
     }
     if (['ai-content', 'ai-travelbro', 'ai-import'].includes(activeSection)) {
       setShowAISubmenu(true);
@@ -39,11 +33,6 @@ export function BrandDashboard() {
     { id: 'pages', label: 'Pagina Beheer', icon: FileText },
     { id: 'menus', label: 'Menu Builder', icon: Layout },
     { id: 'footers', label: 'Footer Builder', icon: Layout },
-  ];
-
-  const contentItems = [
-    { id: 'content', label: 'Nieuwsberichten', icon: FileText },
-    { id: 'destinations', label: 'Bestemmingen', icon: Building },
   ];
 
   const aiToolsItems = [
@@ -133,47 +122,6 @@ export function BrandDashboard() {
               )}
             </li>
 
-            {/* Content Management Menu */}
-            <li>
-              <button
-                onClick={() => setShowContentSubmenu(!showContentSubmenu)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
-                  ['content', 'destinations'].includes(activeSection)
-                    ? 'bg-gray-700 text-white'
-                    : 'text-gray-300 hover:text-white hover:bg-gray-700'
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <FileText size={20} />
-                  <span>Content Management</span>
-                </div>
-                {showContentSubmenu ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-              </button>
-              
-              {showContentSubmenu && (
-                <ul className="mt-2 ml-6 space-y-1">
-                  {contentItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <li key={item.id}>
-                        <button
-                          onClick={() => setActiveSection(item.id)}
-                          className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors text-sm ${
-                            activeSection === item.id
-                              ? 'bg-gray-700 text-white'
-                              : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                          }`}
-                        >
-                          <Icon size={16} />
-                          <span>{item.label}</span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </li>
-            
             {/* AI Tools Menu */}
             <li>
               <button
@@ -264,8 +212,6 @@ export function BrandDashboard() {
                 {activeSection === 'pages' && 'Beheer alle pagina\'s van je website'}
                 {activeSection === 'menus' && 'Beheer menu\'s en hun structuur'}
                 {activeSection === 'footers' && 'Beheer footer layouts voor je website'}
-                {activeSection === 'content' && 'Beheer uw nieuwsberichten en artikelen'}
-                {activeSection === 'destinations' && 'Beheer bestemmingen en reislocaties'}
                 {activeSection === 'ai-content' && 'Generate travel content with AI'}
                 {activeSection === 'ai-travelbro' && 'Your AI travel assistant'}
                 {activeSection === 'ai-import' && 'Import travel data with AI'}
@@ -278,13 +224,6 @@ export function BrandDashboard() {
                 <span>New Website</span>
               </button>
             )}
-            
-            {activeSection === 'content' && (
-              <button className="text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-orange-700 transition-colors" style={{ backgroundColor: '#ff7700' }}>
-                <Plus size={16} />
-                <span>Nieuw Artikel</span>
-              </button>
-            )}
           </div>
         </header>
 
@@ -294,26 +233,12 @@ export function BrandDashboard() {
           {activeSection === 'pages' && <PageManagementView />}
           {activeSection === 'menus' && <MenuBuilderView />}
           {activeSection === 'footers' && <FooterBuilderView />}
-          {activeSection === 'content' && <BrandContentManagement />}
 
           {/* AI Tools Content */}
           {activeSection === 'ai-content' && (
             <AIContentGenerator />
           )}
-          
-          {activeSection === 'destinations' && (
-            <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff7700, #ffaa44)' }}>
-                <Building className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Bestemmingen Management</h2>
-              <p className="text-gray-600 mb-6">Beheer uw reisbestemmingen, locaties en attracties</p>
-              <button className="text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-orange-700" style={{ backgroundColor: '#ff7700' }}>
-                Binnenkort Beschikbaar
-              </button>
-            </div>
-          )}
-          
+
           {activeSection === 'ai-travelbro' && (
             <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff7700, #ffaa44)' }}>
