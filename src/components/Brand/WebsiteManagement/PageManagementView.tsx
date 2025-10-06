@@ -323,9 +323,9 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
                       >
                         <Edit size={18} />
                       </button>
-                      {page.status === 'published' && page.body_html && (
+                      {page.status === 'published' && (
                         <button
-                          onClick={() => window.open(`/?page_id=${page.id}`, '_blank')}
+                          onClick={() => window.open(`/preview?brand_id=${brandId}&slug=${page.slug}`, '_blank')}
                           className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                           title="Preview"
                         >

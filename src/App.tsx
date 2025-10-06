@@ -9,7 +9,8 @@ import { PreviewPage } from './components/Preview/PreviewPage';
 function AppContent() {
   console.log('🚀 AppContent component rendering');
   const params = new URLSearchParams(window.location.search);
-  const isPreview = params.has('preview') || params.has('page_id');
+  const isPreview = params.has('preview') || params.has('page_id') ||
+                    (params.has('brand_id') && params.has('slug'));
 
   if (isPreview) {
     return <PreviewPage />;
