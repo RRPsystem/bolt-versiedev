@@ -213,6 +213,95 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    if (req.method === "DELETE") {
+      const claims = await verifyBearerToken(req);
+      const pageId = pathParts[pathParts.length - 1];
+
+      if (!pageId || pageId === "pages-api") {
+        return new Response(
+          JSON.stringify({ error: "page_id is required" }),
+          { status: 400, headers: corsHeaders() }
+        );
+      }
+
+      const { data: page } = await supabase
+        .from("pages")
+        .select("brand_id")
+        .eq("id", pageId)
+        .maybeSingle();
+
+      if (!page) {
+        return new Response(
+          JSON.stringify({ error: "Page not found" }),
+          { status: 404, headers: corsHeaders() }
+        );
+      }
+
+      if (claims.brand_id !== page.brand_id) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 403, headers: corsHeaders() }
+        );
+      }
+
+      const { error } = await supabase
+        .from("pages")
+        .delete()
+        .eq("id", pageId);
+
+      if (error) throw error;
+
+      return new Response(
+        JSON.stringify({ success: true, message: "Page deleted successfully" }),
+        { status: 200, headers: corsHeaders() }
+      );
+    }
+
+    if (req.method === "POST" && pathParts.includes("updateMenuSettings")) {
+      const body = await req.json();
+      const claims = await verifyBearerToken(req);
+      const { page_id, show_in_menu } = body;
+
+      if (!page_id || show_in_menu === undefined) {
+        return new Response(
+          JSON.stringify({ error: "page_id and show_in_menu are required" }),
+          { status: 400, headers: corsHeaders() }
+        );
+      }
+
+      const { data: page } = await supabase
+        .from("pages")
+        .select("brand_id")
+        .eq("id", page_id)
+        .maybeSingle();
+
+      if (!page) {
+        return new Response(
+          JSON.stringify({ error: "Page not found" }),
+          { status: 404, headers: corsHeaders() }
+        );
+      }
+
+      if (claims.brand_id !== page.brand_id) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 403, headers: corsHeaders() }
+        );
+      }
+
+      const { error } = await supabase
+        .from("pages")
+        .update({ show_in_menu })
+        .eq("id", page_id);
+
+      if (error) throw error;
+
+      return new Response(
+        JSON.stringify({ success: true, message: "Menu settings updated successfully" }),
+        { status: 200, headers: corsHeaders() }
+      );
+    }
+
     if (req.method === "GET" && pathParts.includes("list")) {
       const brandId = url.searchParams.get("brand_id");
       if (!brandId) {
