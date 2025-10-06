@@ -36,6 +36,10 @@ interface ChatSession {
   messages: ChatMessage[];
   contentType: string;
   lastActivity: Date;
+  writingStyle?: string;
+  vacationType?: string;
+  routeType?: string;
+  days?: string;
 }
 
 export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
@@ -54,70 +58,7 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
   
   // Chat state
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [chatSessions, setChatSessions] = useState<ChatSession[]>([
-    {
-      id: '1',
-      title: 'Bestemmings tekst - Amsterdam...',
-      contentType: 'Bestemmings tekst',
-      lastActivity: new Date(),
-      messages: [
-        {
-          id: '1',
-          type: 'user',
-          content: 'Bestemmings tekst voor Amsterdam',
-          timestamp: new Date()
-        },
-        {
-          id: '2',
-          type: 'assistant',
-          content: 'Er is een fout opgetreden: HTTP error! status: 500',
-          timestamp: new Date()
-        }
-      ]
-    },
-    {
-      id: '2',
-      title: 'Dagplanning (2 dagen) - Parijs...',
-      contentType: 'Dagplanning',
-      lastActivity: new Date(Date.now() - 3600000),
-      messages: [
-        {
-          id: '1',
-          type: 'user',
-          content: 'Dagplanning voor 2 dagen in Parijs',
-          timestamp: new Date(Date.now() - 3600000)
-        }
-      ]
-    },
-    {
-      id: '3',
-      title: 'Routebeschrijving (Binnendoor weggetjes)',
-      contentType: 'Routebeschrijving',
-      lastActivity: new Date(Date.now() - 7200000),
-      messages: [
-        {
-          id: '1',
-          type: 'user',
-          content: 'Route van Amsterdam naar Parijs via binnendoor weggetjes',
-          timestamp: new Date(Date.now() - 7200000)
-        }
-      ]
-    },
-    {
-      id: '4',
-      title: 'Bestemmings tekst - Barcelona...',
-      contentType: 'Bestemmings tekst',
-      lastActivity: new Date(Date.now() - 10800000),
-      messages: []
-    },
-    {
-      id: '5',
-      title: 'Bestemmings tekst - Barcelona...',
-      contentType: 'Bestemmings tekst',
-      lastActivity: new Date(Date.now() - 14400000),
-      messages: []
-    }
-  ]);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
 
   const contentTypes = [
     { id: 'destination', label: 'Bestemmings tekst', icon: MapPin, color: 'border-orange-500 bg-orange-50' },
@@ -164,6 +105,14 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
     { id: '3-dagen', label: '3 Dagen', icon: '🗓️', description: 'Lang weekend' }
   ];
 
+  const vacationTypes = [
+    { id: 'familie-met-kinderen', label: 'Familie met kinderen', icon: '👨‍👩‍👧‍👦' },
+    { id: 'stelletjes', label: 'Stelletjes', icon: '💑' },
+    { id: 'vrienden', label: 'Vrienden', icon: '👥' },
+    { id: 'solo', label: 'Solo reiziger', icon: '🎒' },
+    { id: 'zakelijk', label: 'Zakelijk', icon: '💼' }
+  ];
+
   const handleContentTypeSelect = (type: string) => {
     setSelectedContentType(type);
     setShowSlidingPanel(true);
@@ -201,6 +150,10 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
       title: chatTitle,
       contentType: contentTypes.find(c => c.id === selectedContentType)?.label || '',
       lastActivity: new Date(),
+      writingStyle: selectedWritingStyle,
+      vacationType: selectedVacationType,
+      routeType: selectedRouteType,
+      days: selectedDays,
       messages: [
         {
           id: '1',
@@ -227,7 +180,13 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
             selectedContentType,
             selectedContentType === 'route' ? `Route van ${routeFrom} naar ${routeTo}` : currentInput,
             selectedWritingStyle || 'professional',
-            additionalData
+            additionalData,
+            {
+              vacationType: selectedVacationType || 'algemene',
+              routeType: selectedRouteType,
+              days: selectedDays,
+              destination: currentInput
+            }
           );
         }
         
@@ -304,9 +263,12 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
           response = await aiTravelService.generateEnhancedContent(
             contentType,
             userInput,
-            'professional',
+            activeChat?.writingStyle || 'professional',
             {},
             {
+              vacationType: activeChat?.vacationType || 'algemene',
+              routeType: activeChat?.routeType,
+              days: activeChat?.days,
               destination: userInput
             }
           );
@@ -623,6 +585,27 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
                   >
                     <div className="text-lg mb-1">{style.icon}</div>
                     <div className="text-sm font-medium text-gray-900">{style.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Vacation Type */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Type Reis:</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {vacationTypes.map((type) => (
+                  <button
+                    key={type.id}
+                    onClick={() => setSelectedVacationType(type.id)}
+                    className={`p-3 border-2 rounded-xl transition-all ${
+                      selectedVacationType === type.id
+                        ? 'border-orange-500 bg-orange-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="text-lg mb-1">{type.icon}</div>
+                    <div className="text-sm font-medium text-gray-900">{type.label}</div>
                   </button>
                 ))}
               </div>
