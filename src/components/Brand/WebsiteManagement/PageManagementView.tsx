@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, CreditCard as Edit, Copy, Trash2, Eye, Plus, RefreshCw } from 'lucide-react';
+import { ExternalLink, CreditCard as Edit, Copy, Trash2, Eye, Plus, RefreshCw, Upload, FileX } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { generateBuilderJWT, generateBuilderDeeplink } from '../../../lib/jwtHelper';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -166,6 +166,50 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     }
   };
 
+  const publishPage = async (pageId: string, pageSlug: string) => {
+    if (!confirm('Weet je zeker dat je deze pagina wilt publiceren?')) return;
+
+    try {
+      const token = await generateBuilderJWT(brandId, user!.id);
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/publish`;
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          brand_id: brandId,
+          page_id: pageId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to publish page');
+      }
+
+      await loadPages(brandId, false);
+    } catch (error) {
+      console.error('Error publishing page:', error);
+    }
+  };
+
+  const unpublishPage = async (pageId: string) => {
+    if (!confirm('Weet je zeker dat je deze pagina wilt depubliceren?')) return;
+
+    try {
+      await supabase
+        .from('pages')
+        .update({ status: 'draft' })
+        .eq('id', pageId);
+
+      await loadPages(brandId, false);
+    } catch (error) {
+      console.error('Error unpublishing page:', error);
+    }
+  };
+
   const toggleShowInMenu = async (pageId: string, currentValue: boolean) => {
     try {
       const token = await generateBuilderJWT(brandId, user!.id);
@@ -323,13 +367,30 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
                       >
                         <Edit size={18} />
                       </button>
-                      {page.status === 'published' && (
+                      {page.status === 'published' ? (
+                        <>
+                          <button
+                            onClick={() => window.open(`/preview?brand_id=${brandId}&slug=${page.slug}`, '_blank')}
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            title="Preview"
+                          >
+                            <Eye size={18} />
+                          </button>
+                          <button
+                            onClick={() => unpublishPage(page.id)}
+                            className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                            title="Depubliceren"
+                          >
+                            <FileX size={18} />
+                          </button>
+                        </>
+                      ) : (
                         <button
-                          onClick={() => window.open(`/preview?brand_id=${brandId}&slug=${page.slug}`, '_blank')}
+                          onClick={() => publishPage(page.id, page.slug)}
                           className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                          title="Preview"
+                          title="Publiceren"
                         >
-                          <Eye size={18} />
+                          <Upload size={18} />
                         </button>
                       )}
                       <button
