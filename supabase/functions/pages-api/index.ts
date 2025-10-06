@@ -147,6 +147,72 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    if (req.method === "POST" && pathParts.includes("publish")) {
+      const body = await req.json();
+      const claims = await verifyBearerToken(req);
+      const { brand_id, page_id, slug } = body;
+
+      if (claims.brand_id !== brand_id) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 403, headers: corsHeaders() }
+        );
+      }
+
+      if (!brand_id || (!page_id && !slug)) {
+        return new Response(
+          JSON.stringify({ error: "brand_id and (page_id or slug) required" }),
+          { status: 400, headers: corsHeaders() }
+        );
+      }
+
+      let query = supabase.from("pages").select("id, slug, version");
+
+      if (page_id) {
+        query = query.eq("id", page_id);
+      } else {
+        query = query.eq("brand_id", brand_id).eq("slug", slug);
+      }
+
+      const { data: page } = await query.maybeSingle();
+
+      if (!page) {
+        return new Response(
+          JSON.stringify({ error: "Page not found" }),
+          { status: 404, headers: corsHeaders() }
+        );
+      }
+
+      const { data, error } = await supabase
+        .from("pages")
+        .update({
+          status: "published",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", page.id)
+        .select("id, slug, version, status")
+        .maybeSingle();
+
+      if (error) throw error;
+
+      const previewUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/pages-api/preview?brand_id=${brand_id}&slug=${data.slug}`;
+      const publicUrl = `https://yourdomain.com/${data.slug}`;
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          page_id: data.id,
+          slug: data.slug,
+          version: data.version,
+          status: data.status,
+          preview_url: previewUrl,
+          public_url: publicUrl,
+          message: "Page published successfully"
+        }),
+        { status: 200, headers: corsHeaders() }
+      );
+    }
+
     if (req.method === "GET" && pathParts.includes("list")) {
       const brandId = url.searchParams.get("brand_id");
       if (!brandId) {
