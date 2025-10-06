@@ -1,16 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verifyBearerToken } from "./_shared/jwt.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
-};
+import { withCORS } from "../_shared/cors.ts";
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 200, headers: corsHeaders });
+    return new Response(null, { status: 200, headers: withCORS(req) });
   }
 
   try {
@@ -28,7 +23,7 @@ Deno.serve(async (req: Request) => {
       if (!brandId) {
         return new Response(
           JSON.stringify({ error: "brand_id is required" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 400, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
         );
       }
 
@@ -42,7 +37,7 @@ Deno.serve(async (req: Request) => {
 
       return new Response(
         JSON.stringify({ items: data || [] }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
       );
     }
 
@@ -60,7 +55,7 @@ Deno.serve(async (req: Request) => {
 
       return new Response(
         JSON.stringify({ items: data || [] }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
       );
     }
 
@@ -73,14 +68,14 @@ Deno.serve(async (req: Request) => {
       if (claims.brand_id !== brand_id) {
         return new Response(
           JSON.stringify({ error: "Unauthorized: brand_id mismatch" }),
-          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 403, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
         );
       }
 
       if (!brand_id || !name) {
         return new Response(
           JSON.stringify({ error: "brand_id and name are required" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 400, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
         );
       }
 
@@ -140,19 +135,19 @@ Deno.serve(async (req: Request) => {
 
       return new Response(
         JSON.stringify({ menu_id: resultMenuId }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
       );
     }
 
     return new Response(
       JSON.stringify({ error: "Not found" }),
-      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 404, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
     );
   } catch (error) {
     console.error("Error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
     );
   }
 });
