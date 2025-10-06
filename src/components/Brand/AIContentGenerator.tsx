@@ -69,10 +69,10 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
   ];
 
   const writingStyles = [
-    { id: 'business', label: 'Zakelijk', icon: '💼' },
-    { id: 'speels', label: 'Speels', icon: '😊' },
-    { id: 'enthusiast', label: 'Enthusiast', icon: '🔥' },
-    { id: 'beknopt', label: 'Beknopt', icon: '📝' }
+    { id: 'zakelijk', label: 'Zakelijk', icon: '💼' },
+    { id: 'speels met kinderen', label: 'Speels met kinderen', icon: '😊' },
+    { id: 'enthousiast voor stelletjes', label: 'Enthousiast voor stelletjes', icon: '🔥' },
+    { id: 'beleefd in u-vorm', label: 'Beleefd in u-vorm', icon: '📝' }
   ];
 
   const routeTypes = [

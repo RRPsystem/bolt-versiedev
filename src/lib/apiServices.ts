@@ -189,12 +189,22 @@ export class OpenAIService {
 
     // Replace variables in system prompt
     let systemPrompt = options.systemPrompt || '';
+
+    console.log('🔧 Replacing variables in prompt:');
+    console.log('  WRITING_STYLE:', writingStyle);
+    console.log('  VACATION_TYPE:', options.vacationType || 'algemene');
+    console.log('  DESTINATION:', options.destination);
+    console.log('  DAYS:', options.days);
+    console.log('  ROUTE_TYPE:', options.routeType);
+
     systemPrompt = systemPrompt
       .replace(/{WRITING_STYLE}/g, writingStyle)
       .replace(/{VACATION_TYPE}/g, options.vacationType || 'algemene')
       .replace(/{ROUTE_TYPE}/g, options.routeType || '')
       .replace(/{DAYS}/g, options.days || '')
       .replace(/{DESTINATION}/g, options.destination || '');
+
+    console.log('📝 System prompt preview:', systemPrompt.substring(0, 300) + '...');
 
     // Add route type instruction
     const getRouteInstruction = (routeType: string) => {
@@ -525,7 +535,7 @@ export class AITravelService {
         // Use custom GPT model configuration
         const customOptions = {
           ...options,
-          temperature: customGPT.temperature,
+          temperature: typeof customGPT.temperature === 'string' ? parseFloat(customGPT.temperature) : customGPT.temperature,
           maxTokens: customGPT.max_tokens,
           model: customGPT.model,
           systemPrompt: customGPT.system_prompt
