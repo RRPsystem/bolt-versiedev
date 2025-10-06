@@ -305,9 +305,14 @@ Deno.serve(async (req: Request) => {
       { status: 404, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
     );
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Error in pages-api:", error);
+    console.error("Error stack:", error.stack);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({
+        error: error.message,
+        details: error.stack,
+        timestamp: new Date().toISOString()
+      }),
       { status: 500, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
     );
   }
