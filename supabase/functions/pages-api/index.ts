@@ -136,7 +136,13 @@ Deno.serve(async (req: Request) => {
       }
 
       return new Response(
-        JSON.stringify({ page_id: result.id, slug: result.slug, version: result.version }),
+        JSON.stringify({
+          success: true,
+          page_id: result.id,
+          slug: result.slug,
+          version: result.version,
+          message: "Page saved successfully"
+        }),
         { status: 200, headers: corsHeaders() }
       );
     }
@@ -173,6 +179,35 @@ Deno.serve(async (req: Request) => {
       }));
 
       return new Response(JSON.stringify({ pages }), { status: 200, headers: corsHeaders() });
+    }
+
+    if (req.method === "GET" && pathParts.includes("preview")) {
+      const brandId = url.searchParams.get("brand_id");
+      const slug = url.searchParams.get("slug");
+
+      if (!brandId || !slug) {
+        return new Response(
+          JSON.stringify({ error: "brand_id and slug are required" }),
+          { status: 400, headers: corsHeaders() }
+        );
+      }
+
+      const { data, error } = await supabase
+        .from("pages")
+        .select("*")
+        .eq("brand_id", brandId)
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        return new Response(
+          JSON.stringify({ error: "Page not found" }),
+          { status: 404, headers: corsHeaders() }
+        );
+      }
+
+      return new Response(JSON.stringify({ page: data }), { status: 200, headers: corsHeaders() });
     }
 
     if (req.method === "GET" && pathParts[pathParts.length - 1] === "pages-api") {
