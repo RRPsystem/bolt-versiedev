@@ -250,31 +250,25 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Pagina Beheer</h1>
-          <p className="text-gray-600 mt-2">Beheer alle pagina's van je website</p>
-        </div>
-        <div className="flex items-center space-x-3">
+      <div className="flex items-center justify-end mb-8 space-x-3">
+        <button
+          onClick={() => loadPages(brandId, false)}
+          className="inline-flex items-center space-x-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium transition-colors hover:bg-gray-200"
+          title="Ververs pagina's"
+        >
+          <RefreshCw size={20} />
+          <span>Ververs</span>
+        </button>
+        {!hideCreateButtons && (
           <button
-            onClick={() => loadPages(brandId, false)}
-            className="inline-flex items-center space-x-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium transition-colors hover:bg-gray-200"
-            title="Ververs pagina's"
+            onClick={createNewPage}
+            className="inline-flex items-center space-x-2 px-6 py-3 text-white rounded-lg font-medium transition-colors hover:bg-blue-700"
+            style={{ backgroundColor: '#0ea5e9' }}
           >
-            <RefreshCw size={20} />
-            <span>Ververs</span>
+            <Plus size={20} />
+            <span>Nieuwe Pagina</span>
           </button>
-          {!hideCreateButtons && (
-            <button
-              onClick={createNewPage}
-              className="inline-flex items-center space-x-2 px-6 py-3 text-white rounded-lg font-medium transition-colors hover:bg-blue-700"
-              style={{ backgroundColor: '#0ea5e9' }}
-            >
-              <Plus size={20} />
-              <span>Nieuwe Pagina</span>
-            </button>
-          )}
-        </div>
+        )}
       </div>
 
       {loading ? (
