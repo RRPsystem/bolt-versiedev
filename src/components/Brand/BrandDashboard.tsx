@@ -5,13 +5,14 @@ import { NewPage } from './WebsiteManagement/NewPage';
 import PageManagementView from './WebsiteManagement/PageManagementView';
 import MenuBuilderView from './WebsiteManagement/MenuBuilderView';
 import FooterBuilderView from './WebsiteManagement/FooterBuilderView';
-import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe } from 'lucide-react';
+import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe, Newspaper, MapPin, Plane } from 'lucide-react';
 
 export function BrandDashboard() {
   const { user, signOut } = useAuth();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [showAISubmenu, setShowAISubmenu] = useState(false);
   const [showWebsiteSubmenu, setShowWebsiteSubmenu] = useState(false);
+  const [showContentSubmenu, setShowContentSubmenu] = useState(false);
 
   React.useEffect(() => {
     if (['new-page', 'pages', 'menus', 'footers'].includes(activeSection)) {
@@ -19,6 +20,9 @@ export function BrandDashboard() {
     }
     if (['ai-content', 'ai-travelbro', 'ai-import'].includes(activeSection)) {
       setShowAISubmenu(true);
+    }
+    if (['news-items', 'destinations', 'trips'].includes(activeSection)) {
+      setShowContentSubmenu(true);
     }
   }, [activeSection]);
 
@@ -39,6 +43,12 @@ export function BrandDashboard() {
     { id: 'ai-content', label: 'AI Content Generator', icon: Sparkles },
     { id: 'ai-travelbro', label: 'AI TravelBRO', icon: Bot },
     { id: 'ai-import', label: 'AI TravelImport', icon: FileImport },
+  ];
+
+  const contentItems = [
+    { id: 'news-items', label: 'Nieuwsberichten', icon: Newspaper },
+    { id: 'destinations', label: 'Bestemmingen', icon: MapPin },
+    { id: 'trips', label: 'Reizen', icon: Plane },
   ];
 
   const handleTravelStudioClick = () => {
@@ -101,6 +111,47 @@ export function BrandDashboard() {
               {showWebsiteSubmenu && (
                 <ul className="mt-2 ml-6 space-y-1">
                   {websiteManagementItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <li key={item.id}>
+                        <button
+                          onClick={() => setActiveSection(item.id)}
+                          className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors text-sm ${
+                            activeSection === item.id
+                              ? 'bg-gray-700 text-white'
+                              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                          }`}
+                        >
+                          <Icon size={16} />
+                          <span>{item.label}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </li>
+
+            {/* Content Menu */}
+            <li>
+              <button
+                onClick={() => setShowContentSubmenu(!showContentSubmenu)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
+                  ['news-items', 'destinations', 'trips'].includes(activeSection)
+                    ? 'bg-gray-700 text-white'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <FileText size={20} />
+                  <span>Content</span>
+                </div>
+                {showContentSubmenu ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </button>
+
+              {showContentSubmenu && (
+                <ul className="mt-2 ml-6 space-y-1">
+                  {contentItems.map((item) => {
                     const Icon = item.icon;
                     return (
                       <li key={item.id}>

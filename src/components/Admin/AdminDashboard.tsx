@@ -7,13 +7,14 @@ import { PageManagementView } from '../Brand/WebsiteManagement/PageManagementVie
 import { MenuBuilderView } from '../Brand/WebsiteManagement/MenuBuilderView';
 import { FooterBuilderView } from '../Brand/WebsiteManagement/FooterBuilderView';
 import { NewPage } from '../Brand/WebsiteManagement/NewPage';
-import { Users, Building2, FileText, Settings, Plus, Search, Filter, CreditCard as Edit, Trash2, LayoutGrid as Layout, Menu, Globe } from 'lucide-react'
+import { Users, Building2, FileText, Settings, Plus, Search, Filter, CreditCard as Edit, Trash2, LayoutGrid as Layout, Menu, Globe, Newspaper, MapPin, Plane } from 'lucide-react'
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 export function AdminDashboard() {
   const { user, signOut } = useAuth();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [showWebsiteSubmenu, setShowWebsiteSubmenu] = useState(false);
+  const [showContentSubmenu, setShowContentSubmenu] = useState(false);
   const [showBrandForm, setShowBrandForm] = useState(false);
   const [editingBrand, setEditingBrand] = useState<any>(null);
   const [brands, setBrands] = useState<any[]>([]);
@@ -23,6 +24,9 @@ export function AdminDashboard() {
   React.useEffect(() => {
     if (['new-page', 'page-management', 'menu-builder', 'footer-builder'].includes(activeSection)) {
       setShowWebsiteSubmenu(true);
+    }
+    if (['news-items', 'destinations', 'trips'].includes(activeSection)) {
+      setShowContentSubmenu(true);
     }
   }, [activeSection]);
 
@@ -84,6 +88,12 @@ export function AdminDashboard() {
     { id: 'page-management', label: 'Pagina Beheer', icon: FileText },
     { id: 'menu-builder', label: 'Menu Builder', icon: Menu },
     { id: 'footer-builder', label: 'Footer Builder', icon: Layout },
+  ];
+
+  const contentItems = [
+    { id: 'news-items', label: 'Nieuwsberichten', icon: Newspaper },
+    { id: 'destinations', label: 'Bestemmingen', icon: MapPin },
+    { id: 'trips', label: 'Reizen', icon: Plane },
   ];
 
   const handleTravelStudioClick = () => {
@@ -260,6 +270,47 @@ export function AdminDashboard() {
               {showWebsiteSubmenu && (
                 <ul className="mt-2 ml-6 space-y-1">
                   {websiteItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <li key={item.id}>
+                        <button
+                          onClick={() => setActiveSection(item.id)}
+                          className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors text-sm ${
+                            activeSection === item.id
+                              ? 'bg-slate-700 text-white'
+                              : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                          }`}
+                        >
+                          <Icon size={16} />
+                          <span>{item.label}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </li>
+
+            {/* Content Menu */}
+            <li>
+              <button
+                onClick={() => setShowContentSubmenu(!showContentSubmenu)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
+                  ['news-items', 'destinations', 'trips'].includes(activeSection)
+                    ? 'bg-slate-700 text-white'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <FileText size={20} />
+                  <span>Content</span>
+                </div>
+                {showContentSubmenu ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </button>
+
+              {showContentSubmenu && (
+                <ul className="mt-2 ml-6 space-y-1">
+                  {contentItems.map((item) => {
                     const Icon = item.icon;
                     return (
                       <li key={item.id}>
