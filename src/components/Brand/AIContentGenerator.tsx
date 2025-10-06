@@ -412,7 +412,10 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
                           </div>
                         </div>
                       )}
-                      <div className={message.type === 'user' ? 'text-white' : 'text-gray-900'}>
+                      <div
+                        className={`whitespace-pre-wrap ${message.type === 'user' ? 'text-white' : 'text-gray-900'}`}
+                        style={{ lineHeight: '1.6' }}
+                      >
                         {message.content}
                       </div>
                     </div>

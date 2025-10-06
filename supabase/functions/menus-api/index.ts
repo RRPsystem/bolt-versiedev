@@ -1,7 +1,78 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { verifyBearerToken } from "./_shared/jwt.ts";
-import { withCORS } from "../_shared/cors.ts";
+import { createRemoteJWKSet, jwtVerify } from "npm:jose@5";
+
+// JWT Helper (inline)
+interface JWTPayload {
+  brand_id: string;
+  user_id?: string;
+  sub?: string;
+  scopes?: string[];
+  iat?: number;
+  exp?: number;
+}
+
+async function verifyBearerToken(req: Request): Promise<JWTPayload> {
+  const authHeader = req.headers.get("Authorization");
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new Error("Missing or invalid Authorization header");
+  }
+
+  const token = authHeader.substring(7);
+  const jwtSecret = Deno.env.get("JWT_SECRET");
+
+  if (!jwtSecret) {
+    throw new Error("JWT_SECRET not configured");
+  }
+
+  try {
+    const encoder = new TextEncoder();
+    const secretKey = encoder.encode(jwtSecret);
+
+    const { payload } = await jwtVerify(token, secretKey, {
+      algorithms: ["HS256"],
+    });
+
+    if (!payload.brand_id) {
+      throw new Error("Invalid token: missing brand_id");
+    }
+
+    return payload as JWTPayload;
+  } catch (error) {
+    throw new Error(`Token verification failed: ${error.message}`);
+  }
+}
+
+// CORS Helper (inline)
+function withCORS(req: Request, resInit: ResponseInit = {}): Headers {
+  const origin = req.headers.get('origin') ?? '*';
+  const allowedOrigins = [
+    'https://www.ai-websitestudio.nl',
+    'https://ai-websitestudio.nl',
+    'https://www.ai-travelstudio.nl',
+    'https://ai-travelstudio.nl',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:8000'
+  ];
+
+  const isAllowed = allowedOrigins.includes(origin) ||
+                   origin.includes('ai-websitestudio.nl') ||
+                   origin.includes('ai-travelstudio.nl') ||
+                   origin.includes('localhost') ||
+                   origin.includes('127.0.0.1');
+
+  const allowOrigin = isAllowed ? origin : '*';
+
+  const headers = new Headers(resInit.headers || {});
+  headers.set('Access-Control-Allow-Origin', allowOrigin);
+  headers.set('Vary', 'Origin');
+  headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  headers.set('Access-Control-Allow-Headers', 'authorization,apikey,content-type,x-client-info');
+
+  return headers;
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {

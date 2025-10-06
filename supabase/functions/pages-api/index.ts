@@ -1,7 +1,78 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { verifyBearerToken } from "./_shared/jwt.ts";
-import { withCORS } from "../_shared/cors.ts";
+import { createRemoteJWKSet, jwtVerify } from "npm:jose@5";
+
+// JWT Helper (inline)
+interface JWTPayload {
+  brand_id: string;
+  user_id?: string;
+  sub?: string;
+  scopes?: string[];
+  iat?: number;
+  exp?: number;
+}
+
+async function verifyBearerToken(req: Request): Promise<JWTPayload> {
+  const authHeader = req.headers.get("Authorization");
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new Error("Missing or invalid Authorization header");
+  }
+
+  const token = authHeader.substring(7);
+  const jwtSecret = Deno.env.get("JWT_SECRET");
+
+  if (!jwtSecret) {
+    throw new Error("JWT_SECRET not configured");
+  }
+
+  try {
+    const encoder = new TextEncoder();
+    const secretKey = encoder.encode(jwtSecret);
+
+    const { payload } = await jwtVerify(token, secretKey, {
+      algorithms: ["HS256"],
+    });
+
+    if (!payload.brand_id) {
+      throw new Error("Invalid token: missing brand_id");
+    }
+
+    return payload as JWTPayload;
+  } catch (error) {
+    throw new Error(`Token verification failed: ${error.message}`);
+  }
+}
+
+// CORS Helper (inline)
+function withCORS(req: Request, resInit: ResponseInit = {}): Headers {
+  const origin = req.headers.get('origin') ?? '*';
+  const allowedOrigins = [
+    'https://www.ai-websitestudio.nl',
+    'https://ai-websitestudio.nl',
+    'https://www.ai-travelstudio.nl',
+    'https://ai-travelstudio.nl',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:8000'
+  ];
+
+  const isAllowed = allowedOrigins.includes(origin) ||
+                   origin.includes('ai-websitestudio.nl') ||
+                   origin.includes('ai-travelstudio.nl') ||
+                   origin.includes('localhost') ||
+                   origin.includes('127.0.0.1');
+
+  const allowOrigin = isAllowed ? origin : '*';
+
+  const headers = new Headers(resInit.headers || {});
+  headers.set('Access-Control-Allow-Origin', allowOrigin);
+  headers.set('Vary', 'Origin');
+  headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  headers.set('Access-Control-Allow-Headers', 'authorization,apikey,content-type,x-client-info');
+
+  return headers;
+}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -17,7 +88,6 @@ Deno.serve(async (req: Request) => {
     const pathParts = url.pathname.split("/").filter(Boolean);
     console.log('Request:', req.method, url.pathname, 'pathParts:', pathParts);
 
-    // GET /pages-api/list?brand_id={BRAND}&menu_key={KEY} - For menu builder
     if (req.method === "GET" && pathParts.includes("list")) {
       const brandId = url.searchParams.get("brand_id");
       const menuKey = url.searchParams.get("menu_key");
@@ -58,7 +128,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // GET /pages-api?brand_id={BRAND}
     if (req.method === "GET" && pathParts[pathParts.length - 1] === "pages-api") {
       const brandId = url.searchParams.get("brand_id");
       if (!brandId) {
@@ -82,7 +151,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // POST /pages-api/updateMenuSettings - Update menu-related fields
     if (req.method === "POST" && pathParts.includes("updateMenuSettings")) {
       const claims = await verifyBearerToken(req);
       const body = await req.json();
@@ -128,7 +196,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // POST /pages-api/saveDraft
     if (req.method === "POST" && pathParts.includes("saveDraft")) {
       const claims = await verifyBearerToken(req);
       const body = await req.json();
@@ -211,7 +278,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // POST /pages-api/{page_id}/publish
     if (req.method === "POST" && pathParts.includes("publish")) {
       const claims = await verifyBearerToken(req);
       const pageId = pathParts[pathParts.length - 2];
@@ -260,7 +326,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // DELETE /pages-api/{page_id}
     if (req.method === "DELETE") {
       const claims = await verifyBearerToken(req);
       const pageId = pathParts[pathParts.length - 1];
