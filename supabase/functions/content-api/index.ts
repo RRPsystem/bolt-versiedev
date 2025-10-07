@@ -97,9 +97,14 @@ Deno.serve(async (req: Request) => {
           updated_at: new Date().toISOString(),
         };
 
-        if (isAdminNews && contentType === 'news_items') {
-          updateData.author_type = 'admin';
-          updateData.author_id = author_id || claims.user_id || claims.sub;
+        if (contentType === 'news_items') {
+          if (isAdminNews) {
+            updateData.author_type = 'admin';
+            updateData.author_id = author_id || claims.user_id || claims.sub;
+          } else {
+            updateData.author_type = 'brand';
+            updateData.author_id = claims.user_id || claims.sub;
+          }
         }
 
         const { data, error } = await supabase
@@ -127,9 +132,14 @@ Deno.serve(async (req: Request) => {
             updated_at: new Date().toISOString(),
           };
 
-          if (isAdminNews && contentType === 'news_items') {
-            updateData.author_type = 'admin';
-            updateData.author_id = author_id || claims.user_id || claims.sub;
+          if (contentType === 'news_items') {
+            if (isAdminNews) {
+              updateData.author_type = 'admin';
+              updateData.author_id = author_id || claims.user_id || claims.sub;
+            } else {
+              updateData.author_type = 'brand';
+              updateData.author_id = claims.user_id || claims.sub;
+            }
           }
 
           const { data, error } = await supabase
@@ -151,9 +161,14 @@ Deno.serve(async (req: Request) => {
             ...otherFields,
           };
 
-          if (isAdminNews && contentType === 'news_items') {
-            insertData.author_type = 'admin';
-            insertData.author_id = author_id || claims.user_id || claims.sub;
+          if (contentType === 'news_items') {
+            if (isAdminNews) {
+              insertData.author_type = 'admin';
+              insertData.author_id = author_id || claims.user_id || claims.sub;
+            } else {
+              insertData.author_type = 'brand';
+              insertData.author_id = claims.user_id || claims.sub;
+            }
           }
 
           const { data, error } = await supabase
