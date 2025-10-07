@@ -43,7 +43,7 @@ export function LoginForm() {
           <h3 className="font-semibold text-blue-900 mb-2">Demo Login Credentials</h3>
           <div className="space-y-2 text-sm">
             <div>
-              <strong>Admin:</strong> admin@travel.com / admin123
+              <strong>Admin:</strong> admin@example.com / admin123
             </div>
             <div>
               <strong>Brand:</strong> brand@travel.com / brand123
