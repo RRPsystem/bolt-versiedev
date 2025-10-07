@@ -193,6 +193,87 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    if (req.method === "PUT") {
+      const body = await req.json();
+      const claims = await verifyBearerToken(req, "content:write");
+      const brandId = url.searchParams.get("brand_id");
+      const slugParam = url.searchParams.get("slug");
+      const itemId = pathParts[pathParts.length - 1];
+
+      const { content: bodyContent, ...otherFields } = body;
+
+      if (!brandId || claims.brand_id !== brandId) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 403, headers: corsHeaders() }
+        );
+      }
+
+      let targetId: string | null = null;
+
+      if (slugParam) {
+        const { data: bySlug } = await supabase
+          .from(contentType)
+          .select("id")
+          .eq("brand_id", brandId)
+          .eq("slug", slugParam)
+          .maybeSingle();
+        targetId = bySlug?.id || null;
+      } else if (itemId && itemId !== "content-api") {
+        const { data: bySlug } = await supabase
+          .from(contentType)
+          .select("id")
+          .eq("brand_id", brandId)
+          .eq("slug", itemId)
+          .maybeSingle();
+
+        if (bySlug) {
+          targetId = bySlug.id;
+        } else {
+          targetId = itemId;
+        }
+      }
+
+      if (!targetId) {
+        return new Response(
+          JSON.stringify({ error: "Content not found" }),
+          { status: 404, headers: corsHeaders() }
+        );
+      }
+
+      const updateData: any = {
+        content: bodyContent,
+        ...otherFields,
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase
+        .from(contentType)
+        .update(updateData)
+        .eq("id", targetId)
+        .eq("brand_id", brandId)
+        .select("id, slug")
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) {
+        return new Response(
+          JSON.stringify({ error: "Content not found or unauthorized" }),
+          { status: 404, headers: corsHeaders() }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          id: data.id,
+          slug: data.slug,
+          message: "Content updated successfully"
+        }),
+        { status: 200, headers: corsHeaders() }
+      );
+    }
+
     if (req.method === "POST" && pathParts.includes("publish")) {
       const body = await req.json();
       const claims = await verifyBearerToken(req, "content:write");
@@ -375,22 +456,39 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "GET") {
       const brandId = url.searchParams.get("brand_id");
-      const slug = url.searchParams.get("slug");
+      const slugParam = url.searchParams.get("slug");
       const itemId = pathParts[pathParts.length - 1];
 
-      if (!brandId || (!slug && itemId === "content-api")) {
+      if (!brandId) {
         return new Response(
-          JSON.stringify({ error: "brand_id and (slug or id) are required" }),
+          JSON.stringify({ error: "brand_id is required" }),
           { status: 400, headers: corsHeaders() }
         );
       }
 
-      let query = supabase.from(contentType).select("*");
-      
-      if (itemId && itemId !== "content-api") {
+      let query = supabase.from(contentType).select("*").eq("brand_id", brandId);
+
+      if (slugParam) {
+        query = query.eq("slug", slugParam);
+      }
+      else if (itemId && itemId !== "content-api") {
+        const { data: bySlug } = await supabase
+          .from(contentType)
+          .select("*")
+          .eq("brand_id", brandId)
+          .eq("slug", itemId)
+          .maybeSingle();
+
+        if (bySlug) {
+          return new Response(JSON.stringify({ item: bySlug }), { status: 200, headers: corsHeaders() });
+        }
+
         query = query.eq("id", itemId);
       } else {
-        query = query.eq("brand_id", brandId).eq("slug", slug);
+        return new Response(
+          JSON.stringify({ error: "slug or id is required" }),
+          { status: 400, headers: corsHeaders() }
+        );
       }
 
       const { data, error } = await query.maybeSingle();
