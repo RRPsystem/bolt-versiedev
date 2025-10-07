@@ -167,7 +167,7 @@ export function NewsApproval() {
       const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${token}&news_slug=${assignment.news_item.slug}&author_type=brand&author_id=${user.id}#/mode/news`;
+      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${token}&news_slug=${assignment.news_item.slug}&content_type=news_items&author_type=brand&author_id=${user.id}#/mode/news`;
 
       console.log('Generated deeplink:', deeplink);
       window.open(deeplink, '_blank');
@@ -214,7 +214,7 @@ export function NewsApproval() {
       const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${token}&author_type=brand&author_id=${user.id}#/mode/news`;
+      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${token}&content_type=news_items&author_type=brand&author_id=${user.id}#/mode/news`;
 
       window.open(deeplink, '_blank');
     } catch (error) {
