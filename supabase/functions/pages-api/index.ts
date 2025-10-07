@@ -82,66 +82,44 @@ Deno.serve(async (req: Request) => {
             title,
             slug,
             content_json,
+            status: "draft",
             version: (currentPage?.version || 0) + 1,
             updated_at: new Date().toISOString(),
           })
           .eq("id", page_id)
-          .select("id, slug, version")
+          .select("id, slug")
           .maybeSingle();
 
         if (error) throw error;
         result = data;
       } else {
-        const { data: existingPage } = await supabase
+        const { data, error } = await supabase
           .from("pages")
-          .select("id, version")
-          .eq("brand_id", brand_id)
-          .eq("slug", slug)
+          .insert({
+            brand_id,
+            title,
+            slug,
+            content_json,
+            status: "draft",
+            version: 1,
+            content_type: "page",
+            show_in_menu: false,
+            menu_order: 0,
+            parent_slug: null
+          })
+          .select("id, slug")
           .maybeSingle();
 
-        if (existingPage) {
-          const { data, error } = await supabase
-            .from("pages")
-            .update({
-              title,
-              content_json,
-              version: existingPage.version + 1,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", existingPage.id)
-            .select("id, slug, version")
-            .maybeSingle();
-
-          if (error) throw error;
-          result = data;
-        } else {
-          const { data, error } = await supabase
-            .from("pages")
-            .insert({
-              brand_id,
-              title,
-              slug,
-              status: "draft",
-              content_json,
-              version: 1,
-              owner_user_id: claims.user_id || claims.sub || brand_id,
-              created_by: claims.user_id || claims.sub,
-            })
-            .select("id, slug, version")
-            .maybeSingle();
-
-          if (error) throw error;
-          result = data;
-        }
+        if (error) throw error;
+        result = data;
       }
 
       return new Response(
         JSON.stringify({
           success: true,
-          page_id: result.id,
+          id: result.id,
           slug: result.slug,
-          version: result.version,
-          message: "Page saved successfully"
+          message: "Draft saved successfully"
         }),
         { status: 200, headers: corsHeaders() }
       );
@@ -150,7 +128,7 @@ Deno.serve(async (req: Request) => {
     if (req.method === "POST" && pathParts.includes("publish")) {
       const body = await req.json();
       const claims = await verifyBearerToken(req);
-      const { brand_id, page_id, slug } = body;
+      const { brand_id, page_id, title, slug, content_json } = body;
 
       if (claims.brand_id !== brand_id) {
         return new Response(
@@ -159,55 +137,104 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      if (!brand_id || (!page_id && !slug)) {
+      if (!brand_id || !page_id || !title || !slug) {
         return new Response(
-          JSON.stringify({ error: "brand_id and (page_id or slug) required" }),
+          JSON.stringify({ error: "brand_id, page_id, title, and slug required" }),
           { status: 400, headers: corsHeaders() }
         );
       }
 
-      let query = supabase.from("pages").select("id, slug, version");
+      const { data: currentPage } = await supabase
+        .from("pages")
+        .select("version")
+        .eq("id", page_id)
+        .maybeSingle();
 
-      if (page_id) {
-        query = query.eq("id", page_id);
-      } else {
-        query = query.eq("brand_id", brand_id).eq("slug", slug);
+      const { data, error } = await supabase
+        .from("pages")
+        .update({
+          title,
+          slug,
+          content_json,
+          status: "published",
+          published_at: new Date().toISOString(),
+          version: (currentPage?.version || 0) + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", page_id)
+        .select("id, slug")
+        .maybeSingle();
+
+      if (error) throw error;
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          id: data.id,
+          slug: data.slug,
+          message: "Page published successfully"
+        }),
+        { status: 200, headers: corsHeaders() }
+      );
+    }
+
+    if (req.method === "POST" && pathParts.includes("duplicate")) {
+      const body = await req.json();
+      const claims = await verifyBearerToken(req);
+      const { page_id, new_slug } = body;
+
+      if (!page_id || !new_slug) {
+        return new Response(
+          JSON.stringify({ error: "page_id and new_slug are required" }),
+          { status: 400, headers: corsHeaders() }
+        );
       }
 
-      const { data: page } = await query.maybeSingle();
+      const { data: originalPage } = await supabase
+        .from("pages")
+        .select("*")
+        .eq("id", page_id)
+        .maybeSingle();
 
-      if (!page) {
+      if (!originalPage) {
         return new Response(
           JSON.stringify({ error: "Page not found" }),
           { status: 404, headers: corsHeaders() }
         );
       }
 
+      if (claims.brand_id !== originalPage.brand_id) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 403, headers: corsHeaders() }
+        );
+      }
+
       const { data, error } = await supabase
         .from("pages")
-        .update({
-          status: "published",
-          updated_at: new Date().toISOString(),
+        .insert({
+          brand_id: originalPage.brand_id,
+          title: `${originalPage.title} (copy)`,
+          slug: new_slug,
+          content_json: originalPage.content_json,
+          status: "draft",
+          version: 1,
+          content_type: originalPage.content_type || "page",
+          show_in_menu: false,
+          menu_order: originalPage.menu_order,
+          parent_slug: originalPage.parent_slug
         })
-        .eq("id", page.id)
-        .select("id, slug, version, status")
+        .select("id, slug")
         .maybeSingle();
 
       if (error) throw error;
 
-      const previewUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/pages-api/preview?brand_id=${brand_id}&slug=${data.slug}`;
-      const publicUrl = `https://yourdomain.com/${data.slug}`;
-
       return new Response(
         JSON.stringify({
           success: true,
-          page_id: data.id,
+          id: data.id,
           slug: data.slug,
-          version: data.version,
-          status: data.status,
-          preview_url: previewUrl,
-          public_url: publicUrl,
-          message: "Page published successfully"
+          message: "Page duplicated successfully"
         }),
         { status: 200, headers: corsHeaders() }
       );
@@ -317,10 +344,6 @@ Deno.serve(async (req: Request) => {
         .eq("brand_id", brandId)
         .eq("status", "published");
 
-      if (url.searchParams.get("menu_key")) {
-        query = query.eq("show_in_menu", true);
-      }
-
       const { data, error } = await query.order("menu_order", { ascending: true });
       if (error) throw error;
 
@@ -365,24 +388,55 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ page: data }), { status: 200, headers: corsHeaders() });
     }
 
-    if (req.method === "GET" && pathParts[pathParts.length - 1] === "pages-api") {
+    if (req.method === "GET") {
       const brandId = url.searchParams.get("brand_id");
-      if (!brandId) {
-        return new Response(
-          JSON.stringify({ error: "brand_id is required" }),
-          { status: 400, headers: corsHeaders() }
-        );
+      const pageId = url.searchParams.get("page_id");
+
+      if (pageId) {
+        const claims = await verifyBearerToken(req);
+
+        const { data, error } = await supabase
+          .from("pages")
+          .select("*")
+          .eq("id", pageId)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!data) {
+          return new Response(
+            JSON.stringify({ error: "Page not found" }),
+            { status: 404, headers: corsHeaders() }
+          );
+        }
+
+        if (claims.brand_id !== data.brand_id) {
+          return new Response(
+            JSON.stringify({ error: "Unauthorized" }),
+            { status: 403, headers: corsHeaders() }
+          );
+        }
+
+        return new Response(JSON.stringify({ page: data }), { status: 200, headers: corsHeaders() });
       }
 
-      const { data, error } = await supabase
-        .from("pages")
-        .select("*")
-        .eq("brand_id", brandId)
-        .or("content_type.eq.page,content_type.is.null")
-        .order("updated_at", { ascending: false });
+      if (pathParts[pathParts.length - 1] === "pages-api") {
+        if (!brandId) {
+          return new Response(
+            JSON.stringify({ error: "brand_id is required" }),
+            { status: 400, headers: corsHeaders() }
+          );
+        }
 
-      if (error) throw error;
-      return new Response(JSON.stringify({ items: data || [] }), { status: 200, headers: corsHeaders() });
+        const { data, error } = await supabase
+          .from("pages")
+          .select("*")
+          .eq("brand_id", brandId)
+          .or("content_type.eq.page,content_type.is.null")
+          .order("updated_at", { ascending: false });
+
+        if (error) throw error;
+        return new Response(JSON.stringify({ items: data || [] }), { status: 200, headers: corsHeaders() });
+      }
     }
 
     return new Response(

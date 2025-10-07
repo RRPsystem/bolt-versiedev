@@ -87,9 +87,46 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     const pathParts = url.pathname.split("/").filter(Boolean);
 
-    // GET /api/menus?brand_id={BRAND}
+    // GET /api/menus?brand_id={BRAND}&menu_id={ID}
     if (req.method === "GET" && pathParts[pathParts.length - 1] === "menus-api") {
       const brandId = url.searchParams.get("brand_id");
+      const menuId = url.searchParams.get("menu_id");
+
+      if (menuId) {
+        const claims = await verifyBearerToken(req);
+
+        const { data, error } = await supabase
+          .from("menus")
+          .select("*")
+          .eq("id", menuId)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!data) {
+          return new Response(
+            JSON.stringify({ error: "Menu not found" }),
+            { status: 404, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
+          );
+        }
+
+        if (claims.brand_id !== data.brand_id) {
+          return new Response(
+            JSON.stringify({ error: "Unauthorized" }),
+            { status: 403, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
+          );
+        }
+
+        const { data: items } = await supabase
+          .from("menu_items")
+          .select("*")
+          .eq("menu_id", menuId)
+          .order("order", { ascending: true });
+
+        return new Response(
+          JSON.stringify({ menu: { ...data, items: items || [] } }),
+          { status: 200, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
+        );
+      }
 
       if (!brandId) {
         return new Response(
