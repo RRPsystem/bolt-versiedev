@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, AlertCircle, Eye } from 'lucide-react';
+import { Newspaper, Eye } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 
 interface NewsAssignment {
   id: string;
   news_id: string;
-  status: 'pending' | 'accepted' | 'rejected' | 'mandatory';
+  status: 'pending' | 'approved' | 'rejected' | 'mandatory';
+  is_published: boolean;
   assigned_at: string;
   news_item: {
     id: string;
@@ -23,7 +24,6 @@ export function NewsApproval() {
   const { user } = useAuth();
   const [assignments, setAssignments] = useState<NewsAssignment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected' | 'mandatory'>('all');
 
   useEffect(() => {
     loadAssignments();
@@ -39,6 +39,7 @@ export function NewsApproval() {
           id,
           news_id,
           status,
+          is_published,
           assigned_at,
           news_items!inner (
             id,
@@ -59,6 +60,7 @@ export function NewsApproval() {
         id: item.id,
         news_id: item.news_id,
         status: item.status,
+        is_published: item.is_published || false,
         assigned_at: item.assigned_at,
         news_item: Array.isArray(item.news_items) ? item.news_items[0] : item.news_items
       }));
@@ -71,35 +73,44 @@ export function NewsApproval() {
     }
   };
 
-  const handleResponse = async (assignmentId: string, newStatus: 'accepted' | 'rejected') => {
+  const handleTogglePublish = async (assignmentId: string, currentValue: boolean) => {
     try {
+      const { error } = await supabase
+        .from('news_brand_assignments')
+        .update({ is_published: !currentValue })
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+      loadAssignments();
+    } catch (error) {
+      console.error('Error toggling publish:', error);
+      alert('Failed to update');
+    }
+  };
+
+  const handleToggleApprove = async (assignmentId: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'approved' ? 'pending' : 'approved';
+
       const { error } = await supabase
         .from('news_brand_assignments')
         .update({
           status: newStatus,
-          responded_at: new Date().toISOString()
+          acknowledged_at: new Date().toISOString()
         })
         .eq('id', assignmentId);
 
       if (error) throw error;
       loadAssignments();
     } catch (error) {
-      console.error('Error updating assignment:', error);
-      alert('Failed to update assignment');
+      console.error('Error toggling approval:', error);
+      alert('Failed to update');
     }
   };
 
-  const openInBuilder = (newsId: string) => {
-    const builderUrl = import.meta.env.VITE_BUILDER_URL || 'https://windsurfer.builder';
-    const jwtToken = localStorage.getItem('builder_jwt');
-    window.open(`${builderUrl}?jwt=${jwtToken}&content_type=news&content_id=${newsId}&mode=preview`, '_blank');
+  const openPreview = (slug: string) => {
+    window.open(`/preview/news/${slug}`, '_blank');
   };
-
-  const filteredAssignments = assignments.filter(a =>
-    filter === 'all' || a.status === filter
-  );
-
-  const pendingCount = assignments.filter(a => a.status === 'pending').length;
 
   if (loading) {
     return <div className="p-8">Loading...</div>;
@@ -107,157 +118,98 @@ export function NewsApproval() {
 
   return (
     <div className="p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">News Approval</h1>
-        <p className="text-gray-600">
-          Review and approve news items shared by admin
-        </p>
-      </div>
-
-      {pendingCount > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-yellow-600" />
-          <span className="text-yellow-900">
-            You have {pendingCount} pending news item{pendingCount !== 1 ? 's' : ''} waiting for your response
-          </span>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Newspaper className="w-8 h-8 text-orange-600" />
+          <h1 className="text-2xl font-bold">Nieuwsbeheer</h1>
         </div>
-      )}
-
-      <div className="flex gap-2 mb-6">
-        <button
-          onClick={() => setFilter('all')}
-          className={`px-4 py-2 rounded-lg ${
-            filter === 'all' ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          All ({assignments.length})
-        </button>
-        <button
-          onClick={() => setFilter('pending')}
-          className={`px-4 py-2 rounded-lg ${
-            filter === 'pending' ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Pending ({assignments.filter(a => a.status === 'pending').length})
-        </button>
-        <button
-          onClick={() => setFilter('accepted')}
-          className={`px-4 py-2 rounded-lg ${
-            filter === 'accepted' ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Accepted ({assignments.filter(a => a.status === 'accepted').length})
-        </button>
-        <button
-          onClick={() => setFilter('mandatory')}
-          className={`px-4 py-2 rounded-lg ${
-            filter === 'mandatory' ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Mandatory ({assignments.filter(a => a.status === 'mandatory').length})
-        </button>
-        <button
-          onClick={() => setFilter('rejected')}
-          className={`px-4 py-2 rounded-lg ${
-            filter === 'rejected' ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          Rejected ({assignments.filter(a => a.status === 'rejected').length})
-        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredAssignments.map((assignment) => (
-          <div
-            key={assignment.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden"
-          >
-            {assignment.news_item.featured_image && (
-              <img
-                src={assignment.news_item.featured_image}
-                alt={assignment.news_item.title}
-                className="w-full h-48 object-cover"
-              />
-            )}
-            <div className="p-4">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold text-lg">{assignment.news_item.title}</h3>
-                {assignment.news_item.is_mandatory && (
-                  <span className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">
-                    Mandatory
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Titel</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Type</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Goedgekeurd</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Publiceren</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acties</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {assignments.map((assignment) => (
+              <tr key={assignment.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4">
+                  <div className="font-medium text-gray-900">{assignment.news_item.title}</div>
+                  <div className="text-sm text-gray-500">{assignment.news_item.slug}</div>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-500">
+                  {new Date(assignment.assigned_at).toLocaleDateString('nl-NL')}
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    assignment.status === 'mandatory' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {assignment.status === 'mandatory' ? 'Verplicht' : 'Optioneel'}
                   </span>
-                )}
-              </div>
-
-              <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                {assignment.news_item.excerpt}
-              </p>
-
-              <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                <span>Assigned: {new Date(assignment.assigned_at).toLocaleDateString()}</span>
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  assignment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                  assignment.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                  assignment.status === 'mandatory' ? 'bg-red-100 text-red-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {assignment.status}
-                </span>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => openInBuilder(assignment.news_item.id)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  <Eye className="w-4 h-4" />
-                  Preview
-                </button>
-
-                {assignment.status === 'pending' && (
-                  <>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  {assignment.status === 'mandatory' ? (
+                    <span className="text-gray-500 text-sm">N.v.t.</span>
+                  ) : (
                     <button
-                      onClick={() => handleResponse(assignment.id, 'accepted')}
-                      className="flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                      title="Accept"
+                      onClick={() => handleToggleApprove(assignment.id, assignment.status)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        assignment.status === 'approved' ? 'bg-green-500' : 'bg-gray-300'
+                      }`}
                     >
-                      <CheckCircle className="w-4 h-4" />
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          assignment.status === 'approved' ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
                     </button>
-                    <button
-                      onClick={() => handleResponse(assignment.id, 'rejected')}
-                      className="flex items-center justify-center gap-2 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                      title="Reject"
-                    >
-                      <XCircle className="w-4 h-4" />
-                    </button>
-                  </>
-                )}
-
-                {assignment.status === 'mandatory' && (
-                  <div className="flex-1 text-center py-2 text-sm text-gray-500">
-                    Required on website
-                  </div>
-                )}
-
-                {(assignment.status === 'accepted' || assignment.status === 'rejected') && (
+                  )}
+                </td>
+                <td className="px-6 py-4 text-center">
                   <button
-                    onClick={() => handleResponse(assignment.id, assignment.status === 'accepted' ? 'rejected' : 'accepted')}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                    onClick={() => handleTogglePublish(assignment.id, assignment.is_published)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      assignment.is_published ? 'bg-green-500' : 'bg-gray-300'
+                    }`}
+                    disabled={assignment.status !== 'mandatory' && assignment.status !== 'approved'}
+                    title={assignment.status !== 'mandatory' && assignment.status !== 'approved' ? 'Moet eerst goedgekeurd worden' : ''}
                   >
-                    Change to {assignment.status === 'accepted' ? 'Rejected' : 'Accepted'}
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        assignment.is_published ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
                   </button>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => openPreview(assignment.news_item.slug)}
+                      className="text-blue-600 hover:text-blue-800"
+                      title="Preview"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      {filteredAssignments.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          No news items to display
-        </div>
-      )}
+        {assignments.length === 0 && (
+          <div className="text-center py-12 text-gray-500">
+            Geen nieuwsberichten beschikbaar
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -245,7 +245,7 @@ export function NewsManagement() {
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Titel</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Brand</th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Custom Brand</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Franchise</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Verplicht</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acties</th>
