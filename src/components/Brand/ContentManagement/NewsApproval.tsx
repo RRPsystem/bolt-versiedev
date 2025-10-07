@@ -65,23 +65,51 @@ export function NewsApproval() {
         news_item: Array.isArray(item.news_items) ? item.news_items[0] : item.news_items
       }));
 
-      const { data: brandNewsData, error: brandNewsError } = await supabase
+      const { data: brandNewsItems, error: newsItemsError } = await supabase
         .from('news_items')
         .select('id, title, slug, excerpt, featured_image, is_mandatory, published_at, created_at')
         .eq('author_type', 'brand')
         .eq('brand_id', user.brand_id)
         .order('created_at', { ascending: false });
 
-      if (brandNewsError) throw brandNewsError;
+      if (newsItemsError) throw newsItemsError;
 
-      const formattedBrandNews = (brandNewsData || []).map(item => ({
-        id: `brand-${item.id}`,
+      const { data: brandPagesData, error: pagesError } = await supabase
+        .from('pages')
+        .select('id, title, slug, created_at, published_at')
+        .eq('content_type', 'news')
+        .eq('brand_id', user.brand_id)
+        .order('created_at', { ascending: false });
+
+      if (pagesError) throw pagesError;
+
+      const formattedNewsItems = (brandNewsItems || []).map(item => ({
+        id: `brand-item-${item.id}`,
         news_id: item.id,
         status: 'brand' as const,
         is_published: true,
         assigned_at: item.created_at,
         news_item: item
       }));
+
+      const formattedPagesNews = (brandPagesData || []).map(item => ({
+        id: `brand-page-${item.id}`,
+        news_id: item.id,
+        status: 'brand' as const,
+        is_published: true,
+        assigned_at: item.created_at,
+        news_item: {
+          id: item.id,
+          title: item.title,
+          slug: item.slug,
+          excerpt: '',
+          featured_image: '',
+          is_mandatory: false,
+          published_at: item.published_at
+        }
+      }));
+
+      const formattedBrandNews = [...formattedNewsItems, ...formattedPagesNews];
 
       const allNews = [...formattedAssignments, ...formattedBrandNews].sort((a, b) =>
         new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime()
