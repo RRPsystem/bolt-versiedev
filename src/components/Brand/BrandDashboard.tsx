@@ -6,6 +6,7 @@ import PageManagementView from './WebsiteManagement/PageManagementView';
 import MenuBuilderView from './WebsiteManagement/MenuBuilderView';
 import FooterBuilderView from './WebsiteManagement/FooterBuilderView';
 import { NewsItemsView } from './ContentManagement/NewsItemsView';
+import { NewsApproval } from './ContentManagement/NewsApproval';
 import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe, Newspaper, MapPin, Plane } from 'lucide-react';
 
 export function BrandDashboard() {
@@ -22,7 +23,7 @@ export function BrandDashboard() {
     if (['ai-content', 'ai-travelbro', 'ai-import'].includes(activeSection)) {
       setShowAISubmenu(true);
     }
-    if (['news-items', 'destinations', 'trips'].includes(activeSection)) {
+    if (['news-items', 'news-approval', 'destinations', 'trips'].includes(activeSection)) {
       setShowContentSubmenu(true);
     }
   }, [activeSection]);
@@ -48,6 +49,7 @@ export function BrandDashboard() {
 
   const contentItems = [
     { id: 'news-items', label: 'Nieuwsberichten', icon: Newspaper },
+    { id: 'news-approval', label: 'Nieuws Goedkeuring', icon: Newspaper },
     { id: 'destinations', label: 'Bestemmingen', icon: MapPin },
     { id: 'trips', label: 'Reizen', icon: Plane },
   ];
@@ -138,7 +140,7 @@ export function BrandDashboard() {
               <button
                 onClick={() => setShowContentSubmenu(!showContentSubmenu)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
-                  ['news-items', 'destinations', 'trips'].includes(activeSection)
+                  ['news-items', 'news-approval', 'destinations', 'trips'].includes(activeSection)
                     ? 'bg-gray-700 text-white'
                     : 'text-gray-300 hover:text-white hover:bg-gray-700'
                 }`}
@@ -288,6 +290,7 @@ export function BrandDashboard() {
 
           {/* Content Management */}
           {activeSection === 'news-items' && <NewsItemsView />}
+          {activeSection === 'news-approval' && <NewsApproval />}
 
           {/* AI Tools Content */}
           {activeSection === 'ai-content' && (

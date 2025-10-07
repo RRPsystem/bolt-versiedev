@@ -255,12 +255,61 @@ Deno.serve(async (req: Request) => {
     if (req.method === "GET" && pathParts.includes("list")) {
       const brandId = url.searchParams.get("brand_id");
       const status = url.searchParams.get("status");
-      
+      const includeAssigned = url.searchParams.get("include_assigned") === "true";
+
       if (!brandId) {
         return new Response(
           JSON.stringify({ error: "brand_id is required" }),
           { status: 400, headers: corsHeaders() }
         );
+      }
+
+      if (contentType === "news_items" && includeAssigned) {
+        const { data: ownNews, error: ownError } = await supabase
+          .from("news_items")
+          .select("*, author_type, is_mandatory")
+          .eq("brand_id", brandId)
+          .order("updated_at", { ascending: false });
+
+        if (ownError) throw ownError;
+
+        const { data: assignments, error: assignError } = await supabase
+          .from("news_brand_assignments")
+          .select(`
+            news_id,
+            status,
+            news_items!inner (
+              id,
+              title,
+              slug,
+              content,
+              excerpt,
+              featured_image,
+              status,
+              author_type,
+              is_mandatory,
+              published_at,
+              created_at,
+              updated_at
+            )
+          `)
+          .eq("brand_id", brandId)
+          .in("status", ["accepted", "mandatory"]);
+
+        if (assignError) throw assignError;
+
+        const assignedNews = (assignments || []).map(a => {
+          const newsItem = Array.isArray(a.news_items) ? a.news_items[0] : a.news_items;
+          return {
+            ...newsItem,
+            author_type: newsItem.author_type || "admin",
+            is_mandatory: newsItem.is_mandatory || false
+          };
+        });
+
+        const allNews = [...(ownNews || []), ...assignedNews];
+
+        return new Response(JSON.stringify({ items: allNews }), { status: 200, headers: corsHeaders() });
       }
 
       let query = supabase

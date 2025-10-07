@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../lib/supabase';
 import { AgentManagement } from './AgentManagement';
 import { BrandForm } from './BrandForm';
+import { NewsManagement } from './NewsManagement';
 import { PageManagementView } from '../Brand/WebsiteManagement/PageManagementView';
 import { MenuBuilderView } from '../Brand/WebsiteManagement/MenuBuilderView';
 import { FooterBuilderView } from '../Brand/WebsiteManagement/FooterBuilderView';
@@ -25,7 +26,7 @@ export function AdminDashboard() {
     if (['new-page', 'page-management', 'menu-builder', 'footer-builder'].includes(activeSection)) {
       setShowWebsiteSubmenu(true);
     }
-    if (['news-items', 'destinations', 'trips'].includes(activeSection)) {
+    if (['admin-news', 'destinations', 'trips'].includes(activeSection)) {
       setShowContentSubmenu(true);
     }
   }, [activeSection]);
@@ -91,7 +92,7 @@ export function AdminDashboard() {
   ];
 
   const contentItems = [
-    { id: 'news-items', label: 'Nieuwsberichten', icon: Newspaper },
+    { id: 'admin-news', label: 'Nieuwsbeheer', icon: Newspaper },
     { id: 'destinations', label: 'Bestemmingen', icon: MapPin },
     { id: 'trips', label: 'Reizen', icon: Plane },
   ];
@@ -296,7 +297,7 @@ export function AdminDashboard() {
               <button
                 onClick={() => setShowContentSubmenu(!showContentSubmenu)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
-                  ['news-items', 'destinations', 'trips'].includes(activeSection)
+                  ['admin-news', 'destinations', 'trips'].includes(activeSection)
                     ? 'bg-slate-700 text-white'
                     : 'text-slate-300 hover:text-white hover:bg-slate-700'
                 }`}
@@ -402,6 +403,7 @@ export function AdminDashboard() {
         {/* Content */}
         <main className="flex-1 p-6">
           {activeSection === 'agents' && <AgentManagement />}
+          {activeSection === 'admin-news' && <NewsManagement />}
 
           {/* Website Management Content - Admin uses System Templates brand */}
           {activeSection === 'new-page' && <NewPage brandId={SYSTEM_BRAND_ID} />}

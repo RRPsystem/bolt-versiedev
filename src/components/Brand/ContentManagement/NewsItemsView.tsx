@@ -11,6 +11,8 @@ interface NewsItem {
   status: string;
   created_at: string;
   updated_at: string;
+  author_type?: 'admin' | 'brand';
+  is_mandatory?: boolean;
 }
 
 export function NewsItemsView() {
@@ -30,10 +32,13 @@ export function NewsItemsView() {
 
     try {
       setLoading(true);
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/content-api/list?type=news_items&brand_id=${user.brand_id}`;
+
+      const token = await generateBuilderJWT(user.brand_id, user.id, ['content:read']);
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/content-api/list?type=news_items&brand_id=${user.brand_id}&include_assigned=true`;
 
       const response = await fetch(apiUrl, {
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         }
       });
@@ -177,6 +182,16 @@ export function NewsItemsView() {
                     }`}>
                       {item.status === 'published' ? 'Gepubliceerd' : 'Concept'}
                     </span>
+                    {item.author_type === 'admin' && (
+                      <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                        Van Admin
+                      </span>
+                    )}
+                    {item.is_mandatory && (
+                      <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+                        Verplicht
+                      </span>
+                    )}
                   </div>
                   <p className="text-sm text-gray-600 mb-2">Slug: {item.slug}</p>
                   <p className="text-xs text-gray-500">
@@ -184,20 +199,33 @@ export function NewsItemsView() {
                   </p>
                 </div>
                 <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleEdit(item)}
-                    className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
-                    title="Bewerken in Builder"
-                  >
-                    <ExternalLink size={18} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                    title="Verwijderen"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                  {item.author_type === 'brand' && (
+                    <>
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
+                        title="Bewerken in Builder"
+                      >
+                        <ExternalLink size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Verwijderen"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </>
+                  )}
+                  {item.author_type === 'admin' && (
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      title="Bekijken"
+                    >
+                      <Eye size={18} />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
