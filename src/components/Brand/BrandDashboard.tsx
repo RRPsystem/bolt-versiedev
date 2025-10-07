@@ -5,6 +5,7 @@ import { NewPage } from './WebsiteManagement/NewPage';
 import PageManagementView from './WebsiteManagement/PageManagementView';
 import MenuBuilderView from './WebsiteManagement/MenuBuilderView';
 import FooterBuilderView from './WebsiteManagement/FooterBuilderView';
+import { NewsItemsView } from './ContentManagement/NewsItemsView';
 import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe, Newspaper, MapPin, Plane } from 'lucide-react';
 
 export function BrandDashboard() {
@@ -284,6 +285,9 @@ export function BrandDashboard() {
           {activeSection === 'pages' && <PageManagementView />}
           {activeSection === 'menus' && <MenuBuilderView />}
           {activeSection === 'footers' && <FooterBuilderView />}
+
+          {/* Content Management */}
+          {activeSection === 'news-items' && <NewsItemsView />}
 
           {/* AI Tools Content */}
           {activeSection === 'ai-content' && (
