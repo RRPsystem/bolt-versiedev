@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Newspaper, Eye } from 'lucide-react';
+import { Newspaper, Eye, Plus } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
+import { generateBuilderJWT, generateBuilderDeeplink } from '../../../lib/jwtHelper';
 
 interface NewsAssignment {
   id: string;
@@ -162,6 +163,19 @@ export function NewsApproval() {
     window.open(`/preview/news/${slug}`, '_blank');
   };
 
+  const createNewArticle = async () => {
+    if (!user?.brand_id || !user?.id) return;
+
+    try {
+      const token = await generateBuilderJWT(user.brand_id, user.id);
+      const deeplink = generateBuilderDeeplink(user.brand_id, token, { contentType: 'news' });
+      window.open(deeplink, '_blank');
+    } catch (error) {
+      console.error('Error opening builder:', error);
+      alert('Kon de website builder niet openen');
+    }
+  };
+
   if (loading) {
     return <div className="p-8">Loading...</div>;
   }
@@ -173,6 +187,13 @@ export function NewsApproval() {
           <Newspaper className="w-8 h-8 text-orange-600" />
           <h1 className="text-2xl font-bold">Nieuwsbeheer</h1>
         </div>
+        <button
+          onClick={createNewArticle}
+          className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+        >
+          <Plus className="w-5 h-5" />
+          Nieuw Bericht
+        </button>
       </div>
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
