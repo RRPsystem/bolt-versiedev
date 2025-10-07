@@ -135,7 +135,7 @@ export function NewsApproval() {
         .eq('id', assignmentId);
 
       if (error) throw error;
-      loadAssignments();
+      await loadAssignments();
     } catch (error) {
       console.error('Error toggling publish:', error);
       alert('Failed to update');
