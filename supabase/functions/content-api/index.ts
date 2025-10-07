@@ -6,9 +6,10 @@ interface JWTPayload {
   brand_id: string;
   user_id?: string;
   sub?: string;
+  scope?: string[];
 }
 
-async function verifyBearerToken(req: Request): Promise<JWTPayload> {
+async function verifyBearerToken(req: Request, requiredScope?: string): Promise<JWTPayload> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     throw new Error("Missing or invalid Authorization header");
@@ -16,11 +17,19 @@ async function verifyBearerToken(req: Request): Promise<JWTPayload> {
   const token = authHeader.substring(7);
   const jwtSecret = Deno.env.get("JWT_SECRET");
   if (!jwtSecret) throw new Error("JWT_SECRET not configured");
-  
+
   const encoder = new TextEncoder();
   const secretKey = encoder.encode(jwtSecret);
   const { payload } = await jwtVerify(token, secretKey, { algorithms: ["HS256"] });
   if (!payload.brand_id) throw new Error("Invalid token: missing brand_id");
+
+  if (requiredScope) {
+    const scopes = (payload.scope as string[]) || [];
+    if (!scopes.includes(requiredScope)) {
+      throw new Error(`Insufficient permissions: ${requiredScope} required`);
+    }
+  }
+
   return payload as JWTPayload;
 }
 
@@ -59,7 +68,7 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "POST" && pathParts.includes("save")) {
       const body = await req.json();
-      const claims = await verifyBearerToken(req);
+      const claims = await verifyBearerToken(req, "content:write");
       const { brand_id, id, title, slug, content, author_type, author_id, ...otherFields } = body;
 
       if (claims.brand_id !== brand_id) {
@@ -171,7 +180,7 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "POST" && pathParts.includes("publish")) {
       const body = await req.json();
-      const claims = await verifyBearerToken(req);
+      const claims = await verifyBearerToken(req, "content:write");
       const { brand_id, id, slug } = body;
 
       if (claims.brand_id !== brand_id) {
@@ -231,7 +240,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (req.method === "DELETE") {
-      const claims = await verifyBearerToken(req);
+      const claims = await verifyBearerToken(req, "content:write");
       const itemId = pathParts[pathParts.length - 1];
 
       if (!itemId || itemId === "content-api") {
