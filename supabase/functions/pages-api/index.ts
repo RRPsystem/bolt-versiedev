@@ -93,6 +93,7 @@ Deno.serve(async (req: Request) => {
         if (error) throw error;
         result = data;
       } else {
+        const userId = claims.sub || claims.user_id;
         const { data, error } = await supabase
           .from("pages")
           .insert({
@@ -105,7 +106,9 @@ Deno.serve(async (req: Request) => {
             content_type: "page",
             show_in_menu: false,
             menu_order: 0,
-            parent_slug: null
+            parent_slug: null,
+            owner_user_id: userId,
+            created_by: userId
           })
           .select("id, slug")
           .maybeSingle();
