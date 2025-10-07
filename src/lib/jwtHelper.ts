@@ -68,11 +68,13 @@ export function generateBuilderDeeplink(
 ): string {
   const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
   const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL || window.location.origin;
+  const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   const params = new URLSearchParams({
     brand_id: brandId,
     token: token,
-    api: apiBaseUrl
+    api: apiBaseUrl,
+    apikey: apiKey
   });
 
   if (options.pageId) {
