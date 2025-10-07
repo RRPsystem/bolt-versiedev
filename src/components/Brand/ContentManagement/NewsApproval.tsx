@@ -158,11 +158,16 @@ export function NewsApproval() {
   };
 
   const handleEdit = async (assignment: NewsAssignment) => {
-    if (!user?.brand_id || !user?.id || !assignment.page_id) return;
+    if (!user?.brand_id || !user?.id) return;
 
     try {
-      const token = await generateBuilderJWT(user.brand_id, user.id);
-      const deeplink = generateBuilderDeeplink(user.brand_id, token, { pageId: assignment.page_id });
+      const token = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
+      const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
+      const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${token}&news_slug=${assignment.news_item.slug}&author_type=brand&author_id=${user.id}#/mode/news`;
+
       window.open(deeplink, '_blank');
     } catch (error) {
       console.error('Error opening builder:', error);
@@ -195,33 +200,17 @@ export function NewsApproval() {
     if (!user?.brand_id || !user?.id) return;
 
     try {
-      // Create a new draft news page
-      const { data: newPage, error: createError } = await supabase
-        .from('pages')
-        .insert({
-          brand_id: user.brand_id,
-          title: 'Nieuw Nieuwsbericht',
-          slug: `nieuws-${Date.now()}`,
-          content_type: 'news',
-          status: 'draft',
-          layout: {},
-          published_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+      const token = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
+      const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
+      const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      if (createError) throw createError;
+      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${token}&author_type=brand&author_id=${user.id}#/mode/news`;
 
-      // Open the builder with the new page
-      const token = await generateBuilderJWT(user.brand_id, user.id);
-      const deeplink = generateBuilderDeeplink(user.brand_id, token, { pageId: newPage.id });
       window.open(deeplink, '_blank');
-
-      // Refresh the list
-      await loadAssignments();
     } catch (error) {
-      console.error('Error creating article:', error);
-      alert('Kon nieuw artikel niet aanmaken');
+      console.error('Error opening builder:', error);
+      alert('Kon de website builder niet openen');
     }
   };
 
