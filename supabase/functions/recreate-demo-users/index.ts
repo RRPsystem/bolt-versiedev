@@ -50,6 +50,14 @@ Deno.serve(async (req: Request) => {
     const results = [];
 
     for (const user of demoUsers) {
+      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+      const existingUser = existingUsers?.users?.find(u => u.email === user.email);
+
+      if (existingUser) {
+        await supabaseAdmin.auth.admin.deleteUser(existingUser.id);
+        await supabaseAdmin.from('users').delete().eq('id', existingUser.id);
+      }
+
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: user.email,
         password: user.password,
@@ -64,18 +72,17 @@ Deno.serve(async (req: Request) => {
         continue;
       }
 
-      const { error: updateError } = await supabaseAdmin
+      const { error: upsertError } = await supabaseAdmin
         .from('users')
-        .update({
+        .upsert({
           id: authData.user.id,
           email: user.email,
           role: user.role,
           brand_id: user.brand_id
-        })
-        .eq('email', user.email);
+        });
 
-      if (updateError) {
-        results.push({ email: user.email, success: false, error: updateError.message });
+      if (upsertError) {
+        results.push({ email: user.email, success: false, error: upsertError.message });
       } else {
         results.push({ email: user.email, success: true, id: authData.user.id });
       }
