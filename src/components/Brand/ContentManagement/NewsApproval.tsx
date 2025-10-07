@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Newspaper, Eye, Plus } from 'lucide-react';
+import { Newspaper, Eye, Plus, Pencil, Trash2 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import { generateBuilderJWT, generateBuilderDeeplink } from '../../../lib/jwtHelper';
@@ -10,6 +10,7 @@ interface NewsAssignment {
   status: 'pending' | 'approved' | 'rejected' | 'mandatory' | 'brand';
   is_published: boolean;
   assigned_at: string;
+  page_id?: string;
   news_item: {
     id: string;
     title: string;
@@ -77,7 +78,7 @@ export function NewsApproval() {
 
       const { data: brandPagesData, error: pagesError } = await supabase
         .from('pages')
-        .select('id, title, slug, created_at, published_at')
+        .select('id, title, slug, created_at, published_at, status')
         .eq('content_type', 'news')
         .eq('brand_id', user.brand_id)
         .order('created_at', { ascending: false });
@@ -96,8 +97,9 @@ export function NewsApproval() {
       const formattedPagesNews = (brandPagesData || []).map(item => ({
         id: `brand-page-${item.id}`,
         news_id: item.id,
+        page_id: item.id,
         status: 'brand' as const,
-        is_published: true,
+        is_published: item.status === 'published',
         assigned_at: item.created_at,
         news_item: {
           id: item.id,
@@ -124,17 +126,26 @@ export function NewsApproval() {
     }
   };
 
-  const handleTogglePublish = async (assignmentId: string, currentValue: boolean) => {
+  const handleTogglePublish = async (assignmentId: string, currentValue: boolean, assignment: NewsAssignment) => {
     try {
-      const { error } = await supabase
-        .from('news_brand_assignments')
-        .update({
-          is_published: !currentValue,
-          status: !currentValue ? 'accepted' : 'pending'
-        })
-        .eq('id', assignmentId);
+      if (assignment.status === 'brand' && assignment.page_id) {
+        const { error } = await supabase
+          .from('pages')
+          .update({ status: !currentValue ? 'published' : 'draft' })
+          .eq('id', assignment.page_id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('news_brand_assignments')
+          .update({
+            is_published: !currentValue,
+            status: !currentValue ? 'accepted' : 'pending'
+          })
+          .eq('id', assignmentId);
+
+        if (error) throw error;
+      }
       await loadAssignments();
     } catch (error) {
       console.error('Error toggling publish:', error);
@@ -164,6 +175,44 @@ export function NewsApproval() {
 
   const openPreview = (slug: string) => {
     window.open(`/preview/news/${slug}`, '_blank');
+  };
+
+  const handleEdit = async (assignment: NewsAssignment) => {
+    if (!user?.brand_id || !user?.id || !assignment.page_id) return;
+
+    try {
+      const token = await generateBuilderJWT(user.brand_id, user.id);
+      const deeplink = generateBuilderDeeplink(
+        user.brand_id,
+        token,
+        { contentType: 'news', pageId: assignment.page_id }
+      );
+      window.open(deeplink, '_blank');
+    } catch (error) {
+      console.error('Error opening builder:', error);
+      alert('Kon de website builder niet openen');
+    }
+  };
+
+  const handleDelete = async (assignment: NewsAssignment) => {
+    if (!assignment.page_id) return;
+
+    if (!confirm(`Weet je zeker dat je "${assignment.news_item.title}" wilt verwijderen?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('pages')
+        .delete()
+        .eq('id', assignment.page_id);
+
+      if (error) throw error;
+      await loadAssignments();
+    } catch (error) {
+      console.error('Error deleting page:', error);
+      alert('Failed to delete');
+    }
   };
 
   const createNewArticle = async () => {
@@ -232,19 +281,19 @@ export function NewsApproval() {
                   </span>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  {(assignment.status === 'mandatory' || assignment.status === 'brand') ? (
+                  {assignment.status === 'mandatory' ? (
                     <div className="flex items-center justify-center gap-2">
                       <button
                         className="relative inline-flex h-6 w-11 items-center rounded-full bg-green-500 opacity-75 cursor-not-allowed"
                         disabled={true}
-                        title={assignment.status === 'mandatory' ? 'Verplichte nieuwsberichten zijn altijd gepubliceerd' : 'Eigen nieuwsberichten zijn altijd gepubliceerd'}
+                        title="Verplichte nieuwsberichten zijn altijd gepubliceerd"
                       >
                         <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6" />
                       </button>
                     </div>
                   ) : (
                     <button
-                      onClick={() => handleTogglePublish(assignment.id, assignment.is_published)}
+                      onClick={() => handleTogglePublish(assignment.id, assignment.is_published, assignment)}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         assignment.is_published ? 'bg-green-500' : 'bg-gray-300'
                       }`}
@@ -266,6 +315,24 @@ export function NewsApproval() {
                     >
                       <Eye className="w-4 h-4" />
                     </button>
+                    {assignment.status === 'brand' && assignment.page_id && (
+                      <>
+                        <button
+                          onClick={() => handleEdit(assignment)}
+                          className="text-orange-600 hover:text-orange-800"
+                          title="Bewerken"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(assignment)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Verwijderen"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>
