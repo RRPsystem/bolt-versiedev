@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Newspaper, Plus, Edit2, Trash2, Send, Eye, ExternalLink } from 'lucide-react';
+import { Newspaper, Plus, Edit2, Trash2, Send, Eye, ExternalLink, Settings } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { generateBuilderJWT } from '../../lib/jwtHelper';
@@ -18,6 +18,15 @@ interface NewsItem {
   created_at: string;
 }
 
+interface BrandAssignment {
+  id: string;
+  news_id: string;
+  brand_id: string;
+  status: 'pending' | 'approved' | 'rejected' | 'mandatory';
+  acknowledged_at: string | null;
+  brand?: Brand;
+}
+
 interface Brand {
   id: string;
   name: string;
@@ -30,7 +39,9 @@ export function NewsManagement() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDistributeModal, setShowDistributeModal] = useState(false);
+  const [showBrandStatusModal, setShowBrandStatusModal] = useState(false);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  const [brandAssignments, setBrandAssignments] = useState<BrandAssignment[]>([]);
   const [formData, setFormData] = useState({
     target_type: 'all_brands' as 'all_brands' | 'franchise' | 'custom_brand',
     is_mandatory: false,
@@ -75,18 +86,71 @@ export function NewsManagement() {
 
   const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
 
-  const getDistributionInfo = async (newsId: string) => {
+  const loadBrandAssignments = async (newsId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data: assignments, error } = await supabase
         .from('news_brand_assignments')
-        .select('brand_id, status')
+        .select('*')
         .eq('news_id', newsId);
 
       if (error) throw error;
-      return data || [];
+
+      const assignmentsWithBrands = await Promise.all(
+        (assignments || []).map(async (assignment) => {
+          const brand = brands.find(b => b.id === assignment.brand_id);
+          return { ...assignment, brand };
+        })
+      );
+
+      setBrandAssignments(assignmentsWithBrands);
     } catch (error) {
-      console.error('Error loading distribution info:', error);
-      return [];
+      console.error('Error loading brand assignments:', error);
+    }
+  };
+
+  const handleViewBrandStatus = async (news: NewsItem) => {
+    setSelectedNews(news);
+    await loadBrandAssignments(news.id);
+    setShowBrandStatusModal(true);
+  };
+
+  const handleToggleMandatory = async (assignmentId: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'mandatory' ? 'pending' : 'mandatory';
+
+      const { error } = await supabase
+        .from('news_brand_assignments')
+        .update({ status: newStatus })
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+
+      if (selectedNews) {
+        await loadBrandAssignments(selectedNews.id);
+      }
+    } catch (error) {
+      console.error('Error toggling mandatory status:', error);
+      alert('Failed to update status');
+    }
+  };
+
+  const handleRemoveBrandAssignment = async (assignmentId: string) => {
+    if (!confirm('Remove this brand from the news distribution?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('news_brand_assignments')
+        .delete()
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+
+      if (selectedNews) {
+        await loadBrandAssignments(selectedNews.id);
+      }
+    } catch (error) {
+      console.error('Error removing assignment:', error);
+      alert('Failed to remove assignment');
     }
   };
 
@@ -287,6 +351,15 @@ export function NewsManagement() {
                     >
                       <Send className="w-4 h-4" />
                     </button>
+                    {item.status === 'published' && (
+                      <button
+                        onClick={() => handleViewBrandStatus(item)}
+                        className="text-purple-600 hover:text-purple-800"
+                        title="Manage Brand Access"
+                      >
+                        <Settings className="w-4 h-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(item.id)}
                       className="text-red-600 hover:text-red-800"
@@ -308,6 +381,95 @@ export function NewsManagement() {
         )}
       </div>
 
+
+      {/* Brand Status Management Modal */}
+      {showBrandStatusModal && selectedNews && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Brand Access Management</h2>
+              <button
+                onClick={() => setShowBrandStatusModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mb-4 p-3 bg-gray-50 rounded">
+              <h3 className="font-semibold">{selectedNews.title}</h3>
+              <p className="text-sm text-gray-600">Status: {selectedNews.status}</p>
+            </div>
+
+            {brandAssignments.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No brands assigned yet. Use the Distribute button to assign brands.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {brandAssignments.map((assignment) => (
+                  <div
+                    key={assignment.id}
+                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium">{assignment.brand?.name || 'Unknown Brand'}</div>
+                      <div className="text-sm text-gray-500">
+                        Type: {assignment.brand?.type || 'unknown'}
+                      </div>
+                      {assignment.acknowledged_at && (
+                        <div className="text-xs text-green-600 mt-1">
+                          Acknowledged: {new Date(assignment.acknowledged_at).toLocaleDateString()}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={assignment.status === 'mandatory'}
+                          onChange={() => handleToggleMandatory(assignment.id, assignment.status)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm font-medium">
+                          {assignment.status === 'mandatory' ? 'Verplicht' : 'Optioneel'}
+                        </span>
+                      </label>
+
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        assignment.status === 'mandatory' ? 'bg-red-100 text-red-800' :
+                        assignment.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        assignment.status === 'rejected' ? 'bg-gray-100 text-gray-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {assignment.status}
+                      </span>
+
+                      <button
+                        onClick={() => handleRemoveBrandAssignment(assignment.id)}
+                        className="text-red-600 hover:text-red-800"
+                        title="Remove Brand"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setShowBrandStatusModal(false)}
+                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              >
+                Sluiten
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Distribute Modal */}
       {showDistributeModal && selectedNews && (
