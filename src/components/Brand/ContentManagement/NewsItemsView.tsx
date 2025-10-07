@@ -61,7 +61,7 @@ export function NewsItemsView() {
     if (!user?.brand_id || !user?.id) return;
 
     try {
-      const token = await generateBuilderJWT(user.brand_id, user.id, ['content:write']);
+      const token = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
       const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
       const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -79,7 +79,7 @@ export function NewsItemsView() {
     if (!user?.brand_id || !user?.id) return;
 
     try {
-      const token = await generateBuilderJWT(user.brand_id, user.id, ['content:write']);
+      const token = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
       const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
       const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -97,7 +97,7 @@ export function NewsItemsView() {
     if (!user?.brand_id || !confirm('Weet je zeker dat je dit nieuwsbericht wilt verwijderen?')) return;
 
     try {
-      const token = await generateBuilderJWT(user.brand_id, user.id, ['content:write']);
+      const token = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/content-api/${id}?type=news_items`;
 
       const response = await fetch(apiUrl, {

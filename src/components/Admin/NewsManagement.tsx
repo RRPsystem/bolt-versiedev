@@ -77,7 +77,7 @@ export function NewsManagement() {
 
   const handleCreateNews = async () => {
     try {
-      const token = await generateBuilderJWT(SYSTEM_BRAND_ID, user?.id, ['content:write']);
+      const token = await generateBuilderJWT(SYSTEM_BRAND_ID, user?.id, ['content:read', 'content:write']);
       const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
       const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -93,7 +93,7 @@ export function NewsManagement() {
 
   const handleEditNews = async (news: NewsItem) => {
     try {
-      const token = await generateBuilderJWT(SYSTEM_BRAND_ID, user?.id, ['content:write']);
+      const token = await generateBuilderJWT(SYSTEM_BRAND_ID, user?.id, ['content:read', 'content:write']);
       const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
       const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;

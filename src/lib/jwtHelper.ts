@@ -40,7 +40,8 @@ export async function generateBuilderJWT(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      brand_id: brandId
+      brand_id: brandId,
+      scopes: scopes
     })
   });
 
