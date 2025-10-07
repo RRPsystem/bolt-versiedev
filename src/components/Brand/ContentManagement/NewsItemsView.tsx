@@ -64,8 +64,9 @@ export function NewsItemsView() {
       const token = await generateBuilderJWT(user.brand_id, user.id, ['content:write']);
       const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
       const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${token}#/mode/news`;
+      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${token}&author_type=brand&author_id=${user.id}#/mode/news`;
 
       window.open(deeplink, '_blank');
     } catch (err) {
@@ -81,8 +82,9 @@ export function NewsItemsView() {
       const token = await generateBuilderJWT(user.brand_id, user.id, ['content:write']);
       const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
       const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${token}&news_slug=${newsItem.slug}#/mode/news`;
+      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${token}&news_slug=${newsItem.slug}&author_type=brand&author_id=${user.id}#/mode/news`;
 
       window.open(deeplink, '_blank');
     } catch (err) {
