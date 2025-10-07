@@ -95,15 +95,24 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
   const openInBuilder = async (pageId: string) => {
     if (!user || !brandId) {
       console.error('Missing user or brandId:', { user, brandId });
+      alert('Gebruiker of brand ID ontbreekt');
       return;
     }
 
     try {
       console.log('Opening builder for page:', pageId);
+      console.log('Brand ID:', brandId, 'User ID:', user.id);
+
       const token = await generateBuilderJWT(brandId, user.id);
+      console.log('Token generated successfully:', token.substring(0, 20) + '...');
+
       const deeplink = generateBuilderDeeplink(brandId, token, { pageId });
       console.log('Generated deeplink:', deeplink);
-      window.open(deeplink, '_blank');
+
+      const newWindow = window.open(deeplink, '_blank');
+      if (!newWindow) {
+        alert('Popup geblokkeerd! Sta popups toe voor deze website.');
+      }
     } catch (error) {
       console.error('Error generating deeplink:', error);
       alert('Kon de website builder niet openen: ' + error);
