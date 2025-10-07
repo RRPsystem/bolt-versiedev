@@ -6,7 +6,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 interface NewsAssignment {
   id: string;
   news_id: string;
-  status: 'pending' | 'approved' | 'rejected' | 'mandatory';
+  status: 'pending' | 'approved' | 'rejected' | 'mandatory' | 'brand';
   is_published: boolean;
   assigned_at: string;
   news_item: {
@@ -33,7 +33,7 @@ export function NewsApproval() {
     if (!user?.brand_id) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: assignmentData, error: assignmentError } = await supabase
         .from('news_brand_assignments')
         .select(`
           id,
@@ -54,9 +54,9 @@ export function NewsApproval() {
         .eq('brand_id', user.brand_id)
         .order('assigned_at', { ascending: false });
 
-      if (error) throw error;
+      if (assignmentError) throw assignmentError;
 
-      const formatted = (data || []).map(item => ({
+      const formattedAssignments = (assignmentData || []).map(item => ({
         id: item.id,
         news_id: item.news_id,
         status: item.status,
@@ -65,7 +65,29 @@ export function NewsApproval() {
         news_item: Array.isArray(item.news_items) ? item.news_items[0] : item.news_items
       }));
 
-      setAssignments(formatted);
+      const { data: brandNewsData, error: brandNewsError } = await supabase
+        .from('news_items')
+        .select('id, title, slug, excerpt, featured_image, is_mandatory, published_at, created_at')
+        .eq('author_type', 'brand')
+        .eq('brand_id', user.brand_id)
+        .order('created_at', { ascending: false });
+
+      if (brandNewsError) throw brandNewsError;
+
+      const formattedBrandNews = (brandNewsData || []).map(item => ({
+        id: `brand-${item.id}`,
+        news_id: item.id,
+        status: 'brand' as const,
+        is_published: true,
+        assigned_at: item.created_at,
+        news_item: item
+      }));
+
+      const allNews = [...formattedAssignments, ...formattedBrandNews].sort((a, b) =>
+        new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime()
+      );
+
+      setAssignments(allNews);
     } catch (error) {
       console.error('Error loading assignments:', error);
     } finally {
@@ -149,13 +171,17 @@ export function NewsApproval() {
                 </td>
                 <td className="px-6 py-4 text-center">
                   <span className={`px-2 py-1 text-xs rounded-full ${
-                    assignment.status === 'mandatory' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'
+                    assignment.status === 'mandatory' ? 'bg-red-100 text-red-800' :
+                    assignment.status === 'brand' ? 'bg-purple-100 text-purple-800' :
+                    'bg-blue-100 text-blue-800'
                   }`}>
-                    {assignment.status === 'mandatory' ? 'Verplicht' : 'Optioneel'}
+                    {assignment.status === 'mandatory' ? 'Verplicht' :
+                     assignment.status === 'brand' ? 'Eigen Nieuws' :
+                     'Optioneel'}
                   </span>
                 </td>
                 <td className="px-6 py-4 text-center">
-                  {assignment.status === 'mandatory' ? (
+                  {(assignment.status === 'mandatory' || assignment.status === 'brand') ? (
                     <span className="text-gray-500 text-sm">N.v.t.</span>
                   ) : (
                     <button
@@ -173,20 +199,32 @@ export function NewsApproval() {
                   )}
                 </td>
                 <td className="px-6 py-4 text-center">
-                  <button
-                    onClick={() => handleTogglePublish(assignment.id, assignment.is_published)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      assignment.is_published ? 'bg-green-500' : 'bg-gray-300'
-                    }`}
-                    disabled={assignment.status !== 'mandatory' && assignment.status !== 'approved'}
-                    title={assignment.status !== 'mandatory' && assignment.status !== 'approved' ? 'Moet eerst goedgekeurd worden' : ''}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        assignment.is_published ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
+                  {(assignment.status === 'mandatory' || assignment.status === 'brand') ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        className="relative inline-flex h-6 w-11 items-center rounded-full bg-green-500 opacity-75 cursor-not-allowed"
+                        disabled={true}
+                        title={assignment.status === 'mandatory' ? 'Verplichte nieuwsberichten zijn altijd gepubliceerd' : 'Eigen nieuwsberichten zijn altijd gepubliceerd'}
+                      >
+                        <span className="inline-block h-4 w-4 transform rounded-full bg-white translate-x-6" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleTogglePublish(assignment.id, assignment.is_published)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        assignment.is_published ? 'bg-green-500' : 'bg-gray-300'
+                      } ${assignment.status !== 'approved' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={assignment.status !== 'approved'}
+                      title={assignment.status !== 'approved' ? 'Moet eerst goedgekeurd worden' : ''}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          assignment.is_published ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  )}
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-center gap-2">
