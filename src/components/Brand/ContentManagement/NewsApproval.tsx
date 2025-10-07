@@ -161,6 +161,7 @@ export function NewsApproval() {
     if (!user?.brand_id || !user?.id) return;
 
     try {
+      console.log('Opening builder for news item:', assignment.news_item);
       const token = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
       const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
       const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -168,6 +169,7 @@ export function NewsApproval() {
 
       const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${token}&news_slug=${assignment.news_item.slug}&author_type=brand&author_id=${user.id}#/mode/news`;
 
+      console.log('Generated deeplink:', deeplink);
       window.open(deeplink, '_blank');
     } catch (error) {
       console.error('Error opening builder:', error);
