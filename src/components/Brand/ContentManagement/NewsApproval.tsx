@@ -128,7 +128,10 @@ export function NewsApproval() {
     try {
       const { error } = await supabase
         .from('news_brand_assignments')
-        .update({ is_published: !currentValue })
+        .update({
+          is_published: !currentValue,
+          status: !currentValue ? 'accepted' : 'pending'
+        })
         .eq('id', assignmentId);
 
       if (error) throw error;
@@ -203,7 +206,6 @@ export function NewsApproval() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Titel</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Type</th>
-              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Goedgekeurd</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Publiceren</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acties</th>
             </tr>
@@ -231,24 +233,6 @@ export function NewsApproval() {
                 </td>
                 <td className="px-6 py-4 text-center">
                   {(assignment.status === 'mandatory' || assignment.status === 'brand') ? (
-                    <span className="text-gray-500 text-sm">N.v.t.</span>
-                  ) : (
-                    <button
-                      onClick={() => handleToggleApprove(assignment.id, assignment.status)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                        assignment.status === 'approved' ? 'bg-green-500' : 'bg-gray-300'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          assignment.status === 'approved' ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  )}
-                </td>
-                <td className="px-6 py-4 text-center">
-                  {(assignment.status === 'mandatory' || assignment.status === 'brand') ? (
                     <div className="flex items-center justify-center gap-2">
                       <button
                         className="relative inline-flex h-6 w-11 items-center rounded-full bg-green-500 opacity-75 cursor-not-allowed"
@@ -263,9 +247,7 @@ export function NewsApproval() {
                       onClick={() => handleTogglePublish(assignment.id, assignment.is_published)}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         assignment.is_published ? 'bg-green-500' : 'bg-gray-300'
-                      } ${assignment.status !== 'approved' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      disabled={assignment.status !== 'approved'}
-                      title={assignment.status !== 'approved' ? 'Moet eerst goedgekeurd worden' : ''}
+                      }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
