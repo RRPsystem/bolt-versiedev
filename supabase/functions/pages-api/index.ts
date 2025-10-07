@@ -68,7 +68,7 @@ Deno.serve(async (req: Request) => {
       }
 
       let result;
-      
+
       if (page_id) {
         const { data: currentPage } = await supabase
           .from("pages")
@@ -93,28 +93,53 @@ Deno.serve(async (req: Request) => {
         if (error) throw error;
         result = data;
       } else {
-        const userId = claims.sub || claims.user_id;
-        const { data, error } = await supabase
+        const { data: existingPage } = await supabase
           .from("pages")
-          .insert({
-            brand_id,
-            title,
-            slug,
-            content_json,
-            status: "draft",
-            version: 1,
-            content_type: "page",
-            show_in_menu: false,
-            menu_order: 0,
-            parent_slug: null,
-            owner_user_id: userId,
-            created_by: userId
-          })
-          .select("id, slug")
+          .select("id, version")
+          .eq("brand_id", brand_id)
+          .eq("slug", slug)
           .maybeSingle();
 
-        if (error) throw error;
-        result = data;
+        if (existingPage) {
+          const { data, error } = await supabase
+            .from("pages")
+            .update({
+              title,
+              content_json,
+              status: "draft",
+              version: (existingPage.version || 0) + 1,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", existingPage.id)
+            .select("id, slug")
+            .maybeSingle();
+
+          if (error) throw error;
+          result = data;
+        } else {
+          const userId = claims.sub || claims.user_id;
+          const { data, error } = await supabase
+            .from("pages")
+            .insert({
+              brand_id,
+              title,
+              slug,
+              content_json,
+              status: "draft",
+              version: 1,
+              content_type: "page",
+              show_in_menu: false,
+              menu_order: 0,
+              parent_slug: null,
+              owner_user_id: userId,
+              created_by: userId
+            })
+            .select("id, slug")
+            .maybeSingle();
+
+          if (error) throw error;
+          result = data;
+        }
       }
 
       return new Response(
