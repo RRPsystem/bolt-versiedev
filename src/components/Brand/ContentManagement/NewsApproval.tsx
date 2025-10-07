@@ -67,17 +67,17 @@ export function NewsApproval() {
         news_item: Array.isArray(item.news_items) ? item.news_items[0] : item.news_items
       }));
 
-      const { data: brandPagesData, error: pagesError } = await supabase
-        .from('pages')
-        .select('id, title, slug, created_at, published_at, status')
-        .eq('content_type', 'news')
+      const { data: brandNewsData, error: brandNewsError } = await supabase
+        .from('news_items')
+        .select('id, title, slug, excerpt, featured_image, created_at, published_at, status')
+        .eq('author_type', 'brand')
         .eq('brand_id', user.brand_id)
         .order('created_at', { ascending: false });
 
-      if (pagesError) throw pagesError;
+      if (brandNewsError) throw brandNewsError;
 
-      const formattedBrandNews = (brandPagesData || []).map(item => ({
-        id: `brand-page-${item.id}`,
+      const formattedBrandNews = (brandNewsData || []).map(item => ({
+        id: `brand-news-${item.id}`,
         news_id: item.id,
         page_id: item.id,
         status: 'brand' as const,
@@ -87,8 +87,8 @@ export function NewsApproval() {
           id: item.id,
           title: item.title,
           slug: item.slug,
-          excerpt: '',
-          featured_image: '',
+          excerpt: item.excerpt || '',
+          featured_image: item.featured_image || '',
           is_mandatory: false,
           published_at: item.published_at
         }
@@ -108,11 +108,11 @@ export function NewsApproval() {
 
   const handleTogglePublish = async (assignmentId: string, currentValue: boolean, assignment: NewsAssignment) => {
     try {
-      if (assignment.status === 'brand' && assignment.page_id) {
+      if (assignment.status === 'brand' && assignment.news_id) {
         const { error } = await supabase
-          .from('pages')
+          .from('news_items')
           .update({ status: !currentValue ? 'published' : 'draft' })
-          .eq('id', assignment.page_id);
+          .eq('id', assignment.news_id);
 
         if (error) throw error;
       } else {
@@ -176,22 +176,29 @@ export function NewsApproval() {
   };
 
   const handleDelete = async (assignment: NewsAssignment) => {
-    if (!assignment.page_id) return;
-
     if (!confirm(`Weet je zeker dat je "${assignment.news_item.title}" wilt verwijderen?`)) {
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('pages')
-        .delete()
-        .eq('id', assignment.page_id);
+      if (assignment.status === 'brand' && assignment.news_id) {
+        const { error } = await supabase
+          .from('news_items')
+          .delete()
+          .eq('id', assignment.news_id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('news_brand_assignments')
+          .delete()
+          .eq('id', assignment.id);
+
+        if (error) throw error;
+      }
       await loadAssignments();
     } catch (error) {
-      console.error('Error deleting page:', error);
+      console.error('Error deleting:', error);
       alert('Failed to delete');
     }
   };
