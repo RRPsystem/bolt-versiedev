@@ -24,7 +24,7 @@ Deno.serve(async (req: Request) => {
     );
 
     const updates = [
-      { id: '324acef5-a7dd-4f4b-8c8c-43f223d62a07', email: 'admin@travel.com', password: 'admin123' },
+      { id: 'f24acef5-a7dd-4f4b-8c8c-43f223d62a10', email: 'admin@travel.com', password: 'admin123' },
       { id: 'a2cbb78c-0e98-478a-89f4-58dc8debf057', email: 'brand@travel.com', password: 'brand123' },
       { id: '48568dec-bb42-40ed-8daa-989c25a68883', email: 'operator@travel.com', password: 'operator123' }
     ];
