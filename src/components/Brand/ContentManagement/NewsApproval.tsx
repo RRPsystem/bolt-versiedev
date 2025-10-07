@@ -195,12 +195,33 @@ export function NewsApproval() {
     if (!user?.brand_id || !user?.id) return;
 
     try {
+      // Create a new draft news page
+      const { data: newPage, error: createError } = await supabase
+        .from('pages')
+        .insert({
+          brand_id: user.brand_id,
+          title: 'Nieuw Nieuwsbericht',
+          slug: `nieuws-${Date.now()}`,
+          content_type: 'news',
+          status: 'draft',
+          layout: {},
+          published_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (createError) throw createError;
+
+      // Open the builder with the new page
       const token = await generateBuilderJWT(user.brand_id, user.id);
-      const deeplink = generateBuilderDeeplink(user.brand_id, token, { contentType: 'news' });
+      const deeplink = generateBuilderDeeplink(user.brand_id, token, { pageId: newPage.id });
       window.open(deeplink, '_blank');
+
+      // Refresh the list
+      await loadAssignments();
     } catch (error) {
-      console.error('Error opening builder:', error);
-      alert('Kon de website builder niet openen');
+      console.error('Error creating article:', error);
+      alert('Kon nieuw artikel niet aanmaken');
     }
   };
 
