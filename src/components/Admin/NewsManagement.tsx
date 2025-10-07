@@ -17,7 +17,7 @@ interface NewsItem {
 interface Brand {
   id: string;
   name: string;
-  type: 'franchise' | 'custom';
+  business_type: 'franchise' | 'custom';
 }
 
 export function NewsManagement() {
@@ -52,7 +52,7 @@ export function NewsManagement() {
     try {
       const { data, error } = await supabase
         .from('brands')
-        .select('id, name, type')
+        .select('id, name, business_type')
         .order('name');
 
       if (error) throw error;
@@ -116,7 +116,7 @@ export function NewsManagement() {
       if (error) throw error;
 
       if (!currentValue) {
-        const customBrands = brands.filter(b => b.type === 'custom').map(b => b.id);
+        const customBrands = brands.filter(b => b.business_type === 'custom').map(b => b.id);
         const assignments = customBrands.map(brandId => ({
           news_id: newsId,
           brand_id: brandId,
@@ -127,7 +127,7 @@ export function NewsManagement() {
           .from('news_brand_assignments')
           .upsert(assignments, { onConflict: 'news_id,brand_id' });
       } else {
-        const customBrands = brands.filter(b => b.type === 'custom').map(b => b.id);
+        const customBrands = brands.filter(b => b.business_type === 'custom').map(b => b.id);
         await supabase
           .from('news_brand_assignments')
           .delete()
@@ -152,7 +152,7 @@ export function NewsManagement() {
       if (error) throw error;
 
       if (!currentValue) {
-        const franchiseBrands = brands.filter(b => b.type === 'franchise').map(b => b.id);
+        const franchiseBrands = brands.filter(b => b.business_type === 'franchise').map(b => b.id);
         const assignments = franchiseBrands.map(brandId => ({
           news_id: newsId,
           brand_id: brandId,
@@ -163,7 +163,7 @@ export function NewsManagement() {
           .from('news_brand_assignments')
           .upsert(assignments, { onConflict: 'news_id,brand_id' });
       } else {
-        const franchiseBrands = brands.filter(b => b.type === 'franchise').map(b => b.id);
+        const franchiseBrands = brands.filter(b => b.business_type === 'franchise').map(b => b.id);
         await supabase
           .from('news_brand_assignments')
           .delete()
