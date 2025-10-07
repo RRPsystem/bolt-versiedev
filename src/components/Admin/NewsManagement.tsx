@@ -75,14 +75,34 @@ export function NewsManagement() {
 
   const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
 
+  const getDistributionInfo = async (newsId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('news_brand_assignments')
+        .select('brand_id, status')
+        .eq('news_id', newsId);
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error loading distribution info:', error);
+      return [];
+    }
+  };
+
   const handleCreateNews = async () => {
     try {
-      const token = await generateBuilderJWT(SYSTEM_BRAND_ID, user?.id, ['content:read', 'content:write']);
+      if (!user?.id) {
+        alert('User not authenticated');
+        return;
+      }
+
+      const token = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write']);
       const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
       const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${SYSTEM_BRAND_ID}&token=${token}&author_type=admin&author_id=${user?.id}#/mode/news`;
+      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${SYSTEM_BRAND_ID}&token=${token}&author_type=admin&author_id=${user.id}#/mode/news`;
 
       window.open(deeplink, '_blank');
     } catch (err) {
@@ -93,12 +113,17 @@ export function NewsManagement() {
 
   const handleEditNews = async (news: NewsItem) => {
     try {
-      const token = await generateBuilderJWT(SYSTEM_BRAND_ID, user?.id, ['content:read', 'content:write']);
+      if (!user?.id) {
+        alert('User not authenticated');
+        return;
+      }
+
+      const token = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write']);
       const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
       const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${SYSTEM_BRAND_ID}&token=${token}&news_slug=${news.slug}&author_type=admin&author_id=${user?.id}#/mode/news`;
+      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${SYSTEM_BRAND_ID}&token=${token}&news_slug=${news.slug}&author_type=admin&author_id=${user.id}#/mode/news`;
 
       window.open(deeplink, '_blank');
     } catch (err) {
@@ -255,15 +280,13 @@ export function NewsManagement() {
                     >
                       <ExternalLink className="w-4 h-4" />
                     </button>
-                    {item.status === 'draft' && (
-                      <button
-                        onClick={() => handleDistribute(item)}
-                        className="text-green-600 hover:text-green-800"
-                        title="Distribute to Brands"
-                      >
-                        <Send className="w-4 h-4" />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handleDistribute(item)}
+                      className="text-green-600 hover:text-green-800"
+                      title={item.status === 'published' ? 'Update Distribution' : 'Distribute to Brands'}
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => handleDelete(item.id)}
                       className="text-red-600 hover:text-red-800"
