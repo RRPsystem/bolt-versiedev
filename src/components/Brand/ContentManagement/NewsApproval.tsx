@@ -182,11 +182,7 @@ export function NewsApproval() {
 
     try {
       const token = await generateBuilderJWT(user.brand_id, user.id);
-      const deeplink = generateBuilderDeeplink(
-        user.brand_id,
-        token,
-        { contentType: 'news', pageId: assignment.page_id }
-      );
+      const deeplink = generateBuilderDeeplink(user.brand_id, token, { pageId: assignment.page_id });
       window.open(deeplink, '_blank');
     } catch (error) {
       console.error('Error opening builder:', error);
