@@ -378,6 +378,7 @@ Deno.serve(async (req: Request) => {
         .from("pages")
         .select("*")
         .eq("brand_id", brandId)
+        .or("content_type.eq.page,content_type.is.null")
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
