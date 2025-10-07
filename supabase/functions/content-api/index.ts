@@ -60,7 +60,7 @@ Deno.serve(async (req: Request) => {
     if (req.method === "POST" && pathParts.includes("save")) {
       const body = await req.json();
       const claims = await verifyBearerToken(req);
-      const { brand_id, id, title, slug, content, ...otherFields } = body;
+      const { brand_id, id, title, slug, content, author_type, author_id, ...otherFields } = body;
 
       if (claims.brand_id !== brand_id) {
         return new Response(
@@ -77,17 +77,25 @@ Deno.serve(async (req: Request) => {
       }
 
       let result;
-      
+      const isAdminNews = author_type === 'admin';
+
       if (id) {
+        const updateData: any = {
+          title,
+          slug,
+          content,
+          ...otherFields,
+          updated_at: new Date().toISOString(),
+        };
+
+        if (isAdminNews && contentType === 'news_items') {
+          updateData.author_type = 'admin';
+          updateData.author_id = author_id || claims.user_id || claims.sub;
+        }
+
         const { data, error } = await supabase
           .from(contentType)
-          .update({
-            title,
-            slug,
-            content,
-            ...otherFields,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq("id", id)
           .select("id, slug")
           .maybeSingle();
@@ -103,14 +111,21 @@ Deno.serve(async (req: Request) => {
           .maybeSingle();
 
         if (existing) {
+          const updateData: any = {
+            title,
+            content,
+            ...otherFields,
+            updated_at: new Date().toISOString(),
+          };
+
+          if (isAdminNews && contentType === 'news_items') {
+            updateData.author_type = 'admin';
+            updateData.author_id = author_id || claims.user_id || claims.sub;
+          }
+
           const { data, error } = await supabase
             .from(contentType)
-            .update({
-              title,
-              content,
-              ...otherFields,
-              updated_at: new Date().toISOString(),
-            })
+            .update(updateData)
             .eq("id", existing.id)
             .select("id, slug")
             .maybeSingle();
@@ -118,16 +133,23 @@ Deno.serve(async (req: Request) => {
           if (error) throw error;
           result = data;
         } else {
+          const insertData: any = {
+            brand_id,
+            title,
+            slug,
+            content,
+            status: "draft",
+            ...otherFields,
+          };
+
+          if (isAdminNews && contentType === 'news_items') {
+            insertData.author_type = 'admin';
+            insertData.author_id = author_id || claims.user_id || claims.sub;
+          }
+
           const { data, error } = await supabase
             .from(contentType)
-            .insert({
-              brand_id,
-              title,
-              slug,
-              content,
-              status: "draft",
-              ...otherFields,
-            })
+            .insert(insertData)
             .select("id, slug")
             .maybeSingle();
 

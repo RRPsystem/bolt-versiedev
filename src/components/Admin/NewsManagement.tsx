@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Newspaper, Plus, Edit2, Trash2, Send, Eye } from 'lucide-react';
+import { Newspaper, Plus, Edit2, Trash2, Send, Eye, ExternalLink } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { generateBuilderJWT } from '../../lib/jwtHelper';
 
 interface NewsItem {
   id: string;
@@ -28,13 +29,9 @@ export function NewsManagement() {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
   const [showDistributeModal, setShowDistributeModal] = useState(false);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [formData, setFormData] = useState({
-    title: '',
-    slug: '',
-    excerpt: '',
     target_type: 'all_brands' as 'all_brands' | 'franchise' | 'custom_brand',
     is_mandatory: false,
     selected_brands: [] as string[]
@@ -76,65 +73,35 @@ export function NewsManagement() {
     }
   };
 
-  const handleCreateNews = () => {
-    setSelectedNews(null);
-    setFormData({
-      title: '',
-      slug: '',
-      excerpt: '',
-      target_type: 'all_brands',
-      is_mandatory: false,
-      selected_brands: []
-    });
-    setShowModal(true);
-  };
+  const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
 
-  const handleEditNews = (news: NewsItem) => {
-    setSelectedNews(news);
-    setFormData({
-      title: news.title,
-      slug: news.slug,
-      excerpt: news.excerpt || '',
-      target_type: news.target_type,
-      is_mandatory: news.is_mandatory,
-      selected_brands: []
-    });
-    setShowModal(true);
-  };
-
-  const handleSaveNews = async () => {
+  const handleCreateNews = async () => {
     try {
-      const newsData = {
-        title: formData.title,
-        slug: formData.slug,
-        excerpt: formData.excerpt,
-        author_id: user?.id,
-        author_type: 'admin',
-        target_type: formData.target_type,
-        is_mandatory: formData.is_mandatory,
-        status: 'draft'
-      };
+      const token = await generateBuilderJWT(SYSTEM_BRAND_ID, user?.id, ['content:write']);
+      const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
+      const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
-      if (selectedNews) {
-        const { error } = await supabase
-          .from('news_items')
-          .update(newsData)
-          .eq('id', selectedNews.id);
+      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${SYSTEM_BRAND_ID}&token=${token}&author_type=admin#/mode/news`;
 
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('news_items')
-          .insert([newsData]);
+      window.open(deeplink, '_blank');
+    } catch (err) {
+      console.error('Error generating deeplink:', err);
+      alert('Failed to generate builder link');
+    }
+  };
 
-        if (error) throw error;
-      }
+  const handleEditNews = async (news: NewsItem) => {
+    try {
+      const token = await generateBuilderJWT(SYSTEM_BRAND_ID, user?.id, ['content:write']);
+      const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
+      const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
-      setShowModal(false);
-      loadNewsItems();
-    } catch (error) {
-      console.error('Error saving news:', error);
-      alert('Failed to save news item');
+      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${SYSTEM_BRAND_ID}&token=${token}&news_slug=${news.slug}&author_type=admin#/mode/news`;
+
+      window.open(deeplink, '_blank');
+    } catch (err) {
+      console.error('Error generating deeplink:', err);
+      alert('Failed to generate builder link');
     }
   };
 
@@ -213,16 +180,6 @@ export function NewsManagement() {
     }
   };
 
-  const openInBuilder = (newsId?: string) => {
-    const builderUrl = import.meta.env.VITE_BUILDER_URL || 'https://windsurfer.builder';
-    const jwtToken = localStorage.getItem('builder_jwt');
-
-    if (newsId) {
-      window.open(`${builderUrl}?jwt=${jwtToken}&content_type=news&content_id=${newsId}`, '_blank');
-    } else {
-      window.open(`${builderUrl}?jwt=${jwtToken}&content_type=news&mode=create`, '_blank');
-    }
-  };
 
   if (loading) {
     return <div className="p-8">Loading...</div>;
@@ -290,11 +247,11 @@ export function NewsManagement() {
                 <td className="px-6 py-4 text-right">
                   <div className="flex items-center justify-end gap-2">
                     <button
-                      onClick={() => openInBuilder(item.id)}
+                      onClick={() => handleEditNews(item)}
                       className="text-blue-600 hover:text-blue-800"
                       title="Edit in Builder"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <ExternalLink className="w-4 h-4" />
                     </button>
                     {item.status === 'draft' && (
                       <button
@@ -326,65 +283,6 @@ export function NewsManagement() {
         )}
       </div>
 
-      {/* Create/Edit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4">
-              {selectedNews ? 'Edit News' : 'Create News'}
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Slug
-                </label>
-                <input
-                  type="text"
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Excerpt
-                </label>
-                <textarea
-                  value={formData.excerpt}
-                  onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 mt-6">
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveNews}
-                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700"
-              >
-                Save & Continue in Builder
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Distribute Modal */}
       {showDistributeModal && selectedNews && (
