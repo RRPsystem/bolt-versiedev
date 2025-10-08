@@ -162,7 +162,7 @@ export function NewsApproval() {
 
     try {
       console.log('Opening builder for news item:', assignment.news_item);
-      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write'], { forceBrandId: true });
+      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
 
       if (jwtResponse.shortlink) {
         const url = `${jwtResponse.shortlink}?slug=${assignment.news_item.slug}&content_type=news_items&author_type=brand&author_id=${user.id}#/mode/news`;
@@ -212,7 +212,7 @@ export function NewsApproval() {
     if (!user?.brand_id || !user?.id) return;
 
     try {
-      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write'], { forceBrandId: true });
+      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
 
       if (jwtResponse.shortlink) {
         const url = `${jwtResponse.shortlink}?content_type=news_items&author_type=brand&author_id=${user.id}#/mode/news`;
