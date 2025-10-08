@@ -162,11 +162,16 @@ export function NewsApproval() {
 
     try {
       console.log('Opening builder for news item:', assignment.news_item);
-      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
+      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write'], {
+        slug: assignment.news_item.slug,
+        contentType: 'news_items',
+        authorType: 'brand',
+        authorId: user.id,
+        mode: 'news',
+      });
 
       if (jwtResponse.shortlink) {
-        const url = `${jwtResponse.shortlink}?slug=${assignment.news_item.slug}&content_type=news_items&author_type=brand&author_id=${user.id}#/mode/news`;
-        window.open(url, '_blank');
+        window.open(jwtResponse.shortlink, '_blank');
       } else {
         const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
         const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -212,11 +217,15 @@ export function NewsApproval() {
     if (!user?.brand_id || !user?.id) return;
 
     try {
-      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
+      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write'], {
+        contentType: 'news_items',
+        authorType: 'brand',
+        authorId: user.id,
+        mode: 'news',
+      });
 
       if (jwtResponse.shortlink) {
-        const url = `${jwtResponse.shortlink}?content_type=news_items&author_type=brand&author_id=${user.id}#/mode/news`;
-        window.open(url, '_blank');
+        window.open(jwtResponse.shortlink, '_blank');
       } else {
         const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
         const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;

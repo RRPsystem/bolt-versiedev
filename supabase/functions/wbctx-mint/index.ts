@@ -12,6 +12,13 @@ interface MintRequest {
   page_id?: string;
   slug?: string;
   news_slug?: string;
+  template_id?: string;
+  menu_id?: string;
+  footer_id?: string;
+  author_type?: string;
+  author_id?: string;
+  content_type?: string;
+  mode?: string;
   ttl_minutes?: number;
   ephemeral?: boolean;
 }
@@ -32,6 +39,13 @@ Deno.serve(async (req: Request) => {
       page_id,
       slug,
       news_slug,
+      template_id,
+      menu_id,
+      footer_id,
+      author_type,
+      author_id,
+      content_type,
+      mode,
       ttl_minutes = 15,
       ephemeral = true,
     } = body;
@@ -74,6 +88,13 @@ Deno.serve(async (req: Request) => {
       page_id: page_id || null,
       news_slug: news_slug || null,
       slug: slug || null,
+      template_id: template_id || null,
+      menu_id: menu_id || null,
+      footer_id: footer_id || null,
+      author_type: author_type || null,
+      author_id: author_id || null,
+      content_type: content_type || null,
+      mode: mode || null,
       exp,
     };
 
@@ -100,6 +121,13 @@ Deno.serve(async (req: Request) => {
       page_id: page_id || null,
       news_slug: news_slug || null,
       slug: slug || null,
+      template_id: template_id || null,
+      menu_id: menu_id || null,
+      footer_id: footer_id || null,
+      author_type: author_type || null,
+      author_id: author_id || null,
+      content_type: content_type || null,
+      mode: mode || null,
       exp,
       ephemeral,
       sig: '',
@@ -189,12 +217,19 @@ async function signContext(ctx: any, privateKey: string): Promise<string> {
   const canonical = {
     api: ctx.api,
     apikey: ctx.apikey,
+    author_id: ctx.author_id,
+    author_type: ctx.author_type,
     brand_id: ctx.brand_id,
+    content_type: ctx.content_type,
     ephemeral: ctx.ephemeral,
     exp: ctx.exp,
+    footer_id: ctx.footer_id,
+    menu_id: ctx.menu_id,
+    mode: ctx.mode,
     news_slug: ctx.news_slug,
     page_id: ctx.page_id,
     slug: ctx.slug,
+    template_id: ctx.template_id,
     token: ctx.token,
   };
 

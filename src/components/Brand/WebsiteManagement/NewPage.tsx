@@ -85,9 +85,9 @@ export function NewPage({ brandId: propBrandId, onPageCreated }: Props = {}) {
   const handleUseTemplate = async (templateId: number) => {
     if (!user || !propBrandId) return;
 
-    const jwtResponse = await generateBuilderJWT(propBrandId, user.id);
+    const jwtResponse = await generateBuilderJWT(propBrandId, user.id, undefined, { templateId: templateId.toString() });
     if (jwtResponse.shortlink) {
-      window.open(`${jwtResponse.shortlink}?template_id=${templateId}`, '_blank');
+      window.open(jwtResponse.shortlink, '_blank');
     } else {
       const deeplink = generateBuilderDeeplink(propBrandId, jwtResponse.token, {
         templateId: templateId.toString()

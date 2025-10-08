@@ -71,11 +71,15 @@ export function NewsManagement() {
         return;
       }
 
-      const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], { forceBrandId: true });
+      const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], {
+        forceBrandId: true,
+        authorType: 'admin',
+        authorId: user.id,
+        mode: 'news',
+      });
 
       if (jwtResponse.shortlink) {
-        const url = `${jwtResponse.shortlink}?author_type=admin&author_id=${user.id}#/mode/news`;
-        window.open(url, '_blank');
+        window.open(jwtResponse.shortlink, '_blank');
       } else {
         const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
         const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -96,11 +100,16 @@ export function NewsManagement() {
         return;
       }
 
-      const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], { forceBrandId: true });
+      const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], {
+        forceBrandId: true,
+        newsSlug: news.slug,
+        authorType: 'admin',
+        authorId: user.id,
+        mode: 'news',
+      });
 
       if (jwtResponse.shortlink) {
-        const url = `${jwtResponse.shortlink}?news_slug=${news.slug}&author_type=admin&author_id=${user.id}#/mode/news`;
-        window.open(url, '_blank');
+        window.open(jwtResponse.shortlink, '_blank');
       } else {
         const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
         const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;

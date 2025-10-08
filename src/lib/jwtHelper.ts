@@ -21,7 +21,19 @@ export async function generateBuilderJWT(
   brandId: string,
   userId: string,
   scopes: string[] = ['pages:write', 'layouts:write', 'menus:write'],
-  options: { pageId?: string; slug?: string; forceBrandId?: boolean } = {}
+  options: {
+    pageId?: string;
+    slug?: string;
+    forceBrandId?: boolean;
+    templateId?: string;
+    menuId?: string;
+    footerId?: string;
+    authorType?: string;
+    authorId?: string;
+    contentType?: string;
+    newsSlug?: string;
+    mode?: string;
+  } = {}
 ): Promise<GenerateJWTResponse> {
   const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-builder-jwt`;
 
@@ -44,13 +56,22 @@ export async function generateBuilderJWT(
 
   const requestBody: any = {
     scopes: scopes,
-    page_id: options.pageId,
-    slug: options.slug,
   };
 
   if (options.forceBrandId) {
     requestBody.brand_id = brandId;
   }
+
+  if (options.pageId) requestBody.page_id = options.pageId;
+  if (options.slug) requestBody.slug = options.slug;
+  if (options.templateId) requestBody.template_id = options.templateId;
+  if (options.menuId) requestBody.menu_id = options.menuId;
+  if (options.footerId) requestBody.footer_id = options.footerId;
+  if (options.authorType) requestBody.author_type = options.authorType;
+  if (options.authorId) requestBody.author_id = options.authorId;
+  if (options.contentType) requestBody.content_type = options.contentType;
+  if (options.newsSlug) requestBody.news_slug = options.newsSlug;
+  if (options.mode) requestBody.mode = options.mode;
 
   const response = await fetch(apiUrl, {
     method: 'POST',
