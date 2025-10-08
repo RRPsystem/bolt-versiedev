@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, CreditCard as Edit, Copy, Trash2, Eye, Plus, RefreshCw, Upload, FileX } from 'lucide-react';
+import { ExternalLink, Pencil as Edit, Copy, Trash2, Eye, Plus, RefreshCw, Upload, FileX } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { generateBuilderJWT, generateBuilderDeeplink } from '../../../lib/jwtHelper';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -111,6 +111,7 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, {
         pageId,
         slug: page?.slug || '',
+        forceBrandId: true,
       });
       console.log('Token generated successfully');
 
@@ -135,7 +136,9 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     if (!user || !brandId) return;
 
     try {
-      const jwtResponse = await generateBuilderJWT(brandId, user.id);
+      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, {
+        forceBrandId: true,
+      });
       if (jwtResponse.shortlink) {
         window.open(jwtResponse.shortlink, '_blank');
       } else {
@@ -185,7 +188,9 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     if (!confirm('Weet je zeker dat je deze pagina wilt verwijderen?')) return;
 
     try {
-      const jwtResponse = await generateBuilderJWT(brandId, user.id);
+      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, {
+        forceBrandId: true,
+      });
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/${pageId}`;
 
       const response = await fetch(apiUrl, {
@@ -214,7 +219,9 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     if (!confirm('Weet je zeker dat je deze pagina wilt publiceren?')) return;
 
     try {
-      const jwtResponse = await generateBuilderJWT(brandId, user!.id);
+      const jwtResponse = await generateBuilderJWT(brandId, user!.id, undefined, {
+        forceBrandId: true,
+      });
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/publish`;
 
       const response = await fetch(apiUrl, {
@@ -256,7 +263,9 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
 
   const toggleShowInMenu = async (pageId: string, currentValue: boolean) => {
     try {
-      const jwtResponse = await generateBuilderJWT(brandId, user!.id);
+      const jwtResponse = await generateBuilderJWT(brandId, user!.id, undefined, {
+        forceBrandId: true,
+      });
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/updateMenuSettings`;
 
       const response = await fetch(apiUrl, {
