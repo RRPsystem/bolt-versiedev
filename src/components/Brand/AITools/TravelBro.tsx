@@ -43,7 +43,7 @@ export function TravelBro() {
   };
 
   const copyShareLink = (token: string) => {
-    const link = `https://ai.travelstudio.nl/travel/${token}`;
+    const link = `https://www.ai-travelstudio.nl/travel/${token}`;
     navigator.clipboard.writeText(link);
     setCopiedToken(token);
     setTimeout(() => setCopiedToken(null), 2000);
@@ -453,7 +453,7 @@ function TripDetails({ trip, onBack }: { trip: Trip; onBack: () => void }) {
     setConversations(data || []);
   };
 
-  const shareLink = `https://ai.travelstudio.nl/travel/${trip.share_token}`;
+  const shareLink = `https://www.ai-travelstudio.nl/travel/${trip.share_token}`;
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
