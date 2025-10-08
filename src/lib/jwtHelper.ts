@@ -21,7 +21,7 @@ export async function generateBuilderJWT(
   brandId: string,
   userId: string,
   scopes: string[] = ['pages:write', 'layouts:write', 'menus:write'],
-  options: { pageId?: string; slug?: string } = {}
+  options: { pageId?: string; slug?: string; forceBrandId?: boolean } = {}
 ): Promise<GenerateJWTResponse> {
   const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-builder-jwt`;
 
@@ -42,18 +42,23 @@ export async function generateBuilderJWT(
     }
   }
 
+  const requestBody: any = {
+    scopes: scopes,
+    page_id: options.pageId,
+    slug: options.slug,
+  };
+
+  if (options.forceBrandId) {
+    requestBody.brand_id = brandId;
+  }
+
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${authToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      brand_id: brandId,
-      scopes: scopes,
-      page_id: options.pageId,
-      slug: options.slug,
-    })
+    body: JSON.stringify(requestBody)
   });
 
   if (!response.ok) {

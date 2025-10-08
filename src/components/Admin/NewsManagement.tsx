@@ -71,7 +71,7 @@ export function NewsManagement() {
         return;
       }
 
-      const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write']);
+      const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], { forceBrandId: true });
 
       if (jwtResponse.shortlink) {
         const url = `${jwtResponse.shortlink}?author_type=admin&author_id=${user.id}#/mode/news`;
@@ -96,7 +96,7 @@ export function NewsManagement() {
         return;
       }
 
-      const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write']);
+      const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], { forceBrandId: true });
 
       if (jwtResponse.shortlink) {
         const url = `${jwtResponse.shortlink}?news_slug=${news.slug}&author_type=admin&author_id=${user.id}#/mode/news`;
