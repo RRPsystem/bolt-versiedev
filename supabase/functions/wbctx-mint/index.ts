@@ -1,5 +1,10 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, Apikey',
+};
 
 interface MintRequest {
   brand_id: string;
@@ -72,8 +77,8 @@ Deno.serve(async (req: Request) => {
       exp,
     };
 
-    const privateKey = Deno.env.get('WB_CTX_PRIVATE_KEY')?.replace(/\\n/g, '\n');
-    const publicKey = Deno.env.get('WB_CTX_PUBLIC_KEY')?.replace(/\\n/g, '\n');
+    const privateKey = Deno.env.get('WBCTX_PRIVATE_KEY')?.replace(/\\n/g, '\n');
+    const publicKey = Deno.env.get('WBCTX_PUBLIC_KEY')?.replace(/\\n/g, '\n');
 
     if (!privateKey || !publicKey) {
       return new Response(
