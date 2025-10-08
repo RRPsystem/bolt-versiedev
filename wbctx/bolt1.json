@@ -1,0 +1,13 @@
+{
+  "api": "https://YOUR_SUPABASE_PROJECT.supabase.co/functions/v1",
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJicmFuZF9pZCI6IlBMQUNFSE9MREVSIiwicGFnZV9pZCI6IlBMQUNFSE9MREVSIiwic2x1ZyI6InBsYWNlaG9sZGVyLXNsdWciLCJleHAiOjE3MzM2NzEyMDB9.PLACEHOLDER_SIGNATURE",
+  "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.PLACEHOLDER_ANON_KEY",
+  "brand_id": "00000000-0000-0000-0000-000000000000",
+  "page_id": "11111111-1111-1111-1111-111111111111",
+  "news_slug": null,
+  "slug": "example-page-slug",
+  "exp": 1733671200,
+  "ephemeral": true,
+  "sig": "PLACEHOLDER_RS256_SIGNATURE_WILL_BE_GENERATED_BY_MINT_ENDPOINT",
+  "pub": "-----BEGIN PUBLIC KEY-----\nPLACEHOLDER_PUBLIC_KEY\n-----END PUBLIC KEY-----"
+}
