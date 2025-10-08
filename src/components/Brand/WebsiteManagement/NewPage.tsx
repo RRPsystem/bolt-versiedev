@@ -73,21 +73,27 @@ export function NewPage({ brandId: propBrandId, onPageCreated }: Props = {}) {
   const handleOpenPageBuilder = async () => {
     if (!user || !propBrandId) return;
 
-    const token = await generateBuilderJWT(propBrandId, user.id);
-    const deeplink = generateBuilderDeeplink(propBrandId, token);
-
-    window.open(deeplink, '_blank');
+    const jwtResponse = await generateBuilderJWT(propBrandId, user.id);
+    if (jwtResponse.shortlink) {
+      window.open(jwtResponse.shortlink, '_blank');
+    } else {
+      const deeplink = generateBuilderDeeplink(propBrandId, jwtResponse.token);
+      window.open(deeplink, '_blank');
+    }
   };
 
   const handleUseTemplate = async (templateId: number) => {
     if (!user || !propBrandId) return;
 
-    const token = await generateBuilderJWT(propBrandId, user.id);
-    const deeplink = generateBuilderDeeplink(propBrandId, token, {
-      templateId: templateId.toString()
-    });
-
-    window.open(deeplink, '_blank');
+    const jwtResponse = await generateBuilderJWT(propBrandId, user.id);
+    if (jwtResponse.shortlink) {
+      window.open(`${jwtResponse.shortlink}?template_id=${templateId}`, '_blank');
+    } else {
+      const deeplink = generateBuilderDeeplink(propBrandId, jwtResponse.token, {
+        templateId: templateId.toString()
+      });
+      window.open(deeplink, '_blank');
+    }
   };
 
   return (

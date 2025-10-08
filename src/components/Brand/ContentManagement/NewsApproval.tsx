@@ -162,15 +162,18 @@ export function NewsApproval() {
 
     try {
       console.log('Opening builder for news item:', assignment.news_item);
-      const token = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
-      const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
-      const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
 
-      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${token}&slug=${assignment.news_item.slug}&content_type=news_items&author_type=brand&author_id=${user.id}#/mode/news`;
-
-      console.log('Generated deeplink:', deeplink);
-      window.open(deeplink, '_blank');
+      if (jwtResponse.shortlink) {
+        const url = `${jwtResponse.shortlink}?slug=${assignment.news_item.slug}&content_type=news_items&author_type=brand&author_id=${user.id}#/mode/news`;
+        window.open(url, '_blank');
+      } else {
+        const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
+        const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&slug=${assignment.news_item.slug}&content_type=news_items&author_type=brand&author_id=${user.id}#/mode/news`;
+        window.open(deeplink, '_blank');
+      }
     } catch (error) {
       console.error('Error opening builder:', error);
       alert('Kon de website builder niet openen');
@@ -209,14 +212,18 @@ export function NewsApproval() {
     if (!user?.brand_id || !user?.id) return;
 
     try {
-      const token = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
-      const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
-      const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write']);
 
-      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${token}&content_type=news_items&author_type=brand&author_id=${user.id}#/mode/news`;
-
-      window.open(deeplink, '_blank');
+      if (jwtResponse.shortlink) {
+        const url = `${jwtResponse.shortlink}?content_type=news_items&author_type=brand&author_id=${user.id}#/mode/news`;
+        window.open(url, '_blank');
+      } else {
+        const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
+        const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&content_type=news_items&author_type=brand&author_id=${user.id}#/mode/news`;
+        window.open(deeplink, '_blank');
+      }
     } catch (error) {
       console.error('Error opening builder:', error);
       alert('Kon de website builder niet openen');

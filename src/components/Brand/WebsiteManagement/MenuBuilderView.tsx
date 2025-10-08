@@ -138,9 +138,13 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
     if (!user || !brandId) return;
 
     try {
-      const token = await generateBuilderJWT(brandId, user.id);
-      const deeplink = generateBuilderDeeplink(brandId, token, { menuId });
-      window.open(deeplink, '_blank');
+      const jwtResponse = await generateBuilderJWT(brandId, user.id);
+      if (jwtResponse.shortlink) {
+        window.open(`${jwtResponse.shortlink}?menu_id=${menuId}`, '_blank');
+      } else {
+        const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token, { menuId });
+        window.open(deeplink, '_blank');
+      }
     } catch (error) {
       console.error('Error generating deeplink:', error);
     }
@@ -150,9 +154,13 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
     if (!user || !brandId) return;
 
     try {
-      const token = await generateBuilderJWT(brandId, user.id);
-      const deeplink = generateBuilderDeeplink(brandId, token, { menuId: 'new' });
-      window.open(deeplink, '_blank');
+      const jwtResponse = await generateBuilderJWT(brandId, user.id);
+      if (jwtResponse.shortlink) {
+        window.open(`${jwtResponse.shortlink}?menu_id=new`, '_blank');
+      } else {
+        const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token, { menuId: 'new' });
+        window.open(deeplink, '_blank');
+      }
     } catch (error) {
       console.error('Error generating deeplink:', error);
     }

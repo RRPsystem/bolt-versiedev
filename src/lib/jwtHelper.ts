@@ -6,6 +6,14 @@ export interface BuilderJWTPayload {
   iat: number;
 }
 
+export interface GenerateJWTResponse {
+  token: string;
+  brand_id: string;
+  shortlink: string | null;
+  api_url: string;
+  api_key: string;
+}
+
 /**
  * Generates a JWT token for the builder by calling the server-side Edge Function
  */
@@ -13,7 +21,7 @@ export async function generateBuilderJWT(
   brandId: string,
   userId: string,
   scopes: string[] = ['pages:write', 'layouts:write', 'menus:write']
-): Promise<string> {
+): Promise<GenerateJWTResponse> {
   const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-builder-jwt`;
 
   let authToken = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -52,7 +60,7 @@ export async function generateBuilderJWT(
   }
 
   const data = await response.json();
-  return data.token;
+  return data;
 }
 
 export function generateBuilderDeeplink(

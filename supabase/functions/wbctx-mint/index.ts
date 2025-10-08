@@ -46,9 +46,9 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (type === 'page' && (!page_id || !slug)) {
+    if (type === 'page' && page_id && !slug) {
       return new Response(
-        JSON.stringify({ error: 'page_id and slug required for page type' }),
+        JSON.stringify({ error: 'slug required when page_id is provided' }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

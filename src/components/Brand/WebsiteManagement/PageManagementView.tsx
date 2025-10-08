@@ -103,15 +103,21 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       console.log('Opening builder for page:', pageId);
       console.log('Brand ID:', brandId, 'User ID:', user.id);
 
-      const token = await generateBuilderJWT(brandId, user.id);
-      console.log('Token generated successfully:', token.substring(0, 20) + '...');
+      const jwtResponse = await generateBuilderJWT(brandId, user.id);
+      console.log('Token generated successfully');
 
-      const deeplink = generateBuilderDeeplink(brandId, token, { pageId });
-      console.log('Generated deeplink:', deeplink);
-
-      const newWindow = window.open(deeplink, '_blank');
-      if (!newWindow) {
-        alert('Popup geblokkeerd! Sta popups toe voor deze website.');
+      if (jwtResponse.shortlink) {
+        console.log('Using shortlink:', jwtResponse.shortlink);
+        const page = pages.find(p => p.id === pageId);
+        const fullUrl = `${jwtResponse.shortlink}?page_id=${pageId}&slug=${page?.slug || ''}&v=${Date.now().toString(36)}#/mode/page`;
+        window.open(fullUrl, '_blank');
+      } else {
+        const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token, { pageId });
+        console.log('Generated deeplink:', deeplink);
+        const newWindow = window.open(deeplink, '_blank');
+        if (!newWindow) {
+          alert('Popup geblokkeerd! Sta popups toe voor deze website.');
+        }
       }
     } catch (error) {
       console.error('Error generating deeplink:', error);
@@ -123,9 +129,13 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     if (!user || !brandId) return;
 
     try {
-      const token = await generateBuilderJWT(brandId, user.id);
-      const deeplink = generateBuilderDeeplink(brandId, token);
-      window.open(deeplink, '_blank');
+      const jwtResponse = await generateBuilderJWT(brandId, user.id);
+      if (jwtResponse.shortlink) {
+        window.open(jwtResponse.shortlink, '_blank');
+      } else {
+        const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token);
+        window.open(deeplink, '_blank');
+      }
     } catch (error) {
       console.error('Error generating deeplink:', error);
     }
@@ -160,13 +170,13 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     if (!confirm('Weet je zeker dat je deze pagina wilt verwijderen?')) return;
 
     try {
-      const token = await generateBuilderJWT(brandId, user!.id);
+      const jwtResponse = await generateBuilderJWT(brandId, user!.id);
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/${pageId}`;
 
       const response = await fetch(apiUrl, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${jwtResponse.token}`,
           'Content-Type': 'application/json',
         },
       });
@@ -185,13 +195,13 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     if (!confirm('Weet je zeker dat je deze pagina wilt publiceren?')) return;
 
     try {
-      const token = await generateBuilderJWT(brandId, user!.id);
+      const jwtResponse = await generateBuilderJWT(brandId, user!.id);
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/publish`;
 
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${jwtResponse.token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -227,13 +237,13 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
 
   const toggleShowInMenu = async (pageId: string, currentValue: boolean) => {
     try {
-      const token = await generateBuilderJWT(brandId, user!.id);
+      const jwtResponse = await generateBuilderJWT(brandId, user!.id);
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/updateMenuSettings`;
 
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${jwtResponse.token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

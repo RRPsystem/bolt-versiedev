@@ -71,14 +71,18 @@ export function NewsManagement() {
         return;
       }
 
-      const token = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write']);
-      const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
-      const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write']);
 
-      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${SYSTEM_BRAND_ID}&token=${token}&author_type=admin&author_id=${user.id}#/mode/news`;
-
-      window.open(deeplink, '_blank');
+      if (jwtResponse.shortlink) {
+        const url = `${jwtResponse.shortlink}?author_type=admin&author_id=${user.id}#/mode/news`;
+        window.open(url, '_blank');
+      } else {
+        const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
+        const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&author_type=admin&author_id=${user.id}#/mode/news`;
+        window.open(deeplink, '_blank');
+      }
     } catch (err) {
       console.error('Error generating deeplink:', err);
       alert('Failed to generate builder link');
@@ -92,14 +96,18 @@ export function NewsManagement() {
         return;
       }
 
-      const token = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write']);
-      const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
-      const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write']);
 
-      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${SYSTEM_BRAND_ID}&token=${token}&news_slug=${news.slug}&author_type=admin&author_id=${user.id}#/mode/news`;
-
-      window.open(deeplink, '_blank');
+      if (jwtResponse.shortlink) {
+        const url = `${jwtResponse.shortlink}?news_slug=${news.slug}&author_type=admin&author_id=${user.id}#/mode/news`;
+        window.open(url, '_blank');
+      } else {
+        const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
+        const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&news_slug=${news.slug}&author_type=admin&author_id=${user.id}#/mode/news`;
+        window.open(deeplink, '_blank');
+      }
     } catch (err) {
       console.error('Error generating deeplink:', err);
       alert('Failed to generate builder link');
