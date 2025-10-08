@@ -103,14 +103,16 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       console.log('Opening builder for page:', pageId);
       console.log('Brand ID:', brandId, 'User ID:', user.id);
 
-      const jwtResponse = await generateBuilderJWT(brandId, user.id);
+      const page = pages.find(p => p.id === pageId);
+      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, {
+        pageId,
+        slug: page?.slug || '',
+      });
       console.log('Token generated successfully');
 
       if (jwtResponse.shortlink) {
         console.log('Using shortlink:', jwtResponse.shortlink);
-        const page = pages.find(p => p.id === pageId);
-        const fullUrl = `${jwtResponse.shortlink}?page_id=${pageId}&slug=${page?.slug || ''}&v=${Date.now().toString(36)}#/mode/page`;
-        window.open(fullUrl, '_blank');
+        window.open(jwtResponse.shortlink, '_blank');
       } else {
         const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token, { pageId });
         console.log('Generated deeplink:', deeplink);

@@ -20,7 +20,8 @@ export interface GenerateJWTResponse {
 export async function generateBuilderJWT(
   brandId: string,
   userId: string,
-  scopes: string[] = ['pages:write', 'layouts:write', 'menus:write']
+  scopes: string[] = ['pages:write', 'layouts:write', 'menus:write'],
+  options: { pageId?: string; slug?: string } = {}
 ): Promise<GenerateJWTResponse> {
   const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-builder-jwt`;
 
@@ -49,7 +50,9 @@ export async function generateBuilderJWT(
     },
     body: JSON.stringify({
       brand_id: brandId,
-      scopes: scopes
+      scopes: scopes,
+      page_id: options.pageId,
+      slug: options.slug,
     })
   });
 
