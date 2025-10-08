@@ -6,6 +6,7 @@ import PageManagementView from './WebsiteManagement/PageManagementView';
 import MenuBuilderView from './WebsiteManagement/MenuBuilderView';
 import FooterBuilderView from './WebsiteManagement/FooterBuilderView';
 import { NewsApproval } from './ContentManagement/NewsApproval';
+import { TravelBro } from './AITools/TravelBro';
 import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe, Newspaper, MapPin, Plane } from 'lucide-react';
 
 export function BrandDashboard() {
@@ -294,18 +295,7 @@ export function BrandDashboard() {
             <AIContentGenerator />
           )}
 
-          {activeSection === 'ai-travelbro' && (
-            <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff7700, #ffaa44)' }}>
-                <Bot className="w-8 h-8 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">AI TravelBRO</h2>
-              <p className="text-gray-600 mb-6">Your intelligent travel assistant for personalized recommendations</p>
-              <button className="text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-orange-700" style={{ backgroundColor: '#ff7700' }}>
-                Chat with TravelBRO
-              </button>
-            </div>
-          )}
+          {activeSection === 'ai-travelbro' && <TravelBro />}
           
           {activeSection === 'ai-import' && (
             <div className="bg-white rounded-lg shadow-sm border p-8 text-center">

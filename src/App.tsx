@@ -5,9 +5,18 @@ import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { BrandDashboard } from './components/Brand/BrandDashboard';
 import { OperatorDashboard } from './components/Operator/OperatorDashboard';
 import { PreviewPage } from './components/Preview/PreviewPage';
+import { ClientInterface } from './components/TravelBro/ClientInterface';
 
 function AppContent() {
   console.log('🚀 AppContent component rendering');
+
+  const path = window.location.pathname;
+  const travelMatch = path.match(/^\/travel\/([a-f0-9]+)$/);
+
+  if (travelMatch) {
+    return <ClientInterface shareToken={travelMatch[1]} />;
+  }
+
   const params = new URLSearchParams(window.location.search);
   const isPreview = params.has('preview') || params.has('page_id') ||
                     (params.has('brand_id') && params.has('slug'));
