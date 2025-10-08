@@ -7,6 +7,7 @@ interface Trip {
   name: string;
   parsed_data: any;
   source_urls: string[];
+  intake_template: any;
 }
 
 interface Message {
@@ -299,8 +300,9 @@ export function ClientInterface({ shareToken }: { shareToken: string }) {
 }
 
 function IntakeForm({ trip, onComplete }: { trip: Trip; onComplete: (token: string) => void }) {
-  const [travelersCount, setTravelersCount] = useState(1);
-  const [travelers, setTravelers] = useState<any[]>([{ name: '', age: '', relation: 'adult' }]);
+  const templateTravelers = trip.intake_template?.travelers || [{ name: '', age: '', relation: 'adult' }];
+  const [travelersCount, setTravelersCount] = useState(templateTravelers.length);
+  const [travelers, setTravelers] = useState<any[]>(templateTravelers);
   const [submitting, setSubmitting] = useState(false);
 
   const addTraveler = () => {

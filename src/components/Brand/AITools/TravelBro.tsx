@@ -11,6 +11,7 @@ interface Trip {
   source_urls: string[];
   share_token: string;
   is_active: boolean;
+  intake_template: any;
   created_at: string;
 }
 
@@ -424,9 +425,11 @@ function NewTripForm({ onBack }: { onBack: () => void }) {
 }
 
 function TripDetails({ trip, onBack }: { trip: Trip; onBack: () => void }) {
-  const [activeTab, setActiveTab] = useState<'settings' | 'intakes' | 'conversations'>('settings');
+  const [activeTab, setActiveTab] = useState<'settings' | 'intakes' | 'conversations' | 'intake-template'>('settings');
   const [intakes, setIntakes] = useState<any[]>([]);
   const [conversations, setConversations] = useState<any[]>([]);
+  const [newUrls, setNewUrls] = useState<string[]>(['']);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     loadIntakes();
@@ -451,6 +454,56 @@ function TripDetails({ trip, onBack }: { trip: Trip; onBack: () => void }) {
       .order('created_at', { ascending: false });
 
     setConversations(data || []);
+  };
+
+  const handleAddUrls = async () => {
+    const validUrls = newUrls.filter(url => url.trim() !== '');
+    if (validUrls.length === 0) return;
+
+    try {
+      const updatedUrls = [...trip.source_urls, ...validUrls];
+      const { error } = await supabase
+        .from('travel_trips')
+        .update({ source_urls: updatedUrls })
+        .eq('id', trip.id);
+
+      if (error) throw error;
+      alert('URLs toegevoegd!');
+      onBack();
+    } catch (error) {
+      console.error('Error adding URLs:', error);
+      alert('Fout bij toevoegen van URLs');
+    }
+  };
+
+  const handlePdfUpload = async (file: File) => {
+    setUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `trips/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('travel-documents')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { error } = await supabase
+        .from('travel_trips')
+        .update({ pdf_url: filePath })
+        .eq('id', trip.id);
+
+      if (error) throw error;
+      alert('PDF geüpload!');
+      onBack();
+    } catch (error) {
+      console.error('Error uploading PDF:', error);
+      alert('Fout bij uploaden van PDF');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const shareLink = `https://www.ai-travelstudio.nl/travel/${trip.share_token}`;
@@ -529,30 +582,85 @@ function TripDetails({ trip, onBack }: { trip: Trip; onBack: () => void }) {
                 <MessageSquare size={16} />
                 <span>Conversaties ({conversations.length})</span>
               </button>
+              <button
+                onClick={() => setActiveTab('intake-template')}
+                className={`pb-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
+                  activeTab === 'intake-template'
+                    ? 'border-orange-600 text-orange-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <FileText size={16} />
+                <span>Intake Template</span>
+              </button>
             </nav>
           </div>
 
           {activeTab === 'settings' && (
             <div className="space-y-6">
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">PDF Document</h3>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-semibold text-gray-900">PDF Documenten</h3>
+                  <label className="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded text-sm cursor-pointer transition-colors">
+                    + Upload PDF
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      className="hidden"
+                      onChange={(e) => e.target.files?.[0] && handlePdfUpload(e.target.files[0])}
+                      disabled={uploading}
+                    />
+                  </label>
+                </div>
                 <p className="text-sm text-gray-600">
                   {trip.pdf_url ? trip.pdf_url : 'Geen PDF geüpload'}
                 </p>
+                {uploading && <p className="text-sm text-orange-600 mt-2">Uploaden...</p>}
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Bron URL's</h3>
-                {trip.source_urls.length > 0 ? (
-                  <ul className="space-y-1">
+                <h3 className="font-semibold text-gray-900 mb-3">Bron URL's</h3>
+                {trip.source_urls.length > 0 && (
+                  <ul className="space-y-1 mb-4">
                     {trip.source_urls.map((url, index) => (
                       <li key={index} className="text-sm text-blue-600 hover:underline">
                         <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
                       </li>
                     ))}
                   </ul>
-                ) : (
-                  <p className="text-sm text-gray-600">Geen URLs toegevoegd</p>
                 )}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-700">Nieuwe URL's toevoegen:</p>
+                  {newUrls.map((url, index) => (
+                    <div key={index} className="flex space-x-2">
+                      <input
+                        type="url"
+                        value={url}
+                        onChange={(e) => {
+                          const updated = [...newUrls];
+                          updated[index] = e.target.value;
+                          setNewUrls(updated);
+                        }}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                        placeholder="https://example.com"
+                      />
+                      {index === newUrls.length - 1 && (
+                        <button
+                          onClick={() => setNewUrls([...newUrls, ''])}
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
+                        >
+                          +
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    onClick={handleAddUrls}
+                    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm"
+                    style={{ backgroundColor: '#ff7700' }}
+                  >
+                    URLs Opslaan
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -611,7 +719,209 @@ function TripDetails({ trip, onBack }: { trip: Trip; onBack: () => void }) {
               )}
             </div>
           )}
+
+          {activeTab === 'intake-template' && (
+            <IntakeTemplateEditor trip={trip} onSave={onBack} />
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function IntakeTemplateEditor({ trip, onSave }: { trip: Trip; onSave: () => void }) {
+  const [travelers, setTravelers] = useState<any[]>(
+    trip.intake_template?.travelers || [{ name: '', age: '', relation: 'adult' }]
+  );
+  const [saving, setSaving] = useState(false);
+
+  const addTraveler = () => {
+    setTravelers([...travelers, { name: '', age: '', relation: 'child', interests: [] }]);
+  };
+
+  const updateTraveler = (index: number, field: string, value: any) => {
+    const updated = [...travelers];
+    updated[index][field] = value;
+    setTravelers(updated);
+  };
+
+  const removeTraveler = (index: number) => {
+    if (travelers.length > 1) {
+      setTravelers(travelers.filter((_, i) => i !== index));
+    }
+  };
+
+  const toggleInterest = (index: number, interest: string) => {
+    const updated = [...travelers];
+    if (!updated[index].interests) updated[index].interests = [];
+
+    const interests = updated[index].interests;
+    const interestIndex = interests.indexOf(interest);
+
+    if (interestIndex > -1) {
+      interests.splice(interestIndex, 1);
+    } else {
+      interests.push(interest);
+    }
+
+    setTravelers(updated);
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from('travel_trips')
+        .update({
+          intake_template: { travelers },
+        })
+        .eq('id', trip.id);
+
+      if (error) throw error;
+      alert('Intake template opgeslagen!');
+      onSave();
+    } catch (error) {
+      console.error('Error saving template:', error);
+      alert('Fout bij opslaan');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const interestOptions = [
+    { id: 'gaming', label: '🎮 Gaming', value: 'gaming' },
+    { id: 'tiktok', label: '📱 TikTok/Social Media', value: 'tiktok' },
+    { id: 'drawing', label: '🎨 Tekenen/Knutselen', value: 'drawing' },
+    { id: 'sports', label: '⚽ Sport', value: 'sports' },
+    { id: 'reading', label: '📚 Lezen', value: 'reading' },
+    { id: 'music', label: '🎵 Muziek', value: 'music' },
+    { id: 'animals', label: '🐾 Dieren', value: 'animals' },
+    { id: 'adventure', label: '🏔️ Avontuur/Buiten', value: 'adventure' },
+    { id: 'puzzles', label: '🧩 Puzzelen', value: 'puzzles' },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-sm text-blue-900">
+          <strong>Tip:</strong> Vul hier alvast gegevens in die je al weet over de reizigers.
+          De klant kan deze gegevens later aanvullen of aanpassen in het intake formulier.
+        </p>
+      </div>
+
+      {travelers.map((traveler, index) => (
+        <div key={index} className="border border-gray-200 rounded-lg p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Reiziger {index + 1}
+            </h3>
+            {travelers.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeTraveler(index)}
+                className="text-red-600 hover:text-red-700 text-sm"
+              >
+                Verwijder
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Naam (optioneel)
+                </label>
+                <input
+                  type="text"
+                  value={traveler.name || ''}
+                  onChange={(e) => updateTraveler(index, 'name', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Laat leeg als onbekend"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Leeftijd (optioneel)
+                </label>
+                <input
+                  type="number"
+                  value={traveler.age || ''}
+                  onChange={(e) => updateTraveler(index, 'age', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  placeholder="Laat leeg als onbekend"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Relatie
+              </label>
+              <select
+                value={traveler.relation || 'adult'}
+                onChange={(e) => updateTraveler(index, 'relation', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              >
+                <option value="adult">Volwassene</option>
+                <option value="child">Kind</option>
+                <option value="teen">Tiener</option>
+              </select>
+            </div>
+
+            {(traveler.relation === 'child' || traveler.relation === 'teen') && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Interesses & Hobby's (optioneel)
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {interestOptions.map((interest) => (
+                    <button
+                      key={interest.id}
+                      type="button"
+                      onClick={() => toggleInterest(index, interest.value)}
+                      className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                        traveler.interests?.includes(interest.value)
+                          ? 'border-orange-600 bg-orange-50 text-orange-700'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      {interest.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={addTraveler}
+        className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-orange-500 hover:text-orange-600 transition-colors"
+      >
+        + Voeg reiziger toe
+      </button>
+
+      <div className="flex space-x-3 pt-4">
+        <button
+          type="button"
+          onClick={() => onSave()}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+        >
+          Annuleer
+        </button>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className="flex-1 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+          style={{ backgroundColor: '#ff7700' }}
+        >
+          {saving ? 'Opslaan...' : 'Template Opslaan'}
+        </button>
       </div>
     </div>
   );
