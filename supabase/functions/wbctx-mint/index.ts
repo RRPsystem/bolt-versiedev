@@ -137,7 +137,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const shortlink = `https://wb.ai/s/${ctx_id}`;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const shortlink = `${supabaseUrl}/functions/v1/wbctx-redirect/${ctx_id}`;
 
     return new Response(
       JSON.stringify({

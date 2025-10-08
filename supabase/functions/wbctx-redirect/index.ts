@@ -23,10 +23,16 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const ctxBaseUrl = Deno.env.get('CTX_BASE_URL') || 'https://ctx.ai-websitestudio.nl';
+    const ctxBaseUrl = Deno.env.get('SUPABASE_URL') + '/functions/v1';
     const builderUrl = 'https://www.ai-websitestudio.nl/index.html';
 
-    const redirectUrl = `${builderUrl}?ctx=${ctxId}&ctx_base=${ctxBaseUrl}&edge_badge=0#/mode/page`;
+    const params = new URLSearchParams(url.search);
+    params.set('ctx', ctxId);
+    params.set('ctx_base', ctxBaseUrl);
+    params.set('edge_badge', '0');
+
+    const hash = url.hash || '#/mode/page';
+    const redirectUrl = `${builderUrl}?${params.toString()}${hash}`;
 
     return new Response(null, {
       status: 302,
