@@ -93,6 +93,10 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
   };
 
   const openInBuilder = async (pageId: string) => {
+    console.log('[openInBuilder] Called with pageId:', pageId);
+    console.log('[openInBuilder] user:', user);
+    console.log('[openInBuilder] brandId:', brandId);
+
     if (!user || !brandId) {
       console.error('Missing user or brandId:', { user, brandId });
       alert('Gebruiker of brand ID ontbreekt');
@@ -169,10 +173,19 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
   };
 
   const deletePage = async (pageId: string) => {
+    console.log('[deletePage] Called with pageId:', pageId);
+    console.log('[deletePage] user:', user);
+    console.log('[deletePage] brandId:', brandId);
+
+    if (!user || !brandId) {
+      alert('Gebruiker of brand ID ontbreekt');
+      return;
+    }
+
     if (!confirm('Weet je zeker dat je deze pagina wilt verwijderen?')) return;
 
     try {
-      const jwtResponse = await generateBuilderJWT(brandId, user!.id);
+      const jwtResponse = await generateBuilderJWT(brandId, user.id);
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/${pageId}`;
 
       const response = await fetch(apiUrl, {
@@ -184,12 +197,16 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Delete failed:', errorText);
         throw new Error('Failed to delete page');
       }
 
+      alert('Pagina verwijderd!');
       await loadPages(brandId);
     } catch (error) {
       console.error('Error deleting page:', error);
+      alert('Kon pagina niet verwijderen: ' + error);
     }
   };
 
