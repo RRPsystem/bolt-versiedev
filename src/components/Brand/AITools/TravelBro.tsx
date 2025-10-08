@@ -870,6 +870,19 @@ function IntakeTemplateEditor({ trip, onSave }: { trip: Trip; onSave: () => void
               </select>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Favoriet Eten (optioneel)
+              </label>
+              <input
+                type="text"
+                value={traveler.favoriteFood || ''}
+                onChange={(e) => updateTraveler(index, 'favoriteFood', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Bijv: Pizza, Mac Donalds, Pasta"
+              />
+            </div>
+
             {(traveler.relation === 'child' || traveler.relation === 'teen') && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -893,6 +906,45 @@ function IntakeTemplateEditor({ trip, onSave }: { trip: Trip; onSave: () => void
                 </div>
               </div>
             )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Allergieën of Dieetwensen (optioneel)
+              </label>
+              <input
+                type="text"
+                value={traveler.dietary || ''}
+                onChange={(e) => updateTraveler(index, 'dietary', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Bijv: Lactose intolerant, vegetarisch"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Waar kijkt deze persoon naar uit op reis? (optioneel)
+              </label>
+              <textarea
+                value={traveler.lookingForward || ''}
+                onChange={(e) => updateTraveler(index, 'lookingForward', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Bijv: Zwemmen in het zwembad, nieuwe vriendjes maken"
+                rows={2}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Bijzonderheden of Extra Info (optioneel)
+              </label>
+              <textarea
+                value={traveler.specialNeeds || ''}
+                onChange={(e) => updateTraveler(index, 'specialNeeds', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                placeholder="Bijv: Wordt snel wagenziek, heeft knuffel nodig om te slapen"
+                rows={2}
+              />
+            </div>
           </div>
         </div>
       ))}
