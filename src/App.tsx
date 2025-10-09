@@ -5,6 +5,7 @@ import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { BrandDashboard } from './components/Brand/BrandDashboard';
 import { OperatorDashboard } from './components/Operator/OperatorDashboard';
 import { PreviewPage } from './components/Preview/PreviewPage';
+import { NewsPreview } from './components/Preview/NewsPreview';
 import { ClientInterface } from './components/TravelBro/ClientInterface';
 
 function AppContent() {
@@ -15,6 +16,11 @@ function AppContent() {
 
   if (travelMatch) {
     return <ClientInterface shareToken={travelMatch[1]} />;
+  }
+
+  const newsPreviewMatch = path.match(/^\/preview\/news\/(.+)$/);
+  if (newsPreviewMatch) {
+    return <NewsPreview />;
   }
 
   const params = new URLSearchParams(window.location.search);
