@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Newspaper, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Newspaper, Plus, Edit2, Trash2, Eye } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { generateBuilderJWT } from '../../lib/jwtHelper';
@@ -236,6 +236,10 @@ export function NewsManagement() {
     }
   };
 
+  const openPreview = (slug: string) => {
+    window.open(`/preview/news/${slug}`, '_blank');
+  };
+
   if (loading) {
     return <div className="p-8">Loading...</div>;
   }
@@ -323,8 +327,15 @@ export function NewsManagement() {
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-center gap-2">
                     <button
-                      onClick={() => handleEditNews(item)}
+                      onClick={() => openPreview(item.slug)}
                       className="text-blue-600 hover:text-blue-800"
+                      title="Preview"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleEditNews(item)}
+                      className="text-orange-600 hover:text-orange-800"
                       title="Bewerken"
                     >
                       <Edit2 className="w-4 h-4" />
