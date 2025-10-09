@@ -293,7 +293,7 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      let query = supabase.from(contentType).select("id, slug");
+      let query = supabase.from(contentType).select("id, slug, author_type");
 
       if (id) {
         query = query.eq("id", id);
@@ -308,6 +308,35 @@ Deno.serve(async (req: Request) => {
           JSON.stringify({ error: "Content not found" }),
           { status: 404, headers: corsHeaders() }
         );
+      }
+
+      const authorType = item.author_type || 'brand';
+      let assignmentUpdated = false;
+      let responseKind = 'brand';
+
+      if (contentType === 'news_items' && authorType === 'admin') {
+        responseKind = 'admin';
+
+        const { data: assignment } = await supabase
+          .from('news_brand_assignments')
+          .select('id')
+          .eq('news_id', item.id)
+          .eq('brand_id', brand_id)
+          .maybeSingle();
+
+        if (assignment) {
+          const { error: assignError } = await supabase
+            .from('news_brand_assignments')
+            .update({
+              is_published: true,
+              status: 'accepted',
+              acknowledged_at: new Date().toISOString()
+            })
+            .eq('id', assignment.id);
+
+          if (assignError) throw assignError;
+          assignmentUpdated = true;
+        }
       }
 
       const { data, error } = await supabase
@@ -329,6 +358,8 @@ Deno.serve(async (req: Request) => {
           id: data.id,
           slug: data.slug,
           status: data.status,
+          kind: responseKind,
+          assignment_updated: assignmentUpdated,
           message: "Content published successfully"
         }),
         { status: 200, headers: corsHeaders() }
