@@ -71,31 +71,49 @@ export function NewPage({ brandId: propBrandId, onPageCreated }: Props = {}) {
   }, [propBrandId, initialPageCount, onPageCreated]);
 
   const handleOpenPageBuilder = async () => {
-    if (!user || !propBrandId) return;
+    if (!user || !propBrandId) {
+      console.error('Missing user or brandId:', { user, propBrandId });
+      alert('Er is een probleem met de gebruiker of brand ID. Probeer opnieuw in te loggen.');
+      return;
+    }
 
-    const jwtResponse = await generateBuilderJWT(propBrandId, user.id, undefined, { forceBrandId: true });
-    if (jwtResponse.shortlink) {
-      window.open(jwtResponse.shortlink, '_blank');
-    } else {
-      const deeplink = generateBuilderDeeplink(propBrandId, jwtResponse.token);
-      window.open(deeplink, '_blank');
+    try {
+      const jwtResponse = await generateBuilderJWT(propBrandId, user.id, undefined, { forceBrandId: true });
+      if (jwtResponse.shortlink) {
+        window.open(jwtResponse.shortlink, '_blank');
+      } else {
+        const deeplink = generateBuilderDeeplink(propBrandId, jwtResponse.token);
+        window.open(deeplink, '_blank');
+      }
+    } catch (error) {
+      console.error('Error opening builder:', error);
+      alert('Kon de builder niet openen: ' + (error as Error).message);
     }
   };
 
   const handleUseTemplate = async (templateId: number) => {
-    if (!user || !propBrandId) return;
+    if (!user || !propBrandId) {
+      console.error('Missing user or brandId:', { user, propBrandId });
+      alert('Er is een probleem met de gebruiker of brand ID. Probeer opnieuw in te loggen.');
+      return;
+    }
 
-    const jwtResponse = await generateBuilderJWT(propBrandId, user.id, undefined, {
-      templateId: templateId.toString(),
-      forceBrandId: true
-    });
-    if (jwtResponse.shortlink) {
-      window.open(jwtResponse.shortlink, '_blank');
-    } else {
-      const deeplink = generateBuilderDeeplink(propBrandId, jwtResponse.token, {
-        templateId: templateId.toString()
+    try {
+      const jwtResponse = await generateBuilderJWT(propBrandId, user.id, undefined, {
+        templateId: templateId.toString(),
+        forceBrandId: true
       });
-      window.open(deeplink, '_blank');
+      if (jwtResponse.shortlink) {
+        window.open(jwtResponse.shortlink, '_blank');
+      } else {
+        const deeplink = generateBuilderDeeplink(propBrandId, jwtResponse.token, {
+          templateId: templateId.toString()
+        });
+        window.open(deeplink, '_blank');
+      }
+    } catch (error) {
+      console.error('Error opening builder:', error);
+      alert('Kon de builder niet openen: ' + (error as Error).message);
     }
   };
 
