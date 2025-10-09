@@ -47,6 +47,10 @@ Slaat nieuwe content op of update bestaande content.
   "featured_image": "url",   // Optioneel
   "status": "draft",         // Optioneel (draft of published)
 
+  // Voor news_items (VERPLICHT):
+  "author_type": "string",   // Verplicht voor news_items: "admin", "brand", of "agent"
+  "author_id": "uuid",       // Verplicht voor news_items: ID van de auteur
+
   // Voor destinations:
   "description": "string",
   "country": "string",
@@ -186,6 +190,7 @@ Verwijdert een content item.
 ```javascript
 const apiUrl = `${apiBaseUrl}/functions/v1/content-api/save?type=news_items`;
 
+// BELANGRIJK: Voor news_items zijn author_type en author_id VERPLICHT
 const response = await fetch(apiUrl, {
   method: 'POST',
   headers: {
@@ -202,7 +207,9 @@ const response = await fetch(apiUrl, {
     },
     excerpt: 'Ontdek onze nieuwste bestemming',
     featured_image: 'https://example.com/image.jpg',
-    status: 'draft'
+    status: 'draft',
+    author_type: 'brand',  // VERPLICHT: 'admin', 'brand', of 'agent'
+    author_id: userId       // VERPLICHT: ID van de auteur
   })
 });
 
@@ -294,6 +301,7 @@ Alle errors retourneren een JSON object met een `error` veld:
 4. **Timestamps** worden automatisch gegenereerd
 5. **JWT Token** moet altijd de juiste brand_id bevatten
 6. **CORS** is enabled voor alle origins (*)
+7. **VERPLICHT voor news_items**: De velden `author_type` en `author_id` MOETEN worden meegestuurd bij het opslaan van nieuwsberichten. Deze worden automatisch doorgegeven in de URL parameters wanneer de builder wordt geopend (bijv. `&author_type=brand&author_id=xxx`). De builder MOET deze parameters uit de URL halen en meesturen in de POST request.
 
 ---
 
@@ -301,6 +309,11 @@ Alle errors retourneren een JSON object met een `error` veld:
 
 ### news_items
 - id, brand_id, title, slug, content, excerpt, featured_image, status, published_at, created_at, updated_at
+- **author_type** (text) - 'admin', 'brand', of 'agent' - **VERPLICHT**
+- **author_id** (uuid) - ID van de auteur - **VERPLICHT**
+- is_mandatory (boolean) - Of dit nieuws verplicht is voor brands
+- enabled_for_brands (boolean) - Of dit nieuws beschikbaar is voor custom brands
+- enabled_for_franchise (boolean) - Of dit nieuws beschikbaar is voor franchise brands
 
 ### destinations
 - id, brand_id, title, slug, content, description, country, region, featured_image, gallery, status, published_at, created_at, updated_at
