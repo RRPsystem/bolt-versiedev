@@ -279,7 +279,6 @@ export function NewsManagement() {
               <tr key={item.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4">
                   <div className="font-medium text-gray-900">{item.title}</div>
-                  <div className="text-sm text-gray-500">{item.slug}</div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1">
