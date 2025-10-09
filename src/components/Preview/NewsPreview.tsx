@@ -98,18 +98,78 @@ export function NewsPreview() {
       );
     }
 
-    if (typeof newsItem.content === 'string') {
-      return <div dangerouslySetInnerHTML={{ __html: newsItem.content }} />;
-    }
+    let htmlContent = '';
 
-    if (newsItem.content.html) {
-      return <div dangerouslySetInnerHTML={{ __html: newsItem.content.html }} />;
+    if (typeof newsItem.content === 'string') {
+      htmlContent = newsItem.content;
+    } else if (newsItem.content.html) {
+      htmlContent = newsItem.content.html;
+    } else if (newsItem.content.body_html) {
+      htmlContent = newsItem.content.body_html;
+    } else {
+      return (
+        <div className="text-gray-500 italic">
+          Content kan niet weergegeven worden. Open de builder om het te bewerken.
+        </div>
+      );
     }
 
     return (
-      <pre className="bg-gray-100 p-4 rounded overflow-auto text-sm">
-        {JSON.stringify(newsItem.content, null, 2)}
-      </pre>
+      <iframe
+        srcDoc={`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                body {
+                  margin: 0;
+                  padding: 20px;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                  line-height: 1.6;
+                  color: #333;
+                }
+                img {
+                  max-width: 100%;
+                  height: auto;
+                }
+                a {
+                  color: #2563eb;
+                  text-decoration: none;
+                }
+                a:hover {
+                  text-decoration: underline;
+                }
+                h1, h2, h3, h4, h5, h6 {
+                  margin-top: 1.5em;
+                  margin-bottom: 0.5em;
+                  font-weight: 600;
+                }
+                p {
+                  margin-bottom: 1em;
+                }
+                ul, ol {
+                  margin-bottom: 1em;
+                  padding-left: 2em;
+                }
+                blockquote {
+                  border-left: 4px solid #e5e7eb;
+                  padding-left: 1em;
+                  margin-left: 0;
+                  color: #6b7280;
+                }
+              </style>
+            </head>
+            <body>
+              ${htmlContent}
+            </body>
+          </html>
+        `}
+        className="w-full border-0 min-h-[600px]"
+        style={{ height: '100vh' }}
+        title="Content Preview"
+      />
     );
   };
 
@@ -147,7 +207,7 @@ export function NewsPreview() {
           </div>
         )}
 
-        <header className="mb-8">
+        <header className="mb-8 bg-white p-6 rounded-lg shadow-sm">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             {newsItem.title}
           </h1>
@@ -178,7 +238,7 @@ export function NewsPreview() {
           </div>
         </header>
 
-        <div className="prose prose-lg max-w-none">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           {renderContent()}
         </div>
       </article>
