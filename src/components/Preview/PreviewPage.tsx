@@ -165,6 +165,18 @@ export function PreviewPage() {
                   color: #1f2937;
                   background: #ffffff;
                 }
+                body > * {
+                  max-width: 1200px;
+                  margin-left: auto;
+                  margin-right: auto;
+                }
+                body > .wb-hero-page,
+                body > .wb-component.wb-hero-page {
+                  max-width: 100%;
+                  width: 100%;
+                  margin-left: 0;
+                  margin-right: 0;
+                }
                 .wb-component {
                   position: relative;
                 }
