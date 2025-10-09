@@ -19,6 +19,7 @@ interface NewsAssignment {
     featured_image: string;
     is_mandatory: boolean;
     published_at: string;
+    tags: string[];
   };
 }
 
@@ -50,7 +51,8 @@ export function NewsApproval() {
             excerpt,
             featured_image,
             is_mandatory,
-            published_at
+            published_at,
+            tags
           )
         `)
         .eq('brand_id', user.brand_id)
@@ -69,7 +71,7 @@ export function NewsApproval() {
 
       const { data: brandNewsData, error: brandNewsError } = await supabase
         .from('news_items')
-        .select('id, title, slug, excerpt, featured_image, created_at, published_at, status')
+        .select('id, title, slug, excerpt, featured_image, created_at, published_at, status, tags')
         .eq('author_type', 'brand')
         .eq('brand_id', user.brand_id)
         .order('created_at', { ascending: false });
@@ -90,7 +92,8 @@ export function NewsApproval() {
           excerpt: item.excerpt || '',
           featured_image: item.featured_image || '',
           is_mandatory: false,
-          published_at: item.published_at
+          published_at: item.published_at,
+          tags: item.tags || []
         }
       }));
 
@@ -264,6 +267,7 @@ export function NewsApproval() {
           <thead className="bg-gray-50 border-b">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Titel</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Type</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Publiceren</th>
@@ -276,6 +280,22 @@ export function NewsApproval() {
                 <td className="px-6 py-4">
                   <div className="font-medium text-gray-900">{assignment.news_item.title}</div>
                   <div className="text-sm text-gray-500">{assignment.news_item.slug}</div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex flex-wrap gap-1">
+                    {assignment.news_item.tags && assignment.news_item.tags.length > 0 ? (
+                      assignment.news_item.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        >
+                          {tag}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-400 italic">Geen tags</span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500">
                   {new Date(assignment.assigned_at).toLocaleDateString('nl-NL')}

@@ -12,6 +12,7 @@ interface NewsItem {
   enabled_for_brands: boolean;
   enabled_for_franchise: boolean;
   is_mandatory: boolean;
+  tags: string[];
 }
 
 interface Brand {
@@ -35,7 +36,7 @@ export function NewsManagement() {
     try {
       const { data, error } = await supabase
         .from('news_items')
-        .select('id, title, slug, created_at, enabled_for_brands, enabled_for_franchise, is_mandatory')
+        .select('id, title, slug, created_at, enabled_for_brands, enabled_for_franchise, is_mandatory, tags')
         .eq('author_type', 'admin')
         .order('created_at', { ascending: false });
 
@@ -265,6 +266,7 @@ export function NewsManagement() {
           <thead className="bg-gray-50 border-b">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Titel</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Custom Brand</th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Franchise</th>
@@ -278,6 +280,22 @@ export function NewsManagement() {
                 <td className="px-6 py-4">
                   <div className="font-medium text-gray-900">{item.title}</div>
                   <div className="text-sm text-gray-500">{item.slug}</div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex flex-wrap gap-1">
+                    {item.tags && item.tags.length > 0 ? (
+                      item.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                        >
+                          {tag}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-400 italic">Geen tags</span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500">
                   {new Date(item.created_at).toLocaleDateString('nl-NL')}
