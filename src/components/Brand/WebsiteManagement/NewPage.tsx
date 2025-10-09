@@ -71,9 +71,13 @@ export function NewPage({ brandId: propBrandId, onPageCreated }: Props = {}) {
   }, [propBrandId, initialPageCount, onPageCreated]);
 
   const handleOpenPageBuilder = async () => {
-    if (!user || !propBrandId) {
-      console.error('Missing user or brandId:', { user, propBrandId });
-      alert('Er is een probleem met de gebruiker of brand ID. Probeer opnieuw in te loggen.');
+    if (!propBrandId) {
+      alert('Brand ID ontbreekt. Kan de builder niet openen.');
+      return;
+    }
+
+    if (!user?.id) {
+      alert('Gebruiker ID ontbreekt. Probeer opnieuw in te loggen.');
       return;
     }
 
@@ -92,9 +96,13 @@ export function NewPage({ brandId: propBrandId, onPageCreated }: Props = {}) {
   };
 
   const handleUseTemplate = async (templateId: number) => {
-    if (!user || !propBrandId) {
-      console.error('Missing user or brandId:', { user, propBrandId });
-      alert('Er is een probleem met de gebruiker of brand ID. Probeer opnieuw in te loggen.');
+    if (!propBrandId) {
+      alert('Brand ID ontbreekt. Kan de builder niet openen.');
+      return;
+    }
+
+    if (!user?.id) {
+      alert('Gebruiker ID ontbreekt. Probeer opnieuw in te loggen.');
       return;
     }
 
