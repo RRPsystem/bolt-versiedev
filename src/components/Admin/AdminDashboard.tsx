@@ -407,7 +407,7 @@ export function AdminDashboard() {
 
           {/* Website Management Content - Admin uses System Templates brand */}
           {activeSection === 'new-page' && <NewPage brandId={SYSTEM_BRAND_ID} />}
-          {activeSection === 'page-management' && <PageManagementView brandId={SYSTEM_BRAND_ID} hideCreateButtons={true} />}
+          {activeSection === 'page-management' && <PageManagementView brandId={SYSTEM_BRAND_ID} hideCreateButtons={false} />}
           {activeSection === 'menu-builder' && <MenuBuilderView brandId={SYSTEM_BRAND_ID} />}
           {activeSection === 'footer-builder' && <FooterBuilderView brandId={SYSTEM_BRAND_ID} />}
 
