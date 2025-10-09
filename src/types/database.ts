@@ -87,6 +87,7 @@ export interface NewsArticle {
   website_visible: boolean;
   author_type: string;
   author_brand_id?: string;
+  tags?: string[];
   created_at: string;
   updated_at: string;
 }
