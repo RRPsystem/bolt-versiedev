@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,6 +39,33 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    const pdfResponse = await fetch(pdfUrl);
+    if (!pdfResponse.ok) {
+      throw new Error("Failed to download PDF");
+    }
+
+    const pdfBuffer = await pdfResponse.arrayBuffer();
+
+    const jsPDFLib = await import("npm:pdfjs-dist@3.11.174/legacy/build/pdf.mjs");
+
+    const loadingTask = jsPDFLib.getDocument({
+      data: new Uint8Array(pdfBuffer),
+      useSystemFonts: true,
+    });
+
+    const pdf = await loadingTask.promise;
+
+    let fullText = "";
+
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => item.str)
+        .join(" ");
+      fullText += pageText + "\n\n";
+    }
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -49,22 +77,11 @@ Deno.serve(async (req: Request) => {
         messages: [
           {
             role: "system",
-            content: "You are a travel document parser. Extract and structure trip information from the provided PDF. Return JSON with: destination, dates (start_date, end_date), activities (array), accommodations (array), included_services (array), not_included (array), itinerary (array of day objects with day_number, date, title, activities), price_info, and any other relevant details."
+            content: "You are a travel document parser. Extract and structure trip information from the provided PDF text. Return JSON with: destination (with city, country, region), dates (start_date, end_date), activities (array of activities with name and description), accommodations (array with name, address, amenities, description), included_services (array), not_included (array), itinerary (array of day objects with day_number, date, title, description, activities array), price_info (object with amount, currency, notes), important_notes (array), and any other relevant details. Be thorough and extract as much detail as possible from the text."
           },
           {
             role: "user",
-            content: [
-              {
-                type: "text",
-                text: "Please analyze this travel document and extract all trip information in a structured JSON format."
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: pdfUrl
-                }
-              }
-            ]
+            content: `Please analyze this travel document text and extract all trip information in a structured JSON format.\n\nDocument text:\n\n${fullText}`
           }
         ],
         response_format: { type: "json_object" },
@@ -96,7 +113,7 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error("Error parsing PDF:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message, stack: error.stack }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -85,13 +85,17 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    const hasValidTripData = trip.parsed_data && !trip.parsed_data.error;
+    const tripDataText = hasValidTripData
+      ? JSON.stringify(trip.parsed_data, null, 2)
+      : "Geen gedetailleerde reis informatie beschikbaar uit het reisdocument. Je kunt wel algemene tips geven over de bestemming en helpen met vragen.";
+
     const systemPrompt = `Je bent TravelBRO, een vriendelijke en behulpzame Nederlandse reisassistent voor de reis "${trip.name}".
 
 Reis informatie:
-${JSON.stringify(trip.parsed_data, null, 2)}
+${tripDataText}
 
-Extra informatie bronnen:
-${trip.source_urls.join("\n")}
+${trip.source_urls && trip.source_urls.length > 0 ? `Extra informatie bronnen:\n${trip.source_urls.join("\n")}\n` : ''}
 
 Reiziger informatie:
 ${intake ? JSON.stringify(intake.intake_data, null, 2) : "Geen intake data beschikbaar"}
