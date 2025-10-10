@@ -7,7 +7,8 @@ import MenuBuilderView from './WebsiteManagement/MenuBuilderView';
 import FooterBuilderView from './WebsiteManagement/FooterBuilderView';
 import { NewsApproval } from './ContentManagement/NewsApproval';
 import { TravelBro } from './AITools/TravelBro';
-import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe, Newspaper, MapPin, Plane } from 'lucide-react';
+import { SocialMedia } from './AITools/SocialMedia';
+import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe, Newspaper, MapPin, Plane, Share2 } from 'lucide-react';
 
 export function BrandDashboard() {
   const { user, signOut } = useAuth();
@@ -20,7 +21,7 @@ export function BrandDashboard() {
     if (['new-page', 'pages', 'menus', 'footers'].includes(activeSection)) {
       setShowWebsiteSubmenu(true);
     }
-    if (['ai-content', 'ai-travelbro', 'ai-import'].includes(activeSection)) {
+    if (['ai-content', 'ai-travelbro', 'ai-import', 'ai-social'].includes(activeSection)) {
       setShowAISubmenu(true);
     }
     if (['nieuwsbeheer', 'destinations', 'trips'].includes(activeSection)) {
@@ -45,6 +46,7 @@ export function BrandDashboard() {
     { id: 'ai-content', label: 'AI Content Generator', icon: Sparkles },
     { id: 'ai-travelbro', label: 'AI TravelBRO', icon: Bot },
     { id: 'ai-import', label: 'AI TravelImport', icon: FileImport },
+    { id: 'ai-social', label: 'Social Media', icon: Share2 },
   ];
 
   const contentItems = [
@@ -180,7 +182,7 @@ export function BrandDashboard() {
               <button
                 onClick={() => setShowAISubmenu(!showAISubmenu)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
-                  ['ai-content', 'ai-travelbro', 'ai-import'].includes(activeSection)
+                  ['ai-content', 'ai-travelbro', 'ai-import', 'ai-social'].includes(activeSection)
                     ? 'bg-gray-700 text-white'
                     : 'text-gray-300 hover:text-white hover:bg-gray-700'
                 }`}
@@ -258,6 +260,7 @@ export function BrandDashboard() {
                 {activeSection === 'ai-content' && 'AI Content Generator'}
                 {activeSection === 'ai-travelbro' && 'AI TravelBRO'}
                 {activeSection === 'ai-import' && 'AI TravelImport'}
+                {activeSection === 'ai-social' && 'Social Media Manager'}
               </h1>
               <p className="text-gray-600 mt-1">
                 {activeSection === 'websites' && 'Manage your travel websites'}
@@ -268,6 +271,7 @@ export function BrandDashboard() {
                 {activeSection === 'ai-content' && 'Generate travel content with AI'}
                 {activeSection === 'ai-travelbro' && 'Your AI travel assistant'}
                 {activeSection === 'ai-import' && 'Import travel data with AI'}
+                {activeSection === 'ai-social' && 'Manage your social media presence'}
               </p>
             </div>
             
@@ -296,7 +300,9 @@ export function BrandDashboard() {
           )}
 
           {activeSection === 'ai-travelbro' && <TravelBro />}
-          
+
+          {activeSection === 'ai-social' && <SocialMedia />}
+
           {activeSection === 'ai-import' && (
             <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff7700, #ffaa44)' }}>
