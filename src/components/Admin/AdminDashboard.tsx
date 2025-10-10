@@ -8,7 +8,8 @@ import { PageManagementView } from '../Brand/WebsiteManagement/PageManagementVie
 import { MenuBuilderView } from '../Brand/WebsiteManagement/MenuBuilderView';
 import { FooterBuilderView } from '../Brand/WebsiteManagement/FooterBuilderView';
 import { NewPage } from '../Brand/WebsiteManagement/NewPage';
-import { Users, Building2, FileText, Settings, Plus, Search, Filter, CreditCard as Edit, Trash2, LayoutGrid as Layout, Menu, Globe, Newspaper, MapPin, Plane } from 'lucide-react'
+import DeeplinkTester from './DeeplinkTester';
+import { Users, Building2, FileText, Settings, Plus, Search, Filter, CreditCard as Edit, Trash2, LayoutGrid as Layout, Menu, Globe, Newspaper, MapPin, Plane, Link } from 'lucide-react'
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 export function AdminDashboard() {
@@ -82,6 +83,7 @@ export function AdminDashboard() {
     { id: 'dashboard', label: 'Dashboard', icon: Settings },
     { id: 'brands', label: 'Brand Management', icon: Building2 },
     { id: 'agents', label: 'Agent Management', icon: Users },
+    { id: 'deeplink-tester', label: 'Deeplink Tester', icon: Link },
   ];
 
   const websiteItems = [
@@ -373,6 +375,7 @@ export function AdminDashboard() {
                 {activeSection === 'dashboard' && 'Dashboard'}
                 {activeSection === 'brands' && 'Brand Management'}
                 {activeSection === 'agents' && 'Agent Management'}
+                {activeSection === 'deeplink-tester' && 'Deeplink Tester'}
                 {activeSection === 'new-page' && 'Nieuwe Pagina'}
                 {activeSection === 'page-management' && 'Pagina Beheer'}
                 {activeSection === 'menu-builder' && 'Menu Builder'}
@@ -381,6 +384,7 @@ export function AdminDashboard() {
               <p className="text-gray-600 mt-1">
                 {activeSection === 'brands' && 'Manage all brands in the system'}
                 {activeSection === 'dashboard' && 'System overview and statistics'}
+                {activeSection === 'deeplink-tester' && 'Test external builder integration'}
                 {activeSection === 'new-page' && 'Maak een nieuwe pagina voor je website'}
                 {activeSection === 'page-management' && 'Beheer alle pagina\'s van je website'}
                 {activeSection === 'menu-builder' && 'Bouw en organiseer je website navigatie'}
@@ -404,6 +408,7 @@ export function AdminDashboard() {
         <main className="flex-1 p-6">
           {activeSection === 'agents' && <AgentManagement />}
           {activeSection === 'admin-news' && <NewsManagement />}
+          {activeSection === 'deeplink-tester' && <DeeplinkTester />}
 
           {/* Website Management Content - Admin uses System Templates brand */}
           {activeSection === 'new-page' && <NewPage brandId={SYSTEM_BRAND_ID} />}
