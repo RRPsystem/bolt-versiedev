@@ -49,7 +49,10 @@ export default function DeeplinkTester() {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
-        }
+        },
+        body: JSON.stringify({
+          brand_id: page.brand_id
+        })
       });
 
       if (!jwtResponse.ok) {
@@ -66,7 +69,7 @@ export default function DeeplinkTester() {
       setDeeplinkUrl(url);
     } catch (error) {
       console.error('Error generating deeplink:', error);
-      alert('Error generating deeplink. Check console.');
+      alert(`Error generating deeplink: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
