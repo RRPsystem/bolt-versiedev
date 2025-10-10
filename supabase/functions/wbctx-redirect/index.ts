@@ -24,11 +24,13 @@ Deno.serve(async (req: Request) => {
     }
 
     const ctxBaseUrl = Deno.env.get('SUPABASE_URL') + '/functions/v1';
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const builderUrl = 'https://www.ai-websitestudio.nl/index.html';
 
     const params = new URLSearchParams(url.search);
     params.set('ctx', ctxId);
     params.set('ctx_base', ctxBaseUrl);
+    params.set('ctx_apikey', anonKey || '');
     params.set('edge_badge', '0');
 
     const hash = url.hash || '#/mode/page';
