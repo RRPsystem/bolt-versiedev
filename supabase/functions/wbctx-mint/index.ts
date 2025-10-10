@@ -47,7 +47,7 @@ Deno.serve(async (req: Request) => {
       content_type,
       mode,
       ttl_minutes = 15,
-      ephemeral = true,
+      ephemeral = false,
     } = body;
 
     if (!brand_id || !type) {
