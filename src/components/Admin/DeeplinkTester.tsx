@@ -36,20 +36,26 @@ export default function DeeplinkTester() {
 
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('You must be logged in to generate deeplinks');
+        setLoading(false);
+        return;
+      }
 
       const jwtResponse = await fetch(`${supabaseUrl}/functions/v1/generate-builder-jwt`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${anonKey}`,
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          brand_id: page.brand_id,
-          user_id: 'test-user',
-          scopes: ['pages:read', 'pages:write', 'content:read']
-        })
+        }
       });
+
+      if (!jwtResponse.ok) {
+        const errorData = await jwtResponse.json();
+        throw new Error(errorData.error || 'Failed to generate JWT');
+      }
 
       const jwtData = await jwtResponse.json();
       const token = jwtData.token;
