@@ -284,11 +284,6 @@ Maak de post kort, krachtig en engaging. Max 280 karakters voor Twitter, iets la
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Social Media Manager</h2>
-        <p className="text-gray-600 mt-1">Beheer je social media accounts en posts</p>
-      </div>
-
       <div className="flex space-x-4 border-b border-gray-200 mb-6">
         <button
           onClick={() => setActiveTab('create')}
