@@ -37,36 +37,29 @@ export default function DeeplinkTester() {
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        alert('You must be logged in to generate deeplinks');
-        setLoading(false);
-        return;
-      }
-
-      const jwtResponse = await fetch(`${supabaseUrl}/functions/v1/generate-builder-jwt`, {
+      const wbctxResponse = await fetch(`${supabaseUrl}/functions/v1/wbctx-mint`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          brand_id: page.brand_id
+          brand_id: page.brand_id,
+          type: 'page',
+          page_id: page.id,
+          slug: page.slug,
+          ttl_minutes: 60,
+          ephemeral: false
         })
       });
 
-      if (!jwtResponse.ok) {
-        const errorData = await jwtResponse.json();
-        throw new Error(errorData.error || 'Failed to generate JWT');
+      if (!wbctxResponse.ok) {
+        const errorData = await wbctxResponse.json();
+        throw new Error(errorData.error || 'Failed to generate context');
       }
 
-      const jwtData = await jwtResponse.json();
-      const token = jwtData.token;
-      setJwtToken(token);
-
-      const url = `https://www.ai-webbuilder.studio/index.html?brand_id=${page.brand_id}&page_id=${page.id}&slug=${page.slug}&jwt=${token}&deeplink=${encodeURIComponent(supabaseUrl)}/functions/v1/wbctx-serve`;
-
-      setDeeplinkUrl(url);
+      const wbctxData = await wbctxResponse.json();
+      setJwtToken(wbctxData.ctx.token);
+      setDeeplinkUrl(wbctxData.shortlink);
     } catch (error) {
       console.error('Error generating deeplink:', error);
       alert(`Error generating deeplink: ${error instanceof Error ? error.message : 'Unknown error'}`);
