@@ -69,7 +69,7 @@ const platformColors = {
 
 export function SocialMedia() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<'create' | 'accounts' | 'voice'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'calendar' | 'posts' | 'accounts' | 'voice'>('create');
   const [accounts, setAccounts] = useState<SocialAccount[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [brandVoice, setBrandVoice] = useState<BrandVoice>({});
@@ -80,6 +80,9 @@ export function SocialMedia() {
   const [aiTopic, setAiTopic] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  const [contentSuggestions, setContentSuggestions] = useState<any[]>([]);
+  const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -262,6 +265,111 @@ Maak de post kort, krachtig en engaging. Max 280 karakters voor Twitter, iets la
     }
   };
 
+  const generateContentSuggestions = async () => {
+    setIsGeneratingSuggestions(true);
+    try {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('brand_id')
+        .eq('id', user?.id)
+        .single();
+
+      if (!userData?.brand_id) throw new Error('Brand ID not found');
+
+      const { data: brandData } = await supabase
+        .from('brands')
+        .select('name, description')
+        .eq('id', userData.brand_id)
+        .single();
+
+      const recentPosts = posts.slice(0, 10);
+      const postThemes = recentPosts.map(p => ({
+        content: p.content.substring(0, 100),
+        created: p.created_at,
+        platforms: p.platforms
+      }));
+
+      const prompt = `
+Je bent een social media strategie expert. Analyseer het volgende brand profiel en genereer een content kalender met slimme suggesties.
+
+BRAND INFORMATIE:
+Naam: ${brandData?.name || 'Onbekend'}
+Beschrijving: ${brandData?.description || 'Geen beschrijving'}
+
+BRAND VOICE:
+${brandVoice.voice_prompt || 'Geen voice prompt ingesteld'}
+Schrijfstijl: ${brandVoice.writing_style || 'Niet gespecificeerd'}
+Doelgroep: ${brandVoice.target_audience || 'Niet gespecificeerd'}
+
+RECENTE POSTS (laatste 10):
+${postThemes.map((p, i) => `${i + 1}. "${p.content}..." (${new Date(p.created).toLocaleDateString()})`).join('\n')}
+
+OPDRACHT:
+Genereer 7 slimme content suggesties voor de komende week. Elk voorstel moet bevatten:
+1. Een specifieke dag (maandag t/m zondag)
+2. Beste tijdstip (bijv. 09:00, 12:00, 18:00)
+3. Content thema dat past bij het merk
+4. Korte uitleg waarom dit thema nu relevant is
+5. Suggestie voor platforms
+
+Zorg dat:
+- De thema's variëren en niet herhalen wat recent gepost is
+- Het aansluit bij de brand voice en doelgroep
+- Er een goede mix is tussen educatief, inspirerend en promotioneel
+- Seizoens- en actualiteitsgerichte onderwerpen worden meegenomen
+
+Geef het resultaat als JSON array met deze structuur:
+[
+  {
+    "day": "Maandag",
+    "time": "09:00",
+    "theme": "Korte thema beschrijving",
+    "reason": "Waarom dit nu relevant is",
+    "platforms": ["facebook", "instagram"],
+    "contentIdea": "Specifiek content idee"
+  }
+]
+`.trim();
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4',
+          messages: [
+            { role: 'system', content: 'Je bent een social media strategie expert die data-driven content suggesties maakt.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 2000
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate suggestions');
+      }
+
+      const data = await response.json();
+      const suggestionsText = data.choices[0].message.content;
+
+      const jsonMatch = suggestionsText.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const suggestions = JSON.parse(jsonMatch[0]);
+        setContentSuggestions(suggestions);
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (error) {
+      console.error('Error generating suggestions:', error);
+      alert('Fout bij het genereren van suggesties. Controleer of de OpenAI API key is ingesteld.');
+    } finally {
+      setIsGeneratingSuggestions(false);
+    }
+  };
+
   const togglePlatform = (platform: string) => {
     setSelectedPlatforms(prev =>
       prev.includes(platform)
@@ -299,6 +407,29 @@ Maak de post kort, krachtig en engaging. Max 280 karakters voor Twitter, iets la
           }`}
         >
           Post Maken
+        </button>
+        <button
+          onClick={() => setActiveTab('calendar')}
+          className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+            activeTab === 'calendar'
+              ? 'border-orange-600 text-orange-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <div className="flex items-center space-x-2">
+            <Calendar size={16} />
+            <span>Content Kalender</span>
+          </div>
+        </button>
+        <button
+          onClick={() => setActiveTab('posts')}
+          className={`px-4 py-2 font-medium border-b-2 transition-colors ${
+            activeTab === 'posts'
+              ? 'border-orange-600 text-orange-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Recente Posts ({posts.length})
         </button>
         <button
           onClick={() => setActiveTab('accounts')}
@@ -448,27 +579,83 @@ Maak de post kort, krachtig en engaging. Max 280 karakters voor Twitter, iets la
               </button>
             </div>
           </div>
+        </div>
+      )}
 
+      {activeTab === 'calendar' && (
+        <div className="space-y-6">
           <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold mb-4">Recente Posts</h3>
-            {posts.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">Nog geen posts gemaakt</p>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-semibold">AI Content Kalender</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Slimme posting suggesties gebaseerd op je brand, eerdere posts en doelgroep
+                </p>
+              </div>
+              <button
+                onClick={generateContentSuggestions}
+                disabled={isGeneratingSuggestions}
+                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                {isGeneratingSuggestions ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    <span>Genereren...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={20} />
+                    <span>Genereer Suggesties</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {contentSuggestions.length === 0 ? (
+              <div className="text-center py-12">
+                <Calendar size={48} className="mx-auto text-gray-300 mb-4" />
+                <p className="text-gray-500 mb-4">Nog geen content suggesties gegenereerd</p>
+                <p className="text-sm text-gray-400 mb-6">
+                  Klik op "Genereer Suggesties" om AI een slimme content planning te laten maken
+                  op basis van je brand voice, eerdere posts en specialiteiten.
+                </p>
+              </div>
             ) : (
-              <div className="space-y-3">
-                {posts.map((post) => (
-                  <div key={post.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        {getStatusIcon(post.status)}
-                        <span className="text-sm font-medium capitalize">{post.status}</span>
+              <div className="space-y-4">
+                {contentSuggestions.map((suggestion, index) => (
+                  <div key={index} className="border-2 border-gray-200 rounded-lg p-5 hover:border-orange-300 transition-colors">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-orange-100 text-orange-700 px-3 py-1 rounded-lg font-semibold text-sm">
+                          {suggestion.day}
+                        </div>
+                        <div className="flex items-center space-x-2 text-sm text-gray-600">
+                          <Clock size={16} />
+                          <span>{suggestion.time}</span>
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(post.created_at).toLocaleDateString('nl-NL')}
-                      </div>
+                      <button
+                        onClick={() => {
+                          setAiTopic(suggestion.contentIdea);
+                          setActiveTab('create');
+                        }}
+                        className="px-4 py-1.5 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700"
+                      >
+                        Gebruik Template
+                      </button>
                     </div>
-                    <p className="text-sm text-gray-700 mb-2 line-clamp-2">{post.content}</p>
-                    <div className="flex space-x-2">
-                      {(post.platforms as string[]).map((platform) => {
+
+                    <h4 className="font-semibold text-gray-900 mb-2">{suggestion.theme}</h4>
+                    <p className="text-sm text-gray-700 mb-3">{suggestion.contentIdea}</p>
+
+                    <div className="flex items-start space-x-2 mb-3">
+                      <AlertCircle size={16} className="text-blue-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-gray-600 italic">{suggestion.reason}</p>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">Aanbevolen platforms:</span>
+                      {suggestion.platforms?.map((platform: string) => {
                         const Icon = platformIcons[platform as keyof typeof platformIcons];
                         return Icon ? (
                           <Icon
@@ -484,6 +671,76 @@ Maak de post kort, krachtig en engaging. Max 280 karakters voor Twitter, iets la
               </div>
             )}
           </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start space-x-3">
+              <Sparkles size={20} className="text-blue-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-semibold text-blue-900 mb-1">Hoe werkt dit?</h4>
+                <p className="text-sm text-blue-800">
+                  De AI analyseert je brand voice, eerdere posts, en specialiteiten om een strategische
+                  content kalender te maken. Elk voorstel is afgestemd op je doelgroep en zorgt voor variatie
+                  in je content. Klik op "Gebruik Template" om direct een post te maken met het voorgestelde thema.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'posts' && (
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h3 className="text-lg font-semibold mb-4">Recente Posts</h3>
+          {posts.length === 0 ? (
+            <div className="text-center py-12">
+              <Send size={48} className="mx-auto text-gray-300 mb-4" />
+              <p className="text-gray-500">Nog geen posts gemaakt</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {posts.map((post) => (
+                <div key={post.id} className="border border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(post.status)}
+                      <span className="text-sm font-medium capitalize">{post.status}</span>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(post.created_at).toLocaleDateString('nl-NL', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-3">{post.content}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex space-x-2">
+                      {(post.platforms as string[]).map((platform) => {
+                        const Icon = platformIcons[platform as keyof typeof platformIcons];
+                        return Icon ? (
+                          <div key={platform} className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded">
+                            <Icon
+                              size={14}
+                              style={{ color: platformColors[platform as keyof typeof platformColors] }}
+                            />
+                            <span className="text-xs capitalize">{platform}</span>
+                          </div>
+                        ) : null;
+                      })}
+                    </div>
+                    {post.published_at && (
+                      <div className="text-xs text-gray-500">
+                        Gepubliceerd: {new Date(post.published_at).toLocaleDateString('nl-NL')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
