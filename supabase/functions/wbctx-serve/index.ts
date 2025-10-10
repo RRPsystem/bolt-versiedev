@@ -49,16 +49,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (ctx.used && ctx.ephemeral) {
-      return new Response(
-        JSON.stringify({ error: 'Context already used' }),
-        {
-          status: 410,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
     const now = Math.floor(Date.now() / 1000);
     if (ctx.ctx_data.exp < now) {
       return new Response(
@@ -68,18 +58,6 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
-    }
-
-    if (ctx.ephemeral) {
-      const supabaseService = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-      );
-
-      await supabaseService
-        .from('wbctx_storage')
-        .update({ used: true })
-        .eq('id', ctxId);
     }
 
     return new Response(
