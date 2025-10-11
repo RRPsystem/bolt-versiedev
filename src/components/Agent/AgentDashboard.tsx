@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { TravelBro } from '../Brand/AITools/TravelBro';
 import { SocialMedia } from '../Brand/AITools/SocialMedia';
-import { Bot, User, Globe, ChevronDown, ChevronRight, Share2, Plane } from 'lucide-react';
+import { AIContentGenerator } from '../Brand/AIContentGenerator';
+import { Bot, User, ChevronDown, ChevronRight, Share2, Plane, Sparkles, Import as FileImport } from 'lucide-react';
 
 export function AgentDashboard() {
   const { user, signOut } = useAuth();
@@ -10,7 +11,7 @@ export function AgentDashboard() {
   const [showAISubmenu, setShowAISubmenu] = useState(false);
 
   React.useEffect(() => {
-    if (['ai-travelbro', 'ai-social'].includes(activeSection)) {
+    if (['ai-content', 'ai-travelbro', 'ai-social', 'ai-import'].includes(activeSection)) {
       setShowAISubmenu(true);
     }
   }, [activeSection]);
@@ -20,6 +21,8 @@ export function AgentDashboard() {
   ];
 
   const aiToolsItems = [
+    { id: 'ai-content', label: 'Travel Content Generator', icon: Sparkles },
+    { id: 'ai-import', label: 'Reis Import', icon: FileImport },
     { id: 'ai-social', label: 'Social Media', icon: Share2 },
     { id: 'ai-travelbro', label: 'AI TravelBRO', icon: Bot },
   ];
@@ -68,7 +71,7 @@ export function AgentDashboard() {
               <button
                 onClick={() => setShowAISubmenu(!showAISubmenu)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
-                  ['ai-travelbro', 'ai-social'].includes(activeSection)
+                  ['ai-content', 'ai-travelbro', 'ai-social', 'ai-import'].includes(activeSection)
                     ? 'bg-gray-700 text-white'
                     : 'text-gray-300 hover:text-white hover:bg-gray-700'
                 }`}
@@ -132,11 +135,15 @@ export function AgentDashboard() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 {activeSection === 'profile' && 'Profiel'}
+                {activeSection === 'ai-content' && 'Travel Content Generator'}
+                {activeSection === 'ai-import' && 'Reis Import'}
                 {activeSection === 'ai-travelbro' && 'AI TravelBRO'}
                 {activeSection === 'ai-social' && 'Social Media Manager'}
               </h1>
               <p className="text-gray-600 mt-1">
                 {activeSection === 'profile' && 'Beheer je profiel en instellingen'}
+                {activeSection === 'ai-content' && 'Generate travel content with AI'}
+                {activeSection === 'ai-import' && 'Import travel data with AI'}
                 {activeSection === 'ai-travelbro' && 'Your AI travel assistant'}
                 {activeSection === 'ai-social' && 'Manage your social media presence'}
               </p>
@@ -157,11 +164,18 @@ export function AgentDashboard() {
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Welkom terug!</h2>
                     <p className="text-gray-600 mb-6">Hier kun je binnenkort je profiel beheren en instellingen aanpassen.</p>
 
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">
                           {user?.email}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Telefoon</label>
+                        <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600">
+                          Binnenkort beschikbaar
                         </div>
                       </div>
 
@@ -178,6 +192,27 @@ export function AgentDashboard() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Brand ID</label>
                         <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 font-mono text-sm">
                           {user?.brand_id || 'Niet gekoppeld'}
+                        </div>
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Adres</label>
+                        <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600">
+                          Binnenkort beschikbaar
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Postcode</label>
+                        <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600">
+                          Binnenkort beschikbaar
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Plaats</label>
+                        <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600">
+                          Binnenkort beschikbaar
                         </div>
                       </div>
                     </div>
@@ -197,8 +232,23 @@ export function AgentDashboard() {
             </div>
           )}
 
+          {activeSection === 'ai-content' && <AIContentGenerator />}
           {activeSection === 'ai-travelbro' && <TravelBro />}
           {activeSection === 'ai-social' && <SocialMedia />}
+          {activeSection === 'ai-import' && (
+            <div className="p-6">
+              <div className="bg-white rounded-lg shadow-sm border p-8 text-center max-w-2xl mx-auto">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff7700, #ffaa44)' }}>
+                  <FileImport className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Reis Import</h2>
+                <p className="text-gray-600 mb-6">Import en verwerk reisgegevens intelligent met AI</p>
+                <button className="text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-orange-700" style={{ backgroundColor: '#ff7700' }}>
+                  Start Import Proces
+                </button>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>
