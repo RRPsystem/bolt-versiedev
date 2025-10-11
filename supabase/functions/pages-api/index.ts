@@ -11,24 +11,40 @@ interface JWTPayload {
 async function verifyBearerToken(req: Request): Promise<JWTPayload> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    throw new Error("Missing or invalid Authorization header");
+    const error = new Error("Missing or invalid Authorization header");
+    (error as any).statusCode = 401;
+    throw error;
   }
   const token = authHeader.substring(7);
   const jwtSecret = Deno.env.get("JWT_SECRET");
-  if (!jwtSecret) throw new Error("JWT_SECRET not configured");
+  if (!jwtSecret) {
+    const error = new Error("JWT_SECRET not configured");
+    (error as any).statusCode = 500;
+    throw error;
+  }
   
   const encoder = new TextEncoder();
   const secretKey = encoder.encode(jwtSecret);
-  const { payload } = await jwtVerify(token, secretKey, { algorithms: ["HS256"] });
-  if (!payload.brand_id) throw new Error("Invalid token: missing brand_id");
-  return payload as JWTPayload;
+  try {
+    const { payload } = await jwtVerify(token, secretKey, { algorithms: ["HS256"] });
+    if (!payload.brand_id) {
+      const error = new Error("Invalid token: missing brand_id");
+      (error as any).statusCode = 401;
+      throw error;
+    }
+    return payload as JWTPayload;
+  } catch (err) {
+    const error = new Error("Invalid or expired token");
+    (error as any).statusCode = 401;
+    throw error;
+  }
 }
 
 function corsHeaders(): Headers {
   const headers = new Headers();
-  headers.set('Access-Control-Allow-Origin', '*');
+  headers.set('Access-Control-Allow-Origin', 'https://www.ai-websitestudio.nl');
   headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
-  headers.set('Access-Control-Allow-Headers', '*');
+  headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, apikey');
   headers.set('Access-Control-Max-Age', '86400');
   headers.set('Content-Type', 'application/json');
   return headers;
@@ -473,12 +489,13 @@ Deno.serve(async (req: Request) => {
     );
   } catch (error) {
     console.error("Error:", error);
+    const statusCode = (error as any).statusCode || 500;
     return new Response(
       JSON.stringify({
         error: error.message || "Internal server error",
         timestamp: new Date().toISOString()
       }),
-      { status: 500, headers: corsHeaders() }
+      { status: statusCode, headers: corsHeaders() }
     );
   }
 });
