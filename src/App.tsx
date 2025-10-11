@@ -4,6 +4,7 @@ import { LoginForm } from './components/Auth/LoginForm';
 import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { BrandDashboard } from './components/Brand/BrandDashboard';
 import { OperatorDashboard } from './components/Operator/OperatorDashboard';
+import { AgentDashboard } from './components/Agent/AgentDashboard';
 import { PreviewPage } from './components/Preview/PreviewPage';
 import { NewsPreview } from './components/Preview/NewsPreview';
 import { ClientInterface } from './components/TravelBro/ClientInterface';
@@ -31,8 +32,8 @@ function AppContent() {
     return <PreviewPage />;
   }
 
-  const { user, loading, isAdmin, isBrand, isOperator } = useAuth();
-  console.log('🔐 Auth state:', { user: user?.email, loading, isAdmin, isBrand, isOperator });
+  const { user, loading, isAdmin, isBrand, isOperator, isAgent } = useAuth();
+  console.log('🔐 Auth state:', { user: user?.email, loading, isAdmin, isBrand, isOperator, isAgent });
 
   if (loading) {
     return (
@@ -56,6 +57,10 @@ function AppContent() {
 
   if (isOperator) {
     return <OperatorDashboard />;
+  }
+
+  if (isAgent) {
+    return <AgentDashboard />;
   }
 
   return <div>Unauthorized</div>;
