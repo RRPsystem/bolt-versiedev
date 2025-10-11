@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { db } from '../../lib/supabase';
 import { AIContentGenerator } from './AIContentGenerator';
 import { NewPage } from './WebsiteManagement/NewPage';
 import PageManagementView from './WebsiteManagement/PageManagementView';
@@ -16,6 +17,22 @@ export function BrandDashboard() {
   const [showAISubmenu, setShowAISubmenu] = useState(false);
   const [showWebsiteSubmenu, setShowWebsiteSubmenu] = useState(false);
   const [showContentSubmenu, setShowContentSubmenu] = useState(false);
+  const [websites, setWebsites] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadWebsites = async () => {
+    if (!user?.brand_id) return;
+    setLoading(true);
+    try {
+      const data = await db.getWebsites(user.brand_id);
+      setWebsites(data || []);
+    } catch (error) {
+      console.error('Error loading websites:', error);
+      setWebsites([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   React.useEffect(() => {
     if (['new-page', 'pages', 'menus', 'footers'].includes(activeSection)) {
@@ -27,7 +44,10 @@ export function BrandDashboard() {
     if (['nieuwsbeheer', 'destinations', 'trips'].includes(activeSection)) {
       setShowContentSubmenu(true);
     }
-  }, [activeSection]);
+    if (activeSection === 'websites') {
+      loadWebsites();
+    }
+  }, [activeSection, user?.brand_id]);
 
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Settings },
@@ -329,54 +349,56 @@ export function BrandDashboard() {
           )}
 
           {activeSection === 'websites' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                <div className="h-32" style={{ background: 'linear-gradient(135deg, #ff7700, #ffaa44)' }}></div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Summer Destinations</h3>
-                  <p className="text-sm text-gray-600 mb-3">summer-destinations.travel</p>
-                  <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                    <span>5 pages</span>
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded">Published</span>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button className="flex-1 text-white py-2 px-3 rounded text-sm hover:bg-orange-700 transition-colors" style={{ backgroundColor: '#ff7700' }}>
-                      Edit
-                    </button>
-                    <button className="p-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded">
-                      <Eye size={16} />
-                    </button>
+            <div className="p-6">
+              {loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-600"></div>
+                </div>
+              ) : websites.length === 0 ? (
+                <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+                  <Globe className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No websites yet</h3>
+                  <p className="text-gray-600 mb-6">Create your first travel website to get started</p>
+                  <button className="text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-orange-700" style={{ backgroundColor: '#ff7700' }}>
+                    <Plus className="inline-block mr-2" size={16} />
+                    Create Website
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {websites.map((website) => (
+                    <div key={website.id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                      <div className="h-32" style={{ background: 'linear-gradient(135deg, #ff7700, #ffaa44)' }}></div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-gray-900 mb-2">{website.name}</h3>
+                        <p className="text-sm text-gray-600 mb-3">{website.domain || 'No domain set'}</p>
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                          <span>{website.page_count || 0} pages</span>
+                          <span className={`px-2 py-1 rounded ${
+                            website.status === 'published'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {website.status || 'Draft'}
+                          </span>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button className="flex-1 text-white py-2 px-3 rounded text-sm hover:bg-orange-700 transition-colors" style={{ backgroundColor: '#ff7700' }}>
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="bg-white rounded-lg shadow-sm border border-dashed border-gray-300 flex items-center justify-center min-h-64 hover:border-orange-400 transition-colors cursor-pointer">
+                    <div className="text-center">
+                      <Plus className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900">Create New Website</h3>
+                      <p className="text-gray-500">Start building your travel website</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                <div className="h-32" style={{ background: 'linear-gradient(135deg, #ff7700, #ffaa44)' }}></div>
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">Winter Adventures</h3>
-                  <p className="text-sm text-gray-600 mb-3">winter-adventures.travel</p>
-                  <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                    <span>3 pages</span>
-                    <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Draft</span>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button className="flex-1 text-white py-2 px-3 rounded text-sm hover:bg-orange-700 transition-colors" style={{ backgroundColor: '#ff7700' }}>
-                      Edit
-                    </button>
-                    <button className="p-2 text-gray-600 hover:text-gray-900 border border-gray-300 rounded">
-                      <Eye size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg shadow-sm border border-dashed border-gray-300 flex items-center justify-center min-h-64 hover:border-orange-400 transition-colors cursor-pointer">
-                <div className="text-center">
-                  <Plus className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900">Create New Website</h3>
-                  <p className="text-gray-500">Start building your travel website</p>
-                </div>
-              </div>
+              )}
             </div>
           )}
         </main>

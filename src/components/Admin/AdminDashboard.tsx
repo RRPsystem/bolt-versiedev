@@ -21,6 +21,12 @@ export function AdminDashboard() {
   const [editingBrand, setEditingBrand] = useState<any>(null);
   const [brands, setBrands] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState({
+    totalBrands: 0,
+    activeAgents: 0,
+    publishedPages: 0,
+    newsArticles: 0
+  });
   const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
 
   React.useEffect(() => {
@@ -48,7 +54,30 @@ export function AdminDashboard() {
     }
   };
 
+  const loadDashboardStats = async () => {
+    try {
+      const [brandsData, usersData, pagesData, newsData] = await Promise.all([
+        db.getBrands(),
+        db.getUsers(),
+        db.getPages(),
+        db.getNewsItems()
+      ]);
+
+      setDashboardStats({
+        totalBrands: brandsData?.length || 0,
+        activeAgents: usersData?.filter((u: any) => u.role === 'agent')?.length || 0,
+        publishedPages: pagesData?.filter((p: any) => p.is_published)?.length || 0,
+        newsArticles: newsData?.length || 0
+      });
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+    }
+  };
+
   React.useEffect(() => {
+    if (activeSection === 'dashboard') {
+      loadDashboardStats();
+    }
     if (activeSection === 'brands' || ['page-management', 'menu-builder', 'footer-builder'].includes(activeSection)) {
       loadBrands();
     }
@@ -422,7 +451,7 @@ export function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Total Brands</p>
-                    <p className="text-2xl font-bold text-gray-900">12</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashboardStats.totalBrands}</p>
                   </div>
                   <Building2 className="h-8 w-8 text-blue-600" />
                 </div>
@@ -431,7 +460,7 @@ export function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600">Active Agents</p>
-                    <p className="text-2xl font-bold text-gray-900">48</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashboardStats.activeAgents}</p>
                   </div>
                   <Users className="h-8 w-8 text-green-600" />
                 </div>
@@ -439,8 +468,8 @@ export function AdminDashboard() {
               <div className="bg-white p-6 rounded-lg shadow-sm border">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Published Websites</p>
-                    <p className="text-2xl font-bold text-gray-900">8</p>
+                    <p className="text-sm text-gray-600">Published Pages</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashboardStats.publishedPages}</p>
                   </div>
                   <FileText className="h-8 w-8 text-purple-600" />
                 </div>
@@ -448,8 +477,8 @@ export function AdminDashboard() {
               <div className="bg-white p-6 rounded-lg shadow-sm border">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Content Articles</p>
-                    <p className="text-2xl font-bold text-gray-900">156</p>
+                    <p className="text-sm text-gray-600">News Articles</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashboardStats.newsArticles}</p>
                   </div>
                   <FileText className="h-8 w-8 text-orange-600" />
                 </div>

@@ -168,7 +168,45 @@ export const db = {
     if (brandId) {
       query = query.eq('brand_id', brandId);
     }
-    
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  },
+
+  // News Items
+  async getNewsItems(brandId?: string) {
+    if (!supabase) {
+      throw new Error('Supabase not configured');
+    }
+    let query = supabase
+      .from('news_items')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (brandId) {
+      query = query.eq('brand_id', brandId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+  },
+
+  // Pages
+  async getPages(brandId?: string) {
+    if (!supabase) {
+      throw new Error('Supabase not configured');
+    }
+    let query = supabase
+      .from('pages')
+      .select('*')
+      .order('created_at', { ascending: false});
+
+    if (brandId) {
+      query = query.eq('brand_id', brandId);
+    }
+
     const { data, error } = await query;
     if (error) throw error;
     return data;
