@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
 import { supabase } from '../../../lib/supabase';
+import { SocialMediaConnector } from '../SocialMediaConnector';
 import {
   Facebook,
   Instagram,
@@ -74,6 +75,8 @@ export function SocialMedia() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [brandVoice, setBrandVoice] = useState<BrandVoice>({});
   const [loading, setLoading] = useState(true);
+  const [showConnector, setShowConnector] = useState(false);
+  const [brandId, setBrandId] = useState<string | null>(null);
 
   const [postContent, setPostContent] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
@@ -101,6 +104,8 @@ export function SocialMedia() {
         .single();
 
       if (!userData?.brand_id) return;
+
+      setBrandId(userData.brand_id);
 
       const [accountsRes, postsRes, voiceRes] = await Promise.all([
         supabase
@@ -748,7 +753,10 @@ Geef het resultaat als JSON array met deze structuur:
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold">Social Media Accounts</h3>
-            <button className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center space-x-2">
+            <button
+              onClick={() => setShowConnector(true)}
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 flex items-center space-x-2"
+            >
               <Plus size={20} />
               <span>Account Toevoegen</span>
             </button>
@@ -757,7 +765,10 @@ Geef het resultaat als JSON array met deze structuur:
           {accounts.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">Nog geen accounts verbonden</p>
-              <button className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
+              <button
+                onClick={() => setShowConnector(true)}
+                className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+              >
                 Verbind je eerste account
               </button>
             </div>
@@ -926,6 +937,16 @@ Geef het resultaat als JSON array met deze structuur:
         </div>
       )}
 
+      {showConnector && brandId && (
+        <SocialMediaConnector
+          brandId={brandId}
+          onClose={() => setShowConnector(false)}
+          onSuccess={() => {
+            setShowConnector(false);
+            loadData();
+          }}
+        />
+      )}
     </div>
   );
 }
