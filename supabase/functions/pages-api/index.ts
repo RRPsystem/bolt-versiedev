@@ -130,53 +130,55 @@ Deno.serve(async (req: Request) => {
         if (error) throw error;
         result = data;
       } else {
-        const { data: existingPage } = await supabase
+        console.log("[DEBUG] No page_id provided, creating new page with unique slug");
+
+        let finalSlug = slug;
+        let slugSuffix = 1;
+
+        while (true) {
+          const { data } = await supabase
+            .from("pages")
+            .select("id, slug")
+            .eq("brand_id", brand_id)
+            .eq("slug", finalSlug)
+            .maybeSingle();
+
+          if (!data) {
+            break;
+          }
+
+          slugSuffix++;
+          const baseSlug = slug.replace(/-\d+$/, '');
+          finalSlug = `${baseSlug}-${slugSuffix}`;
+          console.log(`[DEBUG] Slug '${slug}' exists, trying '${finalSlug}'`);
+        }
+
+        const userId = claims.sub || claims.user_id;
+        const finalTitle = slugSuffix > 1 ? `${title} ${slugSuffix}` : title;
+
+        console.log(`[DEBUG] Creating new page with slug: ${finalSlug}, title: ${finalTitle}`);
+
+        const { data, error } = await supabase
           .from("pages")
-          .select("id, version")
-          .eq("brand_id", brand_id)
-          .eq("slug", slug)
+          .insert({
+            brand_id,
+            title: finalTitle,
+            slug: finalSlug,
+            content_json,
+            status: "draft",
+            version: 1,
+            content_type: "page",
+            show_in_menu: false,
+            menu_order: 0,
+            parent_slug: null,
+            owner_user_id: userId,
+            created_by: userId
+          })
+          .select("id, slug")
           .maybeSingle();
 
-        if (existingPage) {
-          const { data, error } = await supabase
-            .from("pages")
-            .update({
-              title,
-              content_json,
-              status: "draft",
-              version: (existingPage.version || 0) + 1,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", existingPage.id)
-            .select("id, slug")
-            .maybeSingle();
-
-          if (error) throw error;
-          result = data;
-        } else {
-          const userId = claims.sub || claims.user_id;
-          const { data, error } = await supabase
-            .from("pages")
-            .insert({
-              brand_id,
-              title,
-              slug,
-              content_json,
-              status: "draft",
-              version: 1,
-              content_type: "page",
-              show_in_menu: false,
-              menu_order: 0,
-              parent_slug: null,
-              owner_user_id: userId,
-              created_by: userId
-            })
-            .select("id, slug")
-            .maybeSingle();
-
-          if (error) throw error;
-          result = data;
-        }
+        if (error) throw error;
+        result = data;
       }
 
       const { data: versionData } = await supabase
