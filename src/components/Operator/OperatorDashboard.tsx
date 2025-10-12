@@ -5,12 +5,13 @@ import { GPTManagement } from './GPTManagement';
 import { UsageMonitoring } from './UsageMonitoring';
 import { SystemHealth } from './SystemHealth';
 import { UserActivity } from './UserActivity';
-import { 
-  Settings, 
-  Bot, 
-  BarChart3, 
-  Activity, 
-  Users, 
+import { OAuthManagement } from './OAuthManagement';
+import {
+  Settings,
+  Bot,
+  BarChart3,
+  Activity,
+  Users,
   Key,
   Database,
   Globe,
@@ -59,6 +60,7 @@ export function OperatorDashboard() {
   const sidebarItems = [
     { id: 'overview', label: 'System Overview', icon: BarChart3 },
     { id: 'gpt-management', label: 'GPT Management', icon: Bot },
+    { id: 'oauth-management', label: 'OAuth Apps', icon: Key },
     { id: 'usage-monitoring', label: 'Usage Monitoring', icon: TrendingUp },
     { id: 'user-activity', label: 'User Activity', icon: Users },
     { id: 'system-health', label: 'System Health', icon: Activity },
@@ -122,6 +124,7 @@ export function OperatorDashboard() {
               <h1 className="text-2xl font-bold text-gray-900">
                 {activeSection === 'overview' && 'System Overview'}
                 {activeSection === 'gpt-management' && 'GPT Management'}
+                {activeSection === 'oauth-management' && 'OAuth App Management'}
                 {activeSection === 'usage-monitoring' && 'Usage Monitoring'}
                 {activeSection === 'user-activity' && 'User Activity'}
                 {activeSection === 'system-health' && 'System Health'}
@@ -129,6 +132,7 @@ export function OperatorDashboard() {
               <p className="text-gray-600 mt-1">
                 {activeSection === 'overview' && 'Monitor system performance and key metrics'}
                 {activeSection === 'gpt-management' && 'Configure custom GPTs and content generation'}
+                {activeSection === 'oauth-management' && 'Manage social media OAuth apps and credentials'}
                 {activeSection === 'usage-monitoring' && 'Track API usage and costs'}
                 {activeSection === 'user-activity' && 'Monitor user behavior and activity logs'}
                 {activeSection === 'system-health' && 'System status and performance monitoring'}
@@ -292,6 +296,7 @@ export function OperatorDashboard() {
           )}
 
           {activeSection === 'gpt-management' && <GPTManagement />}
+          {activeSection === 'oauth-management' && <OAuthManagement />}
           {activeSection === 'usage-monitoring' && <UsageMonitoring />}
           {activeSection === 'user-activity' && <UserActivity />}
           {activeSection === 'system-health' && <SystemHealth />}
