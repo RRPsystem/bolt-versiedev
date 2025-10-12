@@ -83,6 +83,9 @@ export function SocialMedia() {
   const [aiTopic, setAiTopic] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
 
   const [contentSuggestions, setContentSuggestions] = useState<any[]>([]);
   const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState(false);
@@ -219,6 +222,34 @@ Maak de post kort, krachtig en engaging. Max 280 karakters voor Twitter, iets la
 
       if (!userData?.brand_id) throw new Error('Brand ID not found');
 
+      let mediaUrls: string[] = [];
+
+      if (mediaFiles.length > 0) {
+        setIsUploadingMedia(true);
+        const uploadPromises = mediaFiles.map(async (file, index) => {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${userData.brand_id}/${Date.now()}_${index}.${fileExt}`;
+
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('social-media-uploads')
+            .upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('social-media-uploads')
+            .getPublicUrl(fileName);
+
+          return publicUrl;
+        });
+
+        mediaUrls = await Promise.all(uploadPromises);
+        setIsUploadingMedia(false);
+      }
+
       const { error } = await supabase
         .from('social_media_posts')
         .insert({
@@ -227,6 +258,7 @@ Maak de post kort, krachtig en engaging. Max 280 karakters voor Twitter, iets la
           content: postContent,
           platforms: selectedPlatforms,
           status: status,
+          media_urls: mediaUrls.length > 0 ? mediaUrls : null,
           published_at: status === 'published' ? new Date().toISOString() : null
         });
 
@@ -235,12 +267,15 @@ Maak de post kort, krachtig en engaging. Max 280 karakters voor Twitter, iets la
       alert(status === 'draft' ? 'Post opgeslagen als concept' : 'Post gepubliceerd!');
       setPostContent('');
       setAiTopic('');
+      setMediaFiles([]);
+      setMediaPreviewUrls([]);
       loadData();
     } catch (error) {
       console.error('Error saving post:', error);
-      alert('Fout bij opslaan');
+      alert('Fout bij opslaan: ' + (error as Error).message);
     } finally {
       setIsSaving(false);
+      setIsUploadingMedia(false);
     }
   };
 
@@ -383,6 +418,46 @@ Geef het resultaat als JSON array met deze structuur:
     );
   };
 
+  const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const validFiles = files.filter(file => {
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+      const maxSize = isVideo ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
+
+      if (!isImage && !isVideo) {
+        alert(`${file.name} is niet een geldige afbeelding of video`);
+        return false;
+      }
+
+      if (file.size > maxSize) {
+        alert(`${file.name} is te groot. Max ${isVideo ? '100MB' : '10MB'}`);
+        return false;
+      }
+
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    setMediaFiles(prev => [...prev, ...validFiles]);
+
+    validFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setMediaPreviewUrls(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeMedia = (index: number) => {
+    setMediaFiles(prev => prev.filter((_, i) => i !== index));
+    setMediaPreviewUrls(prev => prev.filter((_, i) => i !== index));
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'published': return <CheckCircle2 size={16} className="text-green-500" />;
@@ -511,6 +586,75 @@ Geef het resultaat als JSON array met deze structuur:
               </div>
             </div>
 
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Media (Foto's/Video's)
+              </label>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <label className="flex-1 cursor-pointer">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-orange-400 transition-colors text-center">
+                      <div className="flex items-center justify-center space-x-2 text-gray-600">
+                        <ImageIcon size={20} />
+                        <Video size={20} />
+                        <span className="text-sm">Klik om foto's of video's te uploaden</span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Afbeeldingen tot 10MB, video's tot 100MB
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*,video/*"
+                      onChange={handleMediaUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {mediaPreviewUrls.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {mediaPreviewUrls.map((url, index) => {
+                      const file = mediaFiles[index];
+                      const isVideo = file?.type.startsWith('video/');
+
+                      return (
+                        <div key={index} className="relative group">
+                          <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 border-gray-200">
+                            {isVideo ? (
+                              <video
+                                src={url}
+                                className="w-full h-full object-cover"
+                                controls
+                              />
+                            ) : (
+                              <img
+                                src={url}
+                                alt={`Upload ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            )}
+                          </div>
+                          <button
+                            onClick={() => removeMedia(index)}
+                            className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                            title="Verwijderen"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          <div className="absolute bottom-2 left-2 px-2 py-1 bg-black bg-opacity-60 text-white text-xs rounded">
+                            {isVideo ? <Video size={12} className="inline mr-1" /> : <ImageIcon size={12} className="inline mr-1" />}
+                            {(file.size / 1024 / 1024).toFixed(1)}MB
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Selecteer Platforms
@@ -567,13 +711,18 @@ Geef het resultaat als JSON array met deze structuur:
               </button>
               <button
                 onClick={() => savePost('published')}
-                disabled={isSaving}
+                disabled={isSaving || isUploadingMedia}
                 className="flex-1 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
-                {isSaving ? (
+                {isUploadingMedia ? (
                   <>
                     <Loader2 size={20} className="animate-spin" />
-                    <span>Bezig...</span>
+                    <span>Media uploaden...</span>
+                  </>
+                ) : isSaving ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    <span>Opslaan...</span>
                   </>
                 ) : (
                   <>
