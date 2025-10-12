@@ -74,8 +74,8 @@ export function FooterBuilderView({ brandId: propBrandId }: Props = {}) {
 
     try {
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { footerId, forceBrandId: true });
-      if (jwtResponse.shortlink) {
-        window.open(jwtResponse.shortlink, '_blank');
+      if (jwtResponse.url) {
+        window.open(jwtResponse.url, '_blank');
       } else {
         const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token, { footerId });
         window.open(deeplink, '_blank');
@@ -90,8 +90,8 @@ export function FooterBuilderView({ brandId: propBrandId }: Props = {}) {
 
     try {
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { footerId: 'new', forceBrandId: true });
-      if (jwtResponse.shortlink) {
-        window.open(jwtResponse.shortlink, '_blank');
+      if (jwtResponse.url) {
+        window.open(jwtResponse.url, '_blank');
       } else {
         const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token, { footerId: 'new' });
         window.open(deeplink, '_blank');

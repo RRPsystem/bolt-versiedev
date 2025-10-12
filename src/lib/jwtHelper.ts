@@ -9,7 +9,7 @@ export interface BuilderJWTPayload {
 export interface GenerateJWTResponse {
   token: string;
   brand_id: string;
-  shortlink: string | null;
+  url: string;
   api_url: string;
   api_key: string;
 }

@@ -165,13 +165,31 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const shortlink = `${supabaseUrl}/functions/v1/wbctx-redirect/${ctx_id}`;
+    const builderBaseUrl = Deno.env.get('BUILDER_BASE_URL') || 'https://bolt.new';
+
+    const params = new URLSearchParams({
+      brand_id,
+      jwt: token,
+      deeplink: `${Deno.env.get('SUPABASE_URL')}/functions/v1/wbctx-serve/${ctx_id}`,
+    });
+
+    if (page_id) params.set('page_id', page_id);
+    if (slug) params.set('slug', slug);
+    if (news_slug) params.set('news_slug', news_slug);
+    if (template_id) params.set('template_id', template_id);
+    if (menu_id) params.set('menu_id', menu_id);
+    if (footer_id) params.set('footer_id', footer_id);
+    if (author_type) params.set('author_type', author_type);
+    if (author_id) params.set('author_id', author_id);
+    if (content_type) params.set('content_type', content_type);
+    if (mode) params.set('mode', mode);
+
+    const longUrl = `${builderBaseUrl}?${params.toString()}`;
 
     return new Response(
       JSON.stringify({
         ctx_id,
-        shortlink,
+        url: longUrl,
         ctx,
         expires_at: expiresAt,
       }),

@@ -115,9 +115,9 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       });
       console.log('Token generated successfully');
 
-      if (jwtResponse.shortlink) {
-        console.log('Using shortlink:', jwtResponse.shortlink);
-        window.open(jwtResponse.shortlink, '_blank');
+      if (jwtResponse.url) {
+        console.log('Using URL:', jwtResponse.url);
+        window.open(jwtResponse.url, '_blank');
       } else {
         const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token, { pageId });
         console.log('Generated deeplink:', deeplink);
@@ -139,8 +139,8 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, {
         forceBrandId: true,
       });
-      if (jwtResponse.shortlink) {
-        window.open(jwtResponse.shortlink, '_blank');
+      if (jwtResponse.url) {
+        window.open(jwtResponse.url, '_blank');
       } else {
         const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token);
         window.open(deeplink, '_blank');

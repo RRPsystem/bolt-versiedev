@@ -59,7 +59,7 @@ export default function DeeplinkTester() {
 
       const wbctxData = await wbctxResponse.json();
       setJwtToken(wbctxData.ctx.token);
-      setDeeplinkUrl(wbctxData.shortlink);
+      setDeeplinkUrl(wbctxData.url);
     } catch (error) {
       console.error('Error generating deeplink:', error);
       alert(`Error generating deeplink: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -81,8 +81,8 @@ export default function DeeplinkTester() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">Deeplink Tester</h2>
-        <p className="text-gray-600">Generate working deeplink URLs for external builder</p>
+        <h2 className="text-2xl font-bold mb-2">Deeplink Generator</h2>
+        <p className="text-gray-600">Genereer lange, veilige URLs voor de externe builder</p>
       </div>
 
       <div className="grid gap-6">
@@ -117,8 +117,11 @@ export default function DeeplinkTester() {
         {deeplinkUrl && (
           <>
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="font-semibold mb-4">Step 2: Complete Deeplink URL</h3>
-              <div className="bg-gray-50 p-4 rounded border border-gray-200 font-mono text-sm break-all">
+              <h3 className="font-semibold mb-4">Step 2: Lange Deeplink URL</h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Deze URL bevat alle benodigde parameters voor de builder. De JWT token en context zijn ingebouwd.
+              </p>
+              <div className="bg-gray-50 p-4 rounded border border-gray-200 font-mono text-xs break-all max-h-40 overflow-y-auto">
                 {deeplinkUrl}
               </div>
               <div className="flex gap-3 mt-4">
@@ -127,7 +130,7 @@ export default function DeeplinkTester() {
                   className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
                 >
                   <Copy className="h-4 w-4" />
-                  {copied ? 'Copied!' : 'Copy URL'}
+                  {copied ? 'Gekopieerd!' : 'Kopieer URL'}
                 </button>
                 <button
                   onClick={openInBuilder}
@@ -163,15 +166,18 @@ export default function DeeplinkTester() {
               </div>
             </div>
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h4 className="font-semibold text-yellow-900 mb-2">Expected Parameters in Builder:</h4>
-              <ul className="text-sm text-yellow-800 space-y-1">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-semibold text-blue-900 mb-2">URL Parameters:</h4>
+              <ul className="text-sm text-blue-800 space-y-1">
                 <li>✓ brand_id = {selectedPage?.brand_id}</li>
                 <li>✓ page_id = {selectedPage?.id}</li>
                 <li>✓ slug = {selectedPage?.slug}</li>
-                <li>✓ jwt = [valid token with scopes]</li>
-                <li>✓ deeplink = [edge function URL]</li>
+                <li>✓ jwt = [JWT token met authenticatie]</li>
+                <li>✓ deeplink = [Context serve URL]</li>
               </ul>
+              <p className="text-sm text-blue-700 mt-3">
+                Geen korte URLs meer - alle data zit in de query parameters!
+              </p>
             </div>
           </>
         )}

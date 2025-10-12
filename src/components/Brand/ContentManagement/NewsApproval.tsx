@@ -173,8 +173,8 @@ export function NewsApproval() {
         mode: 'news',
       });
 
-      if (jwtResponse.shortlink) {
-        window.open(jwtResponse.shortlink, '_blank');
+      if (jwtResponse.url) {
+        window.open(jwtResponse.url, '_blank');
       } else {
         const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
         const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -227,8 +227,8 @@ export function NewsApproval() {
         mode: 'news',
       });
 
-      if (jwtResponse.shortlink) {
-        window.open(jwtResponse.shortlink, '_blank');
+      if (jwtResponse.url) {
+        window.open(jwtResponse.url, '_blank');
       } else {
         const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
         const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;

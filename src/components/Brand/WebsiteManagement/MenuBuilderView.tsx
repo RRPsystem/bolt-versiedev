@@ -139,8 +139,8 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
 
     try {
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { menuId, forceBrandId: true });
-      if (jwtResponse.shortlink) {
-        window.open(jwtResponse.shortlink, '_blank');
+      if (jwtResponse.url) {
+        window.open(jwtResponse.url, '_blank');
       } else {
         const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token, { menuId });
         window.open(deeplink, '_blank');
@@ -155,8 +155,8 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
 
     try {
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { menuId: 'new', forceBrandId: true });
-      if (jwtResponse.shortlink) {
-        window.open(jwtResponse.shortlink, '_blank');
+      if (jwtResponse.url) {
+        window.open(jwtResponse.url, '_blank');
       } else {
         const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token, { menuId: 'new' });
         window.open(deeplink, '_blank');
