@@ -349,7 +349,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    if (req.method === "GET" && url.pathname.endsWith("/pages")) {
+    if (req.method === "GET" && (url.pathname.endsWith("/pages") || url.pathname.endsWith("/pages-api"))) {
       const apikey = url.searchParams.get("apikey");
       const preview = url.searchParams.get("preview");
       const brand_id = url.searchParams.get("brand_id");
