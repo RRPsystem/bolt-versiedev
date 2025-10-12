@@ -181,18 +181,13 @@ Deno.serve(async (req: Request) => {
         result = data;
       }
 
-      const { data: versionData } = await supabase
-        .from("pages")
-        .select("version")
-        .eq("id", result.id)
-        .maybeSingle();
-
       const responseData = {
-        success: true,
+        brand_id,
         page_id: result.id,
+        title,
         slug: result.slug,
-        version: versionData?.version || 1,
-        message: "Draft saved successfully"
+        content_json,
+        status: "draft"
       };
 
       console.log("[DEBUG] Sending success response:", responseData);
