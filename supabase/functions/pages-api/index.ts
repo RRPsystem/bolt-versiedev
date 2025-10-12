@@ -353,6 +353,25 @@ Deno.serve(async (req: Request) => {
       const apikey = url.searchParams.get("apikey");
       const preview = url.searchParams.get("preview");
       const brand_id = url.searchParams.get("brand_id");
+      const page_id = url.searchParams.get("page_id");
+
+      if (page_id) {
+        const { data, error } = await supabase
+          .from("pages")
+          .select("*")
+          .eq("id", page_id)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!data) {
+          return new Response(
+            JSON.stringify({ error: "Page not found" }),
+            { status: 404, headers: corsHeaders() }
+          );
+        }
+
+        return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders() });
+      }
 
       if (apikey) {
         const { data: apiSettings, error: apiError } = await supabase
