@@ -176,16 +176,7 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
   };
 
   const deletePage = async (pageId: string) => {
-    console.log('[deletePage] Called with pageId:', pageId);
-    console.log('[deletePage] user:', user);
-    console.log('[deletePage] brandId:', brandId);
-
-    if (!user || !brandId) {
-      alert('Gebruiker of brand ID ontbreekt');
-      return;
-    }
-
-    if (!confirm('Weet je zeker dat je deze pagina wilt verwijderen?')) return;
+    if (!user || !brandId) return;
 
     try {
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, {
@@ -207,17 +198,13 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
         throw new Error('Failed to delete page');
       }
 
-      alert('Pagina verwijderd!');
       await loadPages(brandId);
     } catch (error) {
       console.error('Error deleting page:', error);
-      alert('Kon pagina niet verwijderen: ' + error);
     }
   };
 
   const publishPage = async (pageId: string, pageSlug: string) => {
-    if (!confirm('Weet je zeker dat je deze pagina wilt publiceren?')) return;
-
     try {
       const jwtResponse = await generateBuilderJWT(brandId, user!.id, undefined, {
         forceBrandId: true,
