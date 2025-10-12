@@ -28,25 +28,18 @@ async function verifyBearerToken(req: Request, requiredScope?: string): Promise<
   const secretKey = encoder.encode(jwtSecret);
   try {
     const { payload } = await jwtVerify(token, secretKey, { algorithms: ["HS256"] });
-    if (!payload.brand_id) {
-      const error = new Error("Invalid token: missing brand_id");
-      (error as any).statusCode = 401;
+    const typedPayload = payload as unknown as JWTPayload;
+    if (requiredScope && (!typedPayload.scope || !typedPayload.scope.includes(requiredScope))) {
+      const error = new Error(`Missing required scope: ${requiredScope}`);
+      (error as any).statusCode = 403;
       throw error;
     }
-
-    if (requiredScope) {
-      const scopes = (payload.scope as string[]) || [];
-      if (!scopes.includes(requiredScope)) {
-        const error = new Error(`Insufficient permissions: ${requiredScope} required`);
-        (error as any).statusCode = 403;
-        throw error;
-      }
-    }
-
-    return payload as JWTPayload;
+    return typedPayload;
   } catch (err) {
-    if ((err as any).statusCode) throw err;
-    const error = new Error("Invalid or expired token");
+    if ((err as any).statusCode) {
+      throw err;
+    }
+    const error = new Error(`Invalid JWT: ${err.message}`);
     (error as any).statusCode = 401;
     throw error;
   }
@@ -54,10 +47,9 @@ async function verifyBearerToken(req: Request, requiredScope?: string): Promise<
 
 function corsHeaders(): Headers {
   const headers = new Headers();
-  headers.set('Access-Control-Allow-Origin', 'https://www.ai-websitestudio.nl');
-  headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
-  headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, apikey');
-  headers.set('Access-Control-Max-Age', '86400');
+  headers.set('Access-Control-Allow-Origin', '*');
+  headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Client-Info, Apikey');
   headers.set('Content-Type', 'application/json');
   return headers;
 }
@@ -84,8 +76,18 @@ Deno.serve(async (req: Request) => {
     });
 
     if (req.method === "POST" && (pathParts.includes("saveDraft") || pathParts.includes("save"))) {
+      console.log("[DEBUG] Processing saveDraft/save");
       const body = await req.json();
+      console.log("[DEBUG] Body:", {
+        has_brand_id: !!body.brand_id,
+        has_page_id: !!body.page_id,
+        title: body.title,
+        slug: body.slug
+      });
+
       const claims = await verifyBearerToken(req, "content:write");
+      console.log("[DEBUG] Claims verified:", { brand_id: claims.brand_id, sub: claims.sub });
+
       const { brand_id, page_id, title, slug, content_json } = body;
 
       if (claims.brand_id !== brand_id) {
@@ -183,14 +185,18 @@ Deno.serve(async (req: Request) => {
         .eq("id", result.id)
         .maybeSingle();
 
+      const responseData = {
+        success: true,
+        page_id: result.id,
+        slug: result.slug,
+        version: versionData?.version || 1,
+        message: "Draft saved successfully"
+      };
+
+      console.log("[DEBUG] Sending success response:", responseData);
+
       return new Response(
-        JSON.stringify({
-          success: true,
-          page_id: result.id,
-          slug: result.slug,
-          version: versionData?.version || 1,
-          message: "Draft saved successfully"
-        }),
+        JSON.stringify(responseData),
         { status: 200, headers: corsHeaders() }
       );
     }
@@ -203,45 +209,40 @@ Deno.serve(async (req: Request) => {
 
       if (!pageId || pageId === "pages-api") {
         return new Response(
-          JSON.stringify({ error: "page_id is required" }),
+          JSON.stringify({ error: "Invalid page_id in URL" }),
           { status: 400, headers: corsHeaders() }
         );
       }
 
-      const { data: currentPage } = await supabase
+      const { data: page, error: fetchError } = await supabase
         .from("pages")
         .select("brand_id, version")
         .eq("id", pageId)
         .maybeSingle();
 
-      if (!currentPage) {
+      if (fetchError || !page) {
         return new Response(
           JSON.stringify({ error: "Page not found" }),
           { status: 404, headers: corsHeaders() }
         );
       }
 
-      if (claims.brand_id !== currentPage.brand_id) {
+      if (claims.brand_id !== page.brand_id) {
         return new Response(
           JSON.stringify({ error: "Unauthorized" }),
           { status: 403, headers: corsHeaders() }
         );
       }
 
-      const updateData: any = {
-        status: "published",
-        published_at: new Date().toISOString(),
-        version: (currentPage.version || 0) + 1,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (body_html) {
-        updateData.body_html = body_html;
-      }
-
       const { data, error } = await supabase
         .from("pages")
-        .update(updateData)
+        .update({
+          body_html,
+          status: "published",
+          version: (page.version || 0) + 1,
+          published_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", pageId)
         .select("id, slug, version")
         .maybeSingle();
@@ -254,202 +255,20 @@ Deno.serve(async (req: Request) => {
           page_id: data.id,
           slug: data.slug,
           version: data.version,
-          status: "published",
           message: "Page published successfully"
         }),
         { status: 200, headers: corsHeaders() }
       );
     }
 
-    if (req.method === "POST" && pathParts.includes("duplicate")) {
-      const body = await req.json();
-      const claims = await verifyBearerToken(req);
-      const { page_id, new_slug } = body;
-
-      if (!page_id || !new_slug) {
-        return new Response(
-          JSON.stringify({ error: "page_id and new_slug are required" }),
-          { status: 400, headers: corsHeaders() }
-        );
-      }
-
-      const { data: originalPage } = await supabase
-        .from("pages")
-        .select("*")
-        .eq("id", page_id)
-        .maybeSingle();
-
-      if (!originalPage) {
-        return new Response(
-          JSON.stringify({ error: "Page not found" }),
-          { status: 404, headers: corsHeaders() }
-        );
-      }
-
-      if (claims.brand_id !== originalPage.brand_id) {
-        return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { status: 403, headers: corsHeaders() }
-        );
-      }
-
-      const { data, error } = await supabase
-        .from("pages")
-        .insert({
-          brand_id: originalPage.brand_id,
-          title: `${originalPage.title} (copy)`,
-          slug: new_slug,
-          content_json: originalPage.content_json,
-          status: "draft",
-          version: 1,
-          content_type: originalPage.content_type || "page",
-          show_in_menu: false,
-          menu_order: originalPage.menu_order,
-          parent_slug: originalPage.parent_slug
-        })
-        .select("id, slug")
-        .maybeSingle();
-
-      if (error) throw error;
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          id: data.id,
-          slug: data.slug,
-          message: "Page duplicated successfully"
-        }),
-        { status: 200, headers: corsHeaders() }
-      );
-    }
-
-    if (req.method === "DELETE") {
-      const claims = await verifyBearerToken(req);
-      const pageId = pathParts[pathParts.length - 1];
-
-      if (!pageId || pageId === "pages-api") {
-        return new Response(
-          JSON.stringify({ error: "page_id is required" }),
-          { status: 400, headers: corsHeaders() }
-        );
-      }
-
-      const { data: page } = await supabase
-        .from("pages")
-        .select("brand_id")
-        .eq("id", pageId)
-        .maybeSingle();
-
-      if (!page) {
-        return new Response(
-          JSON.stringify({ error: "Page not found" }),
-          { status: 404, headers: corsHeaders() }
-        );
-      }
-
-      if (claims.brand_id !== page.brand_id) {
-        return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { status: 403, headers: corsHeaders() }
-        );
-      }
-
-      const { error } = await supabase
-        .from("pages")
-        .delete()
-        .eq("id", pageId);
-
-      if (error) throw error;
-
-      return new Response(
-        JSON.stringify({ success: true, message: "Page deleted successfully" }),
-        { status: 200, headers: corsHeaders() }
-      );
-    }
-
-    if (req.method === "POST" && pathParts.includes("updateMenuSettings")) {
-      const body = await req.json();
-      const claims = await verifyBearerToken(req);
-      const { page_id, show_in_menu } = body;
-
-      if (!page_id || show_in_menu === undefined) {
-        return new Response(
-          JSON.stringify({ error: "page_id and show_in_menu are required" }),
-          { status: 400, headers: corsHeaders() }
-        );
-      }
-
-      const { data: page } = await supabase
-        .from("pages")
-        .select("brand_id")
-        .eq("id", page_id)
-        .maybeSingle();
-
-      if (!page) {
-        return new Response(
-          JSON.stringify({ error: "Page not found" }),
-          { status: 404, headers: corsHeaders() }
-        );
-      }
-
-      if (claims.brand_id !== page.brand_id) {
-        return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { status: 403, headers: corsHeaders() }
-        );
-      }
-
-      const { error } = await supabase
-        .from("pages")
-        .update({ show_in_menu })
-        .eq("id", page_id);
-
-      if (error) throw error;
-
-      return new Response(
-        JSON.stringify({ success: true, message: "Menu settings updated successfully" }),
-        { status: 200, headers: corsHeaders() }
-      );
-    }
-
     if (req.method === "GET" && pathParts.includes("list")) {
-      const brandId = url.searchParams.get("brand_id");
-      if (!brandId) {
+      const claims = await verifyBearerToken(req, "content:read");
+      const brandId = url.searchParams.get("brand_id") || claims.brand_id;
+
+      if (claims.brand_id !== brandId) {
         return new Response(
-          JSON.stringify({ error: "brand_id is required" }),
-          { status: 400, headers: corsHeaders() }
-        );
-      }
-
-      let query = supabase
-        .from("pages")
-        .select("title, slug, show_in_menu, parent_slug, menu_order, status")
-        .eq("brand_id", brandId)
-        .eq("status", "published");
-
-      const { data, error } = await query.order("menu_order", { ascending: true });
-      if (error) throw error;
-
-      const pages = (data || []).map(page => ({
-        title: page.title,
-        slug: page.slug,
-        url: `/${page.slug}`,
-        show_in_menu: page.show_in_menu,
-        parent_slug: page.parent_slug,
-        order: page.menu_order
-      }));
-
-      return new Response(JSON.stringify({ pages }), { status: 200, headers: corsHeaders() });
-    }
-
-    if (req.method === "GET" && pathParts.includes("preview")) {
-      const brandId = url.searchParams.get("brand_id");
-      const slug = url.searchParams.get("slug");
-
-      if (!brandId || !slug) {
-        return new Response(
-          JSON.stringify({ error: "brand_id and slug are required" }),
-          { status: 400, headers: corsHeaders() }
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 403, headers: corsHeaders() }
         );
       }
 
@@ -457,26 +276,17 @@ Deno.serve(async (req: Request) => {
         .from("pages")
         .select("*")
         .eq("brand_id", brandId)
-        .eq("slug", slug)
-        .maybeSingle();
+        .or("content_type.eq.page,content_type.is.null")
+        .order("updated_at", { ascending: false });
 
       if (error) throw error;
-      if (!data) {
-        return new Response(
-          JSON.stringify({ error: "Page not found" }),
-          { status: 404, headers: corsHeaders() }
-        );
-      }
-
-      return new Response(JSON.stringify({ page: data }), { status: 200, headers: corsHeaders() });
+      return new Response(JSON.stringify({ items: data || [] }), { status: 200, headers: corsHeaders() });
     }
 
-    if (req.method === "GET") {
-      const brandId = url.searchParams.get("brand_id");
-      const pageId = url.searchParams.get("page_id");
-
-      if (pageId) {
-        const claims = await verifyBearerToken(req);
+    if (req.method === "GET" && pathParts.length >= 2) {
+      const pageId = pathParts[pathParts.length - 1];
+      if (pageId !== "pages-api" && pageId !== "list") {
+        const claims = await verifyBearerToken(req, "content:read");
 
         const { data, error } = await supabase
           .from("pages")
@@ -499,11 +309,84 @@ Deno.serve(async (req: Request) => {
           );
         }
 
-        return new Response(JSON.stringify({ page: data }), { status: 200, headers: corsHeaders() });
+        return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders() });
       }
+    }
 
-      if (pathParts[pathParts.length - 1] === "pages-api") {
-        if (!brandId) {
+    if (req.method === "DELETE" && pathParts.length >= 2) {
+      const pageId = pathParts[pathParts.length - 1];
+      if (pageId !== "pages-api") {
+        const claims = await verifyBearerToken(req, "content:write");
+
+        const { data: page, error: fetchError } = await supabase
+          .from("pages")
+          .select("brand_id")
+          .eq("id", pageId)
+          .maybeSingle();
+
+        if (fetchError || !page) {
+          return new Response(
+            JSON.stringify({ error: "Page not found" }),
+            { status: 404, headers: corsHeaders() }
+          );
+        }
+
+        if (claims.brand_id !== page.brand_id) {
+          return new Response(
+            JSON.stringify({ error: "Unauthorized" }),
+            { status: 403, headers: corsHeaders() }
+          );
+        }
+
+        const { error } = await supabase
+          .from("pages")
+          .delete()
+          .eq("id", pageId);
+
+        if (error) throw error;
+
+        return new Response(
+          JSON.stringify({ success: true, message: "Page deleted successfully" }),
+          { status: 200, headers: corsHeaders() }
+        );
+      }
+    }
+
+    if (req.method === "GET" && url.pathname.endsWith("/pages")) {
+      const apikey = url.searchParams.get("apikey");
+      const preview = url.searchParams.get("preview");
+      const brand_id = url.searchParams.get("brand_id");
+
+      if (apikey) {
+        const { data: apiSettings, error: apiError } = await supabase
+          .from("api_settings")
+          .select("api_key, brand_id, can_read_content")
+          .eq("api_key", apikey)
+          .maybeSingle();
+
+        if (apiError || !apiSettings || !apiSettings.can_read_content) {
+          return new Response(
+            JSON.stringify({ error: "Invalid API key or insufficient permissions" }),
+            { status: 403, headers: corsHeaders() }
+          );
+        }
+
+        let query = supabase
+          .from("pages")
+          .select("*")
+          .eq("brand_id", apiSettings.brand_id)
+          .or("content_type.eq.page,content_type.is.null");
+
+        if (preview !== "true") {
+          query = query.eq("status", "published");
+        }
+
+        const { data, error } = await query.order("updated_at", { ascending: false });
+
+        if (error) throw error;
+        return new Response(JSON.stringify({ items: data || [] }), { status: 200, headers: corsHeaders() });
+      } else {
+        if (!brand_id) {
           return new Response(
             JSON.stringify({ error: "brand_id is required" }),
             { status: 400, headers: corsHeaders() }
@@ -513,7 +396,7 @@ Deno.serve(async (req: Request) => {
         const { data, error } = await supabase
           .from("pages")
           .select("*")
-          .eq("brand_id", brandId)
+          .eq("brand_id", brand_id)
           .or("content_type.eq.page,content_type.is.null")
           .order("updated_at", { ascending: false });
 
@@ -527,11 +410,14 @@ Deno.serve(async (req: Request) => {
       { status: 404, headers: corsHeaders() }
     );
   } catch (error) {
-    console.error("Error:", error);
+    console.error("[ERROR] Full error:", error);
+    console.error("[ERROR] Error message:", error?.message);
+    console.error("[ERROR] Error stack:", error?.stack);
     const statusCode = (error as any).statusCode || 500;
     return new Response(
       JSON.stringify({
-        error: error.message || "Internal server error",
+        error: error?.message || "Internal server error",
+        details: error?.toString(),
         timestamp: new Date().toISOString()
       }),
       { status: statusCode, headers: corsHeaders() }
