@@ -82,13 +82,28 @@ Deno.serve(async (req: Request) => {
         has_brand_id: !!body.brand_id,
         has_page_id: !!body.page_id,
         title: body.title,
-        slug: body.slug
+        slug: body.slug,
+        content_json_keys: body.content_json ? Object.keys(body.content_json) : [],
+        content_json_sample: body.content_json ? JSON.stringify(body.content_json).substring(0, 200) : null
       });
 
       const claims = await verifyBearerToken(req, "content:write");
       console.log("[DEBUG] Claims verified:", { brand_id: claims.brand_id, sub: claims.sub });
 
-      const { brand_id, page_id, title, slug, content_json } = body;
+      const { brand_id, page_id, title, slug } = body;
+
+      let content_json = body.content_json || body.json || body.content || body.layout || {};
+
+      if (body.htmlSnapshot) {
+        content_json.htmlSnapshot = body.htmlSnapshot;
+      }
+
+      console.log("[DEBUG] Extracted content_json:", {
+        keys: Object.keys(content_json),
+        has_layout: !!content_json.layout,
+        has_json: !!content_json.json,
+        has_htmlSnapshot: !!content_json.htmlSnapshot
+      });
 
       if (claims.brand_id !== brand_id) {
         return new Response(
