@@ -85,7 +85,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (req.method === "POST" && pathParts.includes("save")) {
+    if (req.method === "POST" && (pathParts.includes("save") || url.pathname.includes("/save"))) {
       const body = await req.json();
       const claims = await verifyBearerToken(req, "content:write");
       const { brand_id, id, title, slug, content, author_type, author_id, ...otherFields } = body;
@@ -206,6 +206,7 @@ Deno.serve(async (req: Request) => {
           success: true,
           id: result.id,
           slug: result.slug,
+          status: "draft",
           message: "Content saved successfully"
         }),
         { status: 200, headers: corsHeaders() }
@@ -293,7 +294,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    if (req.method === "POST" && pathParts.includes("publish")) {
+    if (req.method === "POST" && (pathParts.includes("publish") || url.pathname.includes("/publish"))) {
       const body = await req.json();
       const claims = await verifyBearerToken(req, "content:write");
       const { brand_id, id, slug } = body;

@@ -6,9 +6,10 @@ interface JWTPayload {
   brand_id: string;
   user_id?: string;
   sub?: string;
+  scope?: string[];
 }
 
-async function verifyBearerToken(req: Request): Promise<JWTPayload> {
+async function verifyBearerToken(req: Request, requiredScope?: string): Promise<JWTPayload> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     const error = new Error("Missing or invalid Authorization header");
@@ -22,7 +23,7 @@ async function verifyBearerToken(req: Request): Promise<JWTPayload> {
     (error as any).statusCode = 500;
     throw error;
   }
-  
+
   const encoder = new TextEncoder();
   const secretKey = encoder.encode(jwtSecret);
   try {
@@ -32,8 +33,19 @@ async function verifyBearerToken(req: Request): Promise<JWTPayload> {
       (error as any).statusCode = 401;
       throw error;
     }
+
+    if (requiredScope) {
+      const scopes = (payload.scope as string[]) || [];
+      if (!scopes.includes(requiredScope)) {
+        const error = new Error(`Insufficient permissions: ${requiredScope} required`);
+        (error as any).statusCode = 403;
+        throw error;
+      }
+    }
+
     return payload as JWTPayload;
   } catch (err) {
+    if ((err as any).statusCode) throw err;
     const error = new Error("Invalid or expired token");
     (error as any).statusCode = 401;
     throw error;
@@ -66,7 +78,7 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "POST" && pathParts.includes("saveDraft")) {
       const body = await req.json();
-      const claims = await verifyBearerToken(req);
+      const claims = await verifyBearerToken(req, "content:write");
       const { brand_id, page_id, title, slug, content_json } = body;
 
       if (claims.brand_id !== brand_id) {
@@ -158,11 +170,18 @@ Deno.serve(async (req: Request) => {
         }
       }
 
+      const { data: versionData } = await supabase
+        .from("pages")
+        .select("version")
+        .eq("id", result.id)
+        .maybeSingle();
+
       return new Response(
         JSON.stringify({
           success: true,
-          id: result.id,
+          page_id: result.id,
           slug: result.slug,
+          version: versionData?.version || 1,
           message: "Draft saved successfully"
         }),
         { status: 200, headers: corsHeaders() }
@@ -171,42 +190,53 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "POST" && pathParts.includes("publish")) {
       const body = await req.json();
-      const claims = await verifyBearerToken(req);
-      const { brand_id, page_id, title, slug, content_json } = body;
+      const claims = await verifyBearerToken(req, "content:write");
+      const pageId = pathParts[pathParts.length - 2];
+      const { body_html } = body;
 
-      if (claims.brand_id !== brand_id) {
+      if (!pageId || pageId === "pages-api") {
         return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { status: 403, headers: corsHeaders() }
-        );
-      }
-
-      if (!brand_id || !page_id || !title || !slug) {
-        return new Response(
-          JSON.stringify({ error: "brand_id, page_id, title, and slug required" }),
+          JSON.stringify({ error: "page_id is required" }),
           { status: 400, headers: corsHeaders() }
         );
       }
 
       const { data: currentPage } = await supabase
         .from("pages")
-        .select("version")
-        .eq("id", page_id)
+        .select("brand_id, version")
+        .eq("id", pageId)
         .maybeSingle();
+
+      if (!currentPage) {
+        return new Response(
+          JSON.stringify({ error: "Page not found" }),
+          { status: 404, headers: corsHeaders() }
+        );
+      }
+
+      if (claims.brand_id !== currentPage.brand_id) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 403, headers: corsHeaders() }
+        );
+      }
+
+      const updateData: any = {
+        status: "published",
+        published_at: new Date().toISOString(),
+        version: (currentPage.version || 0) + 1,
+        updated_at: new Date().toISOString(),
+      };
+
+      if (body_html) {
+        updateData.body_html = body_html;
+      }
 
       const { data, error } = await supabase
         .from("pages")
-        .update({
-          title,
-          slug,
-          content_json,
-          status: "published",
-          published_at: new Date().toISOString(),
-          version: (currentPage?.version || 0) + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", page_id)
-        .select("id, slug")
+        .update(updateData)
+        .eq("id", pageId)
+        .select("id, slug, version")
         .maybeSingle();
 
       if (error) throw error;
@@ -214,8 +244,10 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({
           success: true,
-          id: data.id,
+          page_id: data.id,
           slug: data.slug,
+          version: data.version,
+          status: "published",
           message: "Page published successfully"
         }),
         { status: 200, headers: corsHeaders() }
