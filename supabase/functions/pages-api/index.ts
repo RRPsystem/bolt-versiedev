@@ -76,7 +76,14 @@ Deno.serve(async (req: Request) => {
     const url = new URL(req.url);
     const pathParts = url.pathname.split("/").filter(Boolean);
 
-    if (req.method === "POST" && pathParts.includes("saveDraft")) {
+    console.log("[DEBUG] Request:", {
+      method: req.method,
+      pathname: url.pathname,
+      pathParts,
+      hasAuth: req.headers.has("Authorization")
+    });
+
+    if (req.method === "POST" && (pathParts.includes("saveDraft") || pathParts.includes("save"))) {
       const body = await req.json();
       const claims = await verifyBearerToken(req, "content:write");
       const { brand_id, page_id, title, slug, content_json } = body;
