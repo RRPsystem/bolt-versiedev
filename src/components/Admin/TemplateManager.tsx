@@ -60,13 +60,35 @@ export function TemplateManager() {
     if (!user) return;
 
     try {
+      const { data: newTemplate, error: insertError } = await supabase
+        .from('pages')
+        .insert({
+          title: formData.title,
+          slug: formData.slug,
+          is_template: true,
+          template_category: formData.template_category,
+          preview_image_url: formData.preview_image_url || null,
+          brand_id: null,
+          owner_user_id: null,
+          status: 'draft',
+          content_json: {},
+          body_html: '',
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      alert('Template succesvol aangemaakt! De builder wordt nu geopend om de content toe te voegen.');
+
       const jwtResponse = await generateBuilderJWT(
         'template',
         user.id,
         ['pages:write'],
         {
+          pageId: newTemplate.id,
           forceBrandId: false,
-          mode: 'create-template',
+          mode: 'edit-template',
         }
       );
 
@@ -74,11 +96,8 @@ export function TemplateManager() {
         token: jwtResponse.token,
         api: import.meta.env.VITE_SUPABASE_URL,
         apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-        mode: 'create-template',
-        title: formData.title,
-        slug: formData.slug,
-        category: formData.template_category,
-        preview: formData.preview_image_url,
+        page_id: newTemplate.id,
+        mode: 'edit-template',
       });
 
       const url = `https://www.ai-websitestudio.nl/index.html?${params.toString()}`;
@@ -91,9 +110,11 @@ export function TemplateManager() {
         template_category: 'general',
         preview_image_url: '',
       });
+
+      await loadTemplates();
     } catch (error) {
       console.error('Error creating template:', error);
-      alert('Er is een fout opgetreden bij het aanmaken van de template');
+      alert('Er is een fout opgetreden bij het aanmaken van de template: ' + (error as Error).message);
     }
   };
 
