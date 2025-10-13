@@ -37,6 +37,9 @@ export function AdminDashboard() {
   React.useEffect(() => {
     if (['new-page', 'page-management', 'menu-builder', 'footer-builder'].includes(activeSection)) {
       setShowWebsiteSubmenu(true);
+      if (brands.length === 0) {
+        loadBrands();
+      }
     }
     if (['admin-news', 'destinations', 'trips'].includes(activeSection)) {
       setShowContentSubmenu(true);
@@ -518,10 +521,74 @@ export function AdminDashboard() {
           {activeSection === 'deeplink-tester' && <DeeplinkTester />}
 
           {/* Website Management Content - Admin can select brand */}
-          {activeSection === 'new-page' && selectedBrandId && <NewPage brandId={selectedBrandId} />}
-          {activeSection === 'page-management' && selectedBrandId && <PageManagementView brandId={selectedBrandId} hideCreateButtons={false} />}
-          {activeSection === 'menu-builder' && selectedBrandId && <MenuBuilderView brandId={selectedBrandId} />}
-          {activeSection === 'footer-builder' && selectedBrandId && <FooterBuilderView brandId={selectedBrandId} />}
+          {activeSection === 'new-page' && (
+            selectedBrandId ? (
+              <NewPage brandId={selectedBrandId} />
+            ) : brands.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+                <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Geen brands gevonden</h3>
+                <p className="text-gray-600 mb-4">Maak eerst een brand aan voordat je pagina's kunt maken.</p>
+                <button
+                  onClick={() => setActiveSection('brands')}
+                  className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Naar Brand Management
+                </button>
+              </div>
+            ) : null
+          )}
+          {activeSection === 'page-management' && (
+            selectedBrandId ? (
+              <PageManagementView brandId={selectedBrandId} hideCreateButtons={false} />
+            ) : brands.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+                <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Geen brands gevonden</h3>
+                <p className="text-gray-600 mb-4">Maak eerst een brand aan voordat je pagina's kunt beheren.</p>
+                <button
+                  onClick={() => setActiveSection('brands')}
+                  className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Naar Brand Management
+                </button>
+              </div>
+            ) : null
+          )}
+          {activeSection === 'menu-builder' && (
+            selectedBrandId ? (
+              <MenuBuilderView brandId={selectedBrandId} />
+            ) : brands.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+                <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Geen brands gevonden</h3>
+                <p className="text-gray-600 mb-4">Maak eerst een brand aan voordat je menu's kunt maken.</p>
+                <button
+                  onClick={() => setActiveSection('brands')}
+                  className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Naar Brand Management
+                </button>
+              </div>
+            ) : null
+          )}
+          {activeSection === 'footer-builder' && (
+            selectedBrandId ? (
+              <FooterBuilderView brandId={selectedBrandId} />
+            ) : brands.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+                <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Geen brands gevonden</h3>
+                <p className="text-gray-600 mb-4">Maak eerst een brand aan voordat je footers kunt maken.</p>
+                <button
+                  onClick={() => setActiveSection('brands')}
+                  className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Naar Brand Management
+                </button>
+              </div>
+            ) : null
+          )}
 
           {activeSection === 'dashboard' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
