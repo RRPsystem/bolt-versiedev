@@ -63,7 +63,7 @@ export function TemplateManager() {
       const jwtResponse = await generateBuilderJWT(
         'template',
         user.id,
-        ['pages:write'],
+        ['pages:write', 'content:write', 'layouts:write', 'menus:write'],
         {
           forceBrandId: false,
           mode: 'create-template',
@@ -109,7 +109,7 @@ export function TemplateManager() {
       const jwtResponse = await generateBuilderJWT(
         'template',
         user.id,
-        ['pages:write'],
+        ['pages:write', 'content:write', 'layouts:write', 'menus:write'],
         {
           pageId: templateId,
           forceBrandId: false,

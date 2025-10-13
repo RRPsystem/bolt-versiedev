@@ -10,7 +10,7 @@ interface JWTPayload {
   is_template?: boolean;
 }
 
-async function verifyBearerToken(req: Request, requiredScope?: string): Promise<JWTPayload> {
+async function verifyBearerToken(req: Request, requiredScope?: string, alternativeScopes?: string[]): Promise<JWTPayload> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     const error = new Error("Missing or invalid Authorization header");
@@ -30,11 +30,18 @@ async function verifyBearerToken(req: Request, requiredScope?: string): Promise<
   try {
     const { payload } = await jwtVerify(token, secretKey, { algorithms: ["HS256"] });
     const typedPayload = payload as unknown as JWTPayload;
-    if (requiredScope && (!typedPayload.scope || !typedPayload.scope.includes(requiredScope))) {
-      const error = new Error(`Missing required scope: ${requiredScope}`);
-      (error as any).statusCode = 403;
-      throw error;
+
+    if (requiredScope) {
+      const hasRequiredScope = typedPayload.scope?.includes(requiredScope);
+      const hasAlternativeScope = alternativeScopes?.some(scope => typedPayload.scope?.includes(scope));
+
+      if (!hasRequiredScope && !hasAlternativeScope) {
+        const error = new Error(`Missing required scope: ${requiredScope}${alternativeScopes ? ` or ${alternativeScopes.join(', ')}` : ''}`);
+        (error as any).statusCode = 403;
+        throw error;
+      }
     }
+
     return typedPayload;
   } catch (err) {
     if ((err as any).statusCode) {
@@ -89,7 +96,7 @@ Deno.serve(async (req: Request) => {
         content_json_sample: body.content_json ? JSON.stringify(body.content_json).substring(0, 200) : null
       });
 
-      const claims = await verifyBearerToken(req, "content:write");
+      const claims = await verifyBearerToken(req, "content:write", ["pages:write"]);
       console.log("[DEBUG] Claims verified:", { brand_id: claims.brand_id, sub: claims.sub });
 
       const { brand_id, page_id, title, slug, is_template, template_category, preview_image_url } = body;
@@ -274,7 +281,7 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "POST" && pathParts.includes("publish")) {
       const body = await req.json();
-      const claims = await verifyBearerToken(req, "content:write");
+      const claims = await verifyBearerToken(req, "content:write", ["pages:write"]);
       const pageId = pathParts[pathParts.length - 2];
       const { body_html } = body;
 
@@ -333,7 +340,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (req.method === "GET" && pathParts.includes("list")) {
-      const claims = await verifyBearerToken(req, "content:read");
+      const claims = await verifyBearerToken(req, "content:read", ["pages:read"]);
       const brandId = url.searchParams.get("brand_id") || claims.brand_id;
 
       if (claims.brand_id !== brandId) {
@@ -357,7 +364,7 @@ Deno.serve(async (req: Request) => {
     if (req.method === "GET" && pathParts.length >= 2) {
       const pageId = pathParts[pathParts.length - 1];
       if (pageId !== "pages-api" && pageId !== "list") {
-        const claims = await verifyBearerToken(req, "content:read");
+        const claims = await verifyBearerToken(req, "content:read", ["pages:read"]);
 
         const { data, error } = await supabase
           .from("pages")
@@ -387,7 +394,7 @@ Deno.serve(async (req: Request) => {
     if (req.method === "DELETE" && pathParts.length >= 2) {
       const pageId = pathParts[pathParts.length - 1];
       if (pageId !== "pages-api") {
-        const claims = await verifyBearerToken(req, "content:read");
+        const claims = await verifyBearerToken(req, "content:read", ["pages:read"]);
 
         const { data: page, error: fetchError } = await supabase
           .from("pages")
