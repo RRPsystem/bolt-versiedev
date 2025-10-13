@@ -81,6 +81,7 @@ Deno.serve(async (req: Request) => {
       console.log("[DEBUG] Body:", {
         has_brand_id: !!body.brand_id,
         has_page_id: !!body.page_id,
+        is_template: body.is_template,
         title: body.title,
         slug: body.slug,
         content_json_keys: body.content_json ? Object.keys(body.content_json) : [],
@@ -90,7 +91,7 @@ Deno.serve(async (req: Request) => {
       const claims = await verifyBearerToken(req, "content:write");
       console.log("[DEBUG] Claims verified:", { brand_id: claims.brand_id, sub: claims.sub });
 
-      const { brand_id, page_id, title, slug } = body;
+      const { brand_id, page_id, title, slug, is_template, template_category, preview_image_url } = body;
 
       let content_json = body.content_json || body.json || body.content || body.layout || {};
 
@@ -105,18 +106,27 @@ Deno.serve(async (req: Request) => {
         has_htmlSnapshot: !!content_json.htmlSnapshot
       });
 
-      if (claims.brand_id !== brand_id) {
-        return new Response(
-          JSON.stringify({ error: "Unauthorized" }),
-          { status: 403, headers: corsHeaders() }
-        );
-      }
+      if (is_template) {
+        if (!title || !slug) {
+          return new Response(
+            JSON.stringify({ error: "title and slug required for templates" }),
+            { status: 400, headers: corsHeaders() }
+          );
+        }
+      } else {
+        if (claims.brand_id !== brand_id) {
+          return new Response(
+            JSON.stringify({ error: "Unauthorized" }),
+            { status: 403, headers: corsHeaders() }
+          );
+        }
 
-      if (!brand_id || !title || !slug) {
-        return new Response(
-          JSON.stringify({ error: "brand_id, title, and slug required" }),
-          { status: 400, headers: corsHeaders() }
-        );
+        if (!brand_id || !title || !slug) {
+          return new Response(
+            JSON.stringify({ error: "brand_id, title, and slug required" }),
+            { status: 400, headers: corsHeaders() }
+          );
+        }
       }
 
       let result;
@@ -128,16 +138,26 @@ Deno.serve(async (req: Request) => {
           .eq("id", page_id)
           .maybeSingle();
 
+        const updateData: any = {
+          title,
+          slug,
+          content_json,
+          status: "draft",
+          version: (currentPage?.version || 0) + 1,
+          updated_at: new Date().toISOString(),
+        };
+
+        if (is_template) {
+          updateData.is_template = true;
+          updateData.template_category = template_category || 'general';
+          if (preview_image_url) {
+            updateData.preview_image_url = preview_image_url;
+          }
+        }
+
         const { data, error } = await supabase
           .from("pages")
-          .update({
-            title,
-            slug,
-            content_json,
-            status: "draft",
-            version: (currentPage?.version || 0) + 1,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq("id", page_id)
           .select("id, slug")
           .maybeSingle();
@@ -145,18 +165,24 @@ Deno.serve(async (req: Request) => {
         if (error) throw error;
         result = data;
       } else {
-        console.log("[DEBUG] No page_id provided, creating new page with unique slug");
+        console.log("[DEBUG] No page_id provided, creating new page/template with unique slug");
 
         let finalSlug = slug;
         let slugSuffix = 1;
 
         while (true) {
-          const { data } = await supabase
+          let query = supabase
             .from("pages")
             .select("id, slug")
-            .eq("brand_id", brand_id)
-            .eq("slug", finalSlug)
-            .maybeSingle();
+            .eq("slug", finalSlug);
+
+          if (!is_template && brand_id) {
+            query = query.eq("brand_id", brand_id);
+          } else if (is_template) {
+            query = query.eq("is_template", true);
+          }
+
+          const { data } = await query.maybeSingle();
 
           if (!data) {
             break;
@@ -171,24 +197,38 @@ Deno.serve(async (req: Request) => {
         const userId = claims.sub || claims.user_id;
         const finalTitle = slugSuffix > 1 ? `${title} ${slugSuffix}` : title;
 
-        console.log(`[DEBUG] Creating new page with slug: ${finalSlug}, title: ${finalTitle}`);
+        console.log(`[DEBUG] Creating new ${is_template ? 'template' : 'page'} with slug: ${finalSlug}, title: ${finalTitle}`);
+
+        const insertData: any = {
+          title: finalTitle,
+          slug: finalSlug,
+          content_json,
+          status: "draft",
+          version: 1,
+          content_type: "page",
+          show_in_menu: false,
+          menu_order: 0,
+          parent_slug: null,
+        };
+
+        if (is_template) {
+          insertData.is_template = true;
+          insertData.brand_id = null;
+          insertData.owner_user_id = null;
+          insertData.template_category = template_category || 'general';
+          if (preview_image_url) {
+            insertData.preview_image_url = preview_image_url;
+          }
+        } else {
+          insertData.is_template = false;
+          insertData.brand_id = brand_id;
+          insertData.owner_user_id = userId;
+          insertData.created_by = userId;
+        }
 
         const { data, error } = await supabase
           .from("pages")
-          .insert({
-            brand_id,
-            title: finalTitle,
-            slug: finalSlug,
-            content_json,
-            status: "draft",
-            version: 1,
-            content_type: "page",
-            show_in_menu: false,
-            menu_order: 0,
-            parent_slug: null,
-            owner_user_id: userId,
-            created_by: userId
-          })
+          .insert(insertData)
           .select("id, slug")
           .maybeSingle();
 
@@ -196,14 +236,20 @@ Deno.serve(async (req: Request) => {
         result = data;
       }
 
-      const responseData = {
-        brand_id,
+      const responseData: any = {
         page_id: result.id,
         title,
         slug: result.slug,
         content_json,
         status: "draft"
       };
+
+      if (is_template) {
+        responseData.is_template = true;
+        responseData.template_category = template_category || 'general';
+      } else {
+        responseData.brand_id = brand_id;
+      }
 
       console.log("[DEBUG] Sending success response:", responseData);
 
@@ -328,7 +374,7 @@ Deno.serve(async (req: Request) => {
     if (req.method === "DELETE" && pathParts.length >= 2) {
       const pageId = pathParts[pathParts.length - 1];
       if (pageId !== "pages-api") {
-        const claims = await verifyBearerToken(req, "content:write");
+        const claims = await verifyBearerToken(req, "content:read");
 
         const { data: page, error: fetchError } = await supabase
           .from("pages")

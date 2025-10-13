@@ -60,35 +60,13 @@ export function TemplateManager() {
     if (!user) return;
 
     try {
-      const { data: newTemplate, error: insertError } = await supabase
-        .from('pages')
-        .insert({
-          title: formData.title,
-          slug: formData.slug,
-          is_template: true,
-          template_category: formData.template_category,
-          preview_image_url: formData.preview_image_url || null,
-          brand_id: null,
-          owner_user_id: null,
-          status: 'draft',
-          content_json: {},
-          body_html: '',
-        })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-
-      alert('Template succesvol aangemaakt! De builder wordt nu geopend om de content toe te voegen.');
-
       const jwtResponse = await generateBuilderJWT(
         'template',
         user.id,
         ['pages:write'],
         {
-          pageId: newTemplate.id,
           forceBrandId: false,
-          mode: 'edit-template',
+          mode: 'create-template',
         }
       );
 
@@ -96,8 +74,12 @@ export function TemplateManager() {
         token: jwtResponse.token,
         api: import.meta.env.VITE_SUPABASE_URL,
         apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-        page_id: newTemplate.id,
-        mode: 'edit-template',
+        mode: 'create-template',
+        is_template: 'true',
+        title: formData.title,
+        slug: formData.slug,
+        template_category: formData.template_category,
+        preview_image_url: formData.preview_image_url || '',
       });
 
       const url = `https://www.ai-websitestudio.nl/index.html?${params.toString()}`;
@@ -111,10 +93,12 @@ export function TemplateManager() {
         preview_image_url: '',
       });
 
-      await loadTemplates();
+      setTimeout(() => {
+        loadTemplates();
+      }, 2000);
     } catch (error) {
       console.error('Error creating template:', error);
-      alert('Er is een fout opgetreden bij het aanmaken van de template: ' + (error as Error).message);
+      alert('Er is een fout opgetreden bij het aanmaken van de template');
     }
   };
 
