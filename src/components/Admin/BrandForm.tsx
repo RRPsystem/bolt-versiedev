@@ -174,7 +174,10 @@ export function BrandForm({ onBack, onSuccess, editingBrand }: BrandFormProps) {
           throw new Error(result.error || 'Er is een fout opgetreden');
         }
 
-        alert(`Brand aangemaakt!\n\nInloggegevens:\nEmail: ${loginData.email}\nWachtwoord: ${loginData.password}\n\nDeze gegevens worden maar 1x getoond!`);
+        setLoading(false);
+
+        alert(`✅ Brand aangemaakt!\n\n📧 Inloggegevens:\nEmail: ${loginData.email}\nWachtwoord: ${loginData.password}\n\n⚠️ Deze gegevens worden maar 1x getoond!\n\nDe brand gebruiker kan nu inloggen.`);
+
         onSuccess();
       }
     } catch (err: any) {

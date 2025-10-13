@@ -102,7 +102,9 @@ export function AgentManagement() {
         throw new Error(result.error || 'Failed to create agent');
       }
 
-      alert(`Agent created!\n\nLogin credentials:\nEmail: ${formData.email}\nPassword: ${formData.password}\n\nThese credentials are shown only once!`);
+      setAddLoading(false);
+
+      alert(`✅ Agent aangemaakt!\n\n📧 Inloggegevens:\nEmail: ${formData.email}\nWachtwoord: ${formData.password}\n\n⚠️ Deze gegevens worden maar 1x getoond!\n\nDe agent kan nu inloggen.`);
 
       setShowAddModal(false);
       setFormData({ name: '', email: '', password: '', phone: '', brand_id: '' });
