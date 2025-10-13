@@ -7,6 +7,7 @@ interface JWTPayload {
   user_id?: string;
   sub?: string;
   scope?: string[];
+  is_template?: boolean;
 }
 
 async function verifyBearerToken(req: Request, requiredScope?: string): Promise<JWTPayload> {
@@ -106,7 +107,19 @@ Deno.serve(async (req: Request) => {
         has_htmlSnapshot: !!content_json.htmlSnapshot
       });
 
-      if (is_template) {
+      const isTemplateFromJWT = claims.is_template === true;
+      const isTemplateFromBody = is_template === true;
+      const isTemplateMode = isTemplateFromJWT || isTemplateFromBody;
+
+      console.log("[DEBUG] Template mode check:", {
+        isTemplateFromJWT,
+        isTemplateFromBody,
+        isTemplateMode,
+        jwtBrandId: claims.brand_id,
+        bodyBrandId: brand_id
+      });
+
+      if (isTemplateMode) {
         if (!title || !slug) {
           return new Response(
             JSON.stringify({ error: "title and slug required for templates" }),
@@ -147,7 +160,7 @@ Deno.serve(async (req: Request) => {
           updated_at: new Date().toISOString(),
         };
 
-        if (is_template) {
+        if (isTemplateMode) {
           updateData.is_template = true;
           updateData.template_category = template_category || 'general';
           if (preview_image_url) {
@@ -176,9 +189,9 @@ Deno.serve(async (req: Request) => {
             .select("id, slug")
             .eq("slug", finalSlug);
 
-          if (!is_template && brand_id) {
+          if (!isTemplateMode && brand_id) {
             query = query.eq("brand_id", brand_id);
-          } else if (is_template) {
+          } else if (isTemplateMode) {
             query = query.eq("is_template", true);
           }
 
@@ -197,7 +210,7 @@ Deno.serve(async (req: Request) => {
         const userId = claims.sub || claims.user_id;
         const finalTitle = slugSuffix > 1 ? `${title} ${slugSuffix}` : title;
 
-        console.log(`[DEBUG] Creating new ${is_template ? 'template' : 'page'} with slug: ${finalSlug}, title: ${finalTitle}`);
+        console.log(`[DEBUG] Creating new ${isTemplateMode ? 'template' : 'page'} with slug: ${finalSlug}, title: ${finalTitle}`);
 
         const insertData: any = {
           title: finalTitle,
@@ -211,7 +224,7 @@ Deno.serve(async (req: Request) => {
           parent_slug: null,
         };
 
-        if (is_template) {
+        if (isTemplateMode) {
           insertData.is_template = true;
           insertData.brand_id = null;
           insertData.owner_user_id = null;
@@ -244,7 +257,7 @@ Deno.serve(async (req: Request) => {
         status: "draft"
       };
 
-      if (is_template) {
+      if (isTemplateMode) {
         responseData.is_template = true;
         responseData.template_category = template_category || 'general';
       } else {
