@@ -6,6 +6,7 @@ import { NewPage } from './WebsiteManagement/NewPage';
 import PageManagementView from './WebsiteManagement/PageManagementView';
 import MenuBuilderView from './WebsiteManagement/MenuBuilderView';
 import FooterBuilderView from './WebsiteManagement/FooterBuilderView';
+import { TemplateGallery } from './WebsiteManagement/TemplateGallery';
 import { NewsApproval } from './ContentManagement/NewsApproval';
 import { TravelBro } from './AITools/TravelBro';
 import { SocialMedia } from './AITools/SocialMedia';
@@ -56,6 +57,7 @@ export function BrandDashboard() {
   ];
 
   const websiteManagementItems = [
+    { id: 'template-gallery', label: 'Template Gallery', icon: Layout },
     { id: 'new-page', label: 'Nieuwe Pagina', icon: Plus },
     { id: 'pages', label: 'Pagina Beheer', icon: FileText },
     { id: 'menus', label: 'Menu Builder', icon: Layout },
@@ -306,6 +308,12 @@ export function BrandDashboard() {
 
         {/* Content */}
         <main className="flex-1 overflow-auto">
+          {activeSection === 'template-gallery' && user?.brand_id && (
+            <TemplateGallery
+              brandId={user.brand_id}
+              onTemplateSelected={() => setActiveSection('pages')}
+            />
+          )}
           {activeSection === 'new-page' && <NewPage brandId={user?.brand_id} onPageCreated={() => setActiveSection('pages')} />}
           {activeSection === 'pages' && <PageManagementView />}
           {activeSection === 'menus' && <MenuBuilderView />}

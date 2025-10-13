@@ -4,6 +4,7 @@ import { db, supabase } from '../../lib/supabase';
 import { AgentManagement } from './AgentManagement';
 import { BrandForm } from './BrandForm';
 import { NewsManagement } from './NewsManagement';
+import { TemplateManager } from './TemplateManager';
 import { PageManagementView } from '../Brand/WebsiteManagement/PageManagementView';
 import { MenuBuilderView } from '../Brand/WebsiteManagement/MenuBuilderView';
 import { FooterBuilderView } from '../Brand/WebsiteManagement/FooterBuilderView';
@@ -35,9 +36,9 @@ export function AdminDashboard() {
   const [resetError, setResetError] = useState('');
 
   React.useEffect(() => {
-    if (['new-page', 'page-management', 'menu-builder', 'footer-builder'].includes(activeSection)) {
+    if (['template-manager', 'page-management', 'menu-builder', 'footer-builder'].includes(activeSection)) {
       setShowWebsiteSubmenu(true);
-      if (brands.length === 0) {
+      if (activeSection !== 'template-manager' && brands.length === 0) {
         loadBrands();
       }
     }
@@ -179,7 +180,7 @@ export function AdminDashboard() {
   ];
 
   const websiteItems = [
-    { id: 'new-page', label: 'Nieuwe Pagina', icon: Plus },
+    { id: 'template-manager', label: 'Template Manager', icon: Layout },
     { id: 'page-management', label: 'Pagina Beheer', icon: FileText },
     { id: 'menu-builder', label: 'Menu Builder', icon: Menu },
     { id: 'footer-builder', label: 'Footer Builder', icon: Layout },
@@ -468,7 +469,7 @@ export function AdminDashboard() {
                 {activeSection === 'brands' && 'Brand Management'}
                 {activeSection === 'agents' && 'Agent Management'}
                 {activeSection === 'deeplink-tester' && 'Deeplink Tester'}
-                {activeSection === 'new-page' && 'Nieuwe Pagina'}
+                {activeSection === 'template-manager' && 'Template Manager'}
                 {activeSection === 'page-management' && 'Pagina Beheer'}
                 {activeSection === 'menu-builder' && 'Menu Builder'}
                 {activeSection === 'footer-builder' && 'Footer Builder'}
@@ -477,7 +478,7 @@ export function AdminDashboard() {
                 {activeSection === 'brands' && 'Manage all brands in the system'}
                 {activeSection === 'dashboard' && 'System overview and statistics'}
                 {activeSection === 'deeplink-tester' && 'Test external builder integration'}
-                {activeSection === 'new-page' && 'Maak een nieuwe pagina voor je website'}
+                {activeSection === 'template-manager' && 'Maak en beheer pagina templates voor brands'}
                 {activeSection === 'page-management' && 'Beheer alle pagina\'s van je website'}
                 {activeSection === 'menu-builder' && 'Bouw en organiseer je website navigatie'}
                 {activeSection === 'footer-builder' && 'Ontwerp en beheer je website footer'}
@@ -494,7 +495,7 @@ export function AdminDashboard() {
               </button>
             )}
 
-            {['page-management', 'menu-builder', 'footer-builder', 'new-page'].includes(activeSection) && brands.length > 0 && (
+            {['page-management', 'menu-builder', 'footer-builder'].includes(activeSection) && brands.length > 0 && (
               <div className="flex items-center space-x-3">
                 <label htmlFor="brand-select" className="text-sm font-medium text-gray-700">Brand:</label>
                 <select
@@ -519,25 +520,9 @@ export function AdminDashboard() {
           {activeSection === 'agents' && <AgentManagement />}
           {activeSection === 'admin-news' && <NewsManagement />}
           {activeSection === 'deeplink-tester' && <DeeplinkTester />}
+          {activeSection === 'template-manager' && <TemplateManager />}
 
           {/* Website Management Content - Admin can select brand */}
-          {activeSection === 'new-page' && (
-            selectedBrandId ? (
-              <NewPage brandId={selectedBrandId} />
-            ) : brands.length === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
-                <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Geen brands gevonden</h3>
-                <p className="text-gray-600 mb-4">Maak eerst een brand aan voordat je pagina's kunt maken.</p>
-                <button
-                  onClick={() => setActiveSection('brands')}
-                  className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
-                >
-                  Naar Brand Management
-                </button>
-              </div>
-            ) : null
-          )}
           {activeSection === 'page-management' && (
             selectedBrandId ? (
               <PageManagementView brandId={selectedBrandId} hideCreateButtons={false} />
