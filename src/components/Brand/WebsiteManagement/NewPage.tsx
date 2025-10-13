@@ -1,29 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Grid3x3, Wrench, Search, Plus, Eye } from 'lucide-react';
+import { Grid3x3, Wrench } from 'lucide-react';
 import { generateBuilderJWT, generateBuilderDeeplink } from '../../../lib/jwtHelper';
 import { useAuth } from '../../../contexts/AuthContext';
-
-const templateCategories = [
-  { id: 'all', label: 'All Templates', count: 1 },
-  { id: 'landing', label: 'Landing Pages', count: 1 },
-  { id: 'about', label: 'About Pages', count: 0 },
-  { id: 'contact', label: 'Contact Pages', count: 0 },
-  { id: 'services', label: 'Services', count: 0 },
-  { id: 'galleries', label: 'Galleries', count: 0 },
-  { id: 'blog', label: 'Blog Pages', count: 0 },
-];
-
-const templates = [
-  {
-    id: 1,
-    name: 'Home 1',
-    category: 'landing',
-    description: 'Professionele travel homepage geïnspireerd door Gowilds design met hero slider, bestemmingen showcase en tour highlights',
-    image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop',
-    tags: ['gowilds', 'hero-slider', 'tours', '+2'],
-    isPopular: true
-  }
-];
+import { TemplateGallery } from './TemplateGallery';
 
 interface Props {
   brandId?: string;
@@ -31,8 +10,6 @@ interface Props {
 }
 
 export function NewPage({ brandId: propBrandId, onPageCreated }: Props = {}) {
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
   const [initialPageCount, setInitialPageCount] = useState<number | null>(null);
   const { user } = useAuth();
 
@@ -95,36 +72,6 @@ export function NewPage({ brandId: propBrandId, onPageCreated }: Props = {}) {
     }
   };
 
-  const handleUseTemplate = async (templateId: number) => {
-    if (!propBrandId) {
-      alert('Brand ID ontbreekt. Kan de builder niet openen.');
-      return;
-    }
-
-    if (!user?.id) {
-      alert('Gebruiker ID ontbreekt. Probeer opnieuw in te loggen.');
-      return;
-    }
-
-    try {
-      const jwtResponse = await generateBuilderJWT(propBrandId, user.id, undefined, {
-        templateId: templateId.toString(),
-        forceBrandId: true
-      });
-      if (jwtResponse.url) {
-        window.open(jwtResponse.url, '_blank');
-      } else {
-        const deeplink = generateBuilderDeeplink(propBrandId, jwtResponse.token, {
-          templateId: templateId.toString()
-        });
-        window.open(deeplink, '_blank');
-      }
-    } catch (error) {
-      console.error('Error opening builder:', error);
-      alert('Kon de builder niet openen: ' + (error as Error).message);
-    }
-  };
-
   return (
     <div className="bg-gray-50 min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
@@ -165,111 +112,13 @@ export function NewPage({ brandId: propBrandId, onPageCreated }: Props = {}) {
           </div>
         </div>
 
-        {/* Template Gallery */}
-        <div className="bg-white rounded-lg border border-gray-200 p-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-1">Template Gallery</h2>
-              <p className="text-gray-600">Choose from our collection of professional travel website templates</p>
-            </div>
-            <button className="inline-flex items-center space-x-2 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              <Plus size={18} />
-              <span>Create Template</span>
-            </button>
-          </div>
-
-          {/* Search */}
-          <div className="mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search templates by name, description, or tags..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {/* Categories */}
-          <div className="flex flex-wrap gap-4 mb-8 pb-6 border-b border-gray-200">
-            {templateCategories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  selectedCategory === category.id
-                    ? 'bg-orange-100 text-orange-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category.label} <span className="ml-1 text-gray-500">{category.count}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Popular Templates Section */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <span className="text-yellow-500 mr-2">⭐</span>
-              Popular Templates
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {templates.map((template) => (
-                <div key={template.id} className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="relative">
-                    {template.isPopular && (
-                      <div className="absolute top-3 left-3 bg-orange-600 text-white text-xs font-semibold px-3 py-1 rounded flex items-center space-x-1">
-                        <span>⭐</span>
-                        <span>Popular</span>
-                      </div>
-                    )}
-                    <div className="bg-gray-900 h-48">
-                      <div className="grid grid-cols-4 grid-rows-2 h-full p-2 gap-1">
-                        {[1,2,3,4,5,6,7,8].map((i) => (
-                          <div key={i} className="bg-gray-700 rounded"></div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-lg font-semibold text-gray-900">{template.name}</h4>
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
-                        landing
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-3">{template.description}</p>
-
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {template.tags.map((tag) => (
-                        <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleUseTemplate(template.id)}
-                        className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
-                      >
-                        <span>↓</span>
-                        <span>Use Template</span>
-                      </button>
-                      <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                        <Eye size={18} className="text-gray-600" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* Template Gallery - Real templates from database */}
+        {propBrandId && (
+          <TemplateGallery
+            brandId={propBrandId}
+            onTemplateSelected={onPageCreated}
+          />
+        )}
       </div>
     </div>
   );
