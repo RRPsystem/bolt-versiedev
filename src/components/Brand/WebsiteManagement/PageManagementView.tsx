@@ -74,12 +74,13 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
 
       const response = await fetch(apiUrl, {
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
         },
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Failed to load pages:', response.status, errorData);
         throw new Error('Failed to load pages');
       }
 
