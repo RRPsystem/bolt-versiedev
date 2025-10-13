@@ -21,6 +21,7 @@ export function AdminDashboard() {
   const [editingBrand, setEditingBrand] = useState<any>(null);
   const [brands, setBrands] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedBrandId, setSelectedBrandId] = useState<string>('');
   const [dashboardStats, setDashboardStats] = useState({
     totalBrands: 0,
     activeAgents: 0,
@@ -45,6 +46,9 @@ export function AdminDashboard() {
       const data = await db.getBrands();
       console.log('✅ Brands loaded:', data);
       setBrands(data || []);
+      if (data && data.length > 0 && !selectedBrandId) {
+        setSelectedBrandId(data[0].id);
+      }
     } catch (error) {
       console.error('❌ Error loading brands:', error);
       setBrands([]);
@@ -422,13 +426,31 @@ export function AdminDashboard() {
             </div>
             
             {activeSection === 'brands' && (
-              <button 
+              <button
                 onClick={() => setShowBrandForm(true)}
                 className="bg-black text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-gray-800 transition-colors"
               >
                 <Plus size={16} />
                 <span>Add Brand</span>
               </button>
+            )}
+
+            {['page-management', 'menu-builder', 'footer-builder', 'new-page'].includes(activeSection) && brands.length > 0 && (
+              <div className="flex items-center space-x-3">
+                <label htmlFor="brand-select" className="text-sm font-medium text-gray-700">Brand:</label>
+                <select
+                  id="brand-select"
+                  value={selectedBrandId}
+                  onChange={(e) => setSelectedBrandId(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white"
+                >
+                  {brands.map((brand) => (
+                    <option key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
         </header>
@@ -439,11 +461,11 @@ export function AdminDashboard() {
           {activeSection === 'admin-news' && <NewsManagement />}
           {activeSection === 'deeplink-tester' && <DeeplinkTester />}
 
-          {/* Website Management Content - Admin uses System Templates brand */}
-          {activeSection === 'new-page' && <NewPage brandId={SYSTEM_BRAND_ID} />}
-          {activeSection === 'page-management' && <PageManagementView brandId={SYSTEM_BRAND_ID} hideCreateButtons={false} />}
-          {activeSection === 'menu-builder' && <MenuBuilderView brandId={SYSTEM_BRAND_ID} />}
-          {activeSection === 'footer-builder' && <FooterBuilderView brandId={SYSTEM_BRAND_ID} />}
+          {/* Website Management Content - Admin can select brand */}
+          {activeSection === 'new-page' && selectedBrandId && <NewPage brandId={selectedBrandId} />}
+          {activeSection === 'page-management' && selectedBrandId && <PageManagementView brandId={selectedBrandId} hideCreateButtons={false} />}
+          {activeSection === 'menu-builder' && selectedBrandId && <MenuBuilderView brandId={selectedBrandId} />}
+          {activeSection === 'footer-builder' && selectedBrandId && <FooterBuilderView brandId={selectedBrandId} />}
 
           {activeSection === 'dashboard' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
