@@ -238,6 +238,21 @@ export const db = {
     return data;
   },
 
+  // Users
+  async getUserByBrandId(brandId: string) {
+    if (!supabase) {
+      throw new Error('Supabase not configured');
+    }
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('brand_id', brandId)
+      .eq('role', 'brand')
+      .maybeSingle();
+    if (error) throw error;
+    return { data };
+  },
+
   // Agents
   async getAgents(brandId?: string) {
     if (!supabase) {

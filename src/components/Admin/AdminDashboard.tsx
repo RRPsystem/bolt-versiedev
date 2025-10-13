@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { db } from '../../lib/supabase';
+import { db, supabase } from '../../lib/supabase';
 import { AgentManagement } from './AgentManagement';
 import { BrandForm } from './BrandForm';
 import { NewsManagement } from './NewsManagement';
@@ -9,7 +9,7 @@ import { MenuBuilderView } from '../Brand/WebsiteManagement/MenuBuilderView';
 import { FooterBuilderView } from '../Brand/WebsiteManagement/FooterBuilderView';
 import { NewPage } from '../Brand/WebsiteManagement/NewPage';
 import DeeplinkTester from './DeeplinkTester';
-import { Users, Building2, FileText, Settings, Plus, Search, Filter, CreditCard as Edit, Trash2, LayoutGrid as Layout, Menu, Globe, Newspaper, MapPin, Plane, Link } from 'lucide-react'
+import { Users, Building2, FileText, Settings, Plus, Search, Filter, CreditCard as Edit, Trash2, LayoutGrid as Layout, Menu, Globe, Newspaper, MapPin, Plane, Link, Key, X, Lock } from 'lucide-react'
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 export function AdminDashboard() {
@@ -29,6 +29,10 @@ export function AdminDashboard() {
     newsArticles: 0
   });
   const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
+  const [resetPasswordBrand, setResetPasswordBrand] = useState<any>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState('');
 
   React.useEffect(() => {
     if (['new-page', 'page-management', 'menu-builder', 'footer-builder'].includes(activeSection)) {
@@ -109,6 +113,58 @@ export function AdminDashboard() {
         console.error('❌ Error deleting brand:', error);
         alert(`Er is een fout opgetreden bij het verwijderen van de brand: ${error.message || error}`);
       }
+    }
+  };
+
+  const handleResetBrandPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetPasswordBrand) return;
+
+    setResetLoading(true);
+    setResetError('');
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not logged in');
+      }
+
+      const { data: brandUser } = await db.getUserByBrandId(resetPasswordBrand.id);
+      if (!brandUser) {
+        throw new Error('Brand user not found');
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/reset-user-password`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            user_id: brandUser.id,
+            new_password: newPassword
+          })
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to reset password');
+      }
+
+      setResetLoading(false);
+
+      alert(`✅ Wachtwoord gereset!\n\n📧 Email: ${brandUser.email}\n🔑 Nieuw wachtwoord: ${newPassword}\n\n⚠️ Noteer dit wachtwoord - het wordt maar 1x getoond!`);
+
+      setResetPasswordBrand(null);
+      setNewPassword('');
+    } catch (err: any) {
+      setResetError(err.message || 'Failed to reset password');
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -604,14 +660,21 @@ export function AdminDashboard() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                               <div className="flex items-center space-x-2">
-                                <button 
+                                <button
+                                  onClick={() => setResetPasswordBrand(brand)}
+                                  className="p-1 hover:bg-gray-100 rounded"
+                                  title="Reset wachtwoord"
+                                >
+                                  <Key size={16} className="text-orange-600" />
+                                </button>
+                                <button
                                   onClick={() => handleEditBrand(brand)}
                                   className="p-1 hover:bg-gray-100 rounded"
                                   title="Bewerk brand"
                                 >
                                   <Edit size={16} className="text-blue-600" />
                                 </button>
-                                <button 
+                                <button
                                   onClick={() => handleDeleteBrand(brand)}
                                   className="p-1 hover:bg-gray-100 rounded"
                                   title="Verwijder brand"
@@ -631,6 +694,88 @@ export function AdminDashboard() {
           )}
         </main>
       </div>
+
+      {resetPasswordBrand && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center space-x-2">
+                <Key size={20} className="text-orange-600" />
+                <span>Reset Wachtwoord</span>
+              </h2>
+              <button
+                onClick={() => {
+                  setResetPasswordBrand(null);
+                  setNewPassword('');
+                  setResetError('');
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleResetBrandPassword} className="p-6">
+              {resetError && (
+                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                  {resetError}
+                </div>
+              )}
+
+              <div className="mb-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-sm text-gray-600 mb-1">Brand</p>
+                <p className="font-medium text-gray-900">{resetPasswordBrand.name}</p>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="flex items-center space-x-2">
+                    <Lock size={16} />
+                    <span>Nieuw Wachtwoord <span className="text-red-500">*</span></span>
+                  </div>
+                </label>
+                <input
+                  type="text"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimaal 6 karakters"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  required
+                  minLength={6}
+                />
+                <p className="text-xs text-gray-500 mt-2">Het nieuwe wachtwoord wordt in een alert getoond na het resetten.</p>
+              </div>
+
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-orange-800">
+                  <strong>Let op:</strong> Noteer het nieuwe wachtwoord. Het wordt maar 1x getoond!
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetPasswordBrand(null);
+                    setNewPassword('');
+                    setResetError('');
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Annuleren
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
+                >
+                  {resetLoading ? 'Bezig...' : 'Wachtwoord Resetten'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
