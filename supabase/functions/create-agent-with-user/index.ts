@@ -100,9 +100,7 @@ Deno.serve(async (req: Request) => {
         id: authData.user.id,
         email,
         role: 'agent',
-        brand_id,
-        name,
-        phone
+        brand_id
       });
 
     if (userInsertError) {

@@ -29,7 +29,7 @@ Deno.serve(async (req: Request) => {
         email: 'admin@travel.com',
         password: 'admin123',
         role: 'admin',
-        brand_id: null
+        brand_id: '00000000-0000-0000-0000-000000000999'
       },
       {
         id: '550e8400-e29b-41d4-a716-446655440011',
