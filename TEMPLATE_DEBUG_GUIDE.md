@@ -1,29 +1,69 @@
 # Template System Debug Guide voor BOLT Builder
 
-## Probleem: "Invalid JWT" bij opslaan
+## Probleem 1: 403 Forbidden - Verkeerd endpoint
+
+De builder roept `content-api/save?type=news_items` aan in plaats van `pages-api/save`.
+
+### Root Cause
+
+De builder moet de URL parameter `content_type` checken om te bepalen welk endpoint aangeroepen moet worden.
+
+### Oplossing
+
+```javascript
+const urlParams = new URLSearchParams(window.location.search);
+const contentType = urlParams.get('content_type');  // Voor templates is dit "page"
+
+// Bepaal het juiste endpoint
+let endpoint;
+if (contentType === 'page' || urlParams.get('mode')?.includes('template')) {
+  endpoint = `${api}/functions/v1/pages-api/save`;
+} else if (contentType === 'news') {
+  endpoint = `${api}/functions/v1/content-api/save?type=news_items`;
+}
+```
+
+## Probleem 2: "Invalid JWT" bij opslaan
 
 De builder krijgt een 401 error met message "Invalid JWT" wanneer een template wordt opgeslagen.
 
-## Root Cause
+### Root Cause
 
 De JWT die in de URL parameter `token` wordt meegegeven, moet EXACT worden gebruikt in de Authorization header bij het aanroepen van de pages-api.
 
 ## ✅ CORRECTE Implementatie
 
-### 1. Lees het JWT token uit URL parameters
+### 1. Lees de URL parameters
 
 ```javascript
 const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get('token');  // Dit JWT moet gebruikt worden!
 const api = urlParams.get('api');
 const apikey = urlParams.get('apikey');
+const contentType = urlParams.get('content_type');  // "page" voor templates
+const mode = urlParams.get('mode');  // "create-template" of "edit-template"
 ```
 
-### 2. Gebruik het token in ALLE API calls
+### 2. Bepaal het correcte endpoint op basis van content_type
+
+```javascript
+// ❌ FOUT - Hardcoded endpoint of verkeerde detectie
+const endpoint = `${api}/functions/v1/content-api/save?type=news_items`;  // FOUT!
+
+// ✅ CORRECT - Gebruik content_type parameter
+let endpoint;
+if (contentType === 'page' || mode?.includes('template')) {
+  endpoint = `${api}/functions/v1/pages-api/save`;
+} else if (contentType === 'news') {
+  endpoint = `${api}/functions/v1/content-api/save?type=news_items`;
+}
+```
+
+### 3. Gebruik het token in ALLE API calls
 
 ```javascript
 // ❌ FOUT - Gebruik NIET de apikey als Bearer token
-const response = await fetch(`${api}/functions/v1/pages-api/save`, {
+const response = await fetch(endpoint, {
   headers: {
     'Authorization': `Bearer ${apikey}`,  // ❌ FOUT!
     'Content-Type': 'application/json'
@@ -31,7 +71,7 @@ const response = await fetch(`${api}/functions/v1/pages-api/save`, {
 });
 
 // ✅ CORRECT - Gebruik het token parameter
-const response = await fetch(`${api}/functions/v1/pages-api/save`, {
+const response = await fetch(endpoint, {
   headers: {
     'Authorization': `Bearer ${token}`,  // ✅ CORRECT!
     'Content-Type': 'application/json'
@@ -39,16 +79,28 @@ const response = await fetch(`${api}/functions/v1/pages-api/save`, {
 });
 ```
 
-### 3. Voeg apikey alleen toe als query parameter (optioneel)
+### 4. Complete voorbeeld voor template save
 
 ```javascript
-// De apikey kan als query parameter worden toegevoegd, maar is niet verplicht
-const url = `${api}/functions/v1/pages-api/save?apikey=${apikey}`;
+const urlParams = new URLSearchParams(window.location.search);
+const token = urlParams.get('token');
+const api = urlParams.get('api');
+const contentType = urlParams.get('content_type');
+const mode = urlParams.get('mode');
 
-const response = await fetch(url, {
+// Bepaal endpoint
+let endpoint;
+if (contentType === 'page' || mode?.includes('template')) {
+  endpoint = `${api}/functions/v1/pages-api/save`;
+} else if (contentType === 'news') {
+  endpoint = `${api}/functions/v1/content-api/save?type=news_items`;
+}
+
+// Save template
+const response = await fetch(endpoint, {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${token}`,  // Token in Authorization header
+    'Authorization': `Bearer ${token}`,  // ✅ Gebruik token, NIET apikey
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
@@ -57,6 +109,7 @@ const response = await fetch(url, {
     title: 'Test',
     slug: 'test',
     content_json: { ... }
+    // GEEN brand_id!
   })
 });
 ```
@@ -64,6 +117,15 @@ const response = await fetch(url, {
 ## Verificatie Checklist
 
 ### Voor BOLT Team:
+
+0. ✅ **Check het endpoint dat je aanroept:**
+   ```javascript
+   console.log('[DEBUG] content_type:', urlParams.get('content_type'));
+   console.log('[DEBUG] mode:', urlParams.get('mode'));
+   console.log('[DEBUG] Endpoint used:', endpoint);
+   // Voor templates moet dit zijn: ".../functions/v1/pages-api/save"
+   // NIET: ".../content-api/save?type=news_items"
+   ```
 
 1. ✅ **Check dat je het juiste token gebruikt:**
    ```javascript

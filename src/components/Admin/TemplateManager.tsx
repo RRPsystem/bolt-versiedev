@@ -75,6 +75,7 @@ export function TemplateManager() {
         api: import.meta.env.VITE_SUPABASE_URL,
         apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         mode: 'create-template',
+        content_type: 'page',
         is_template: 'true',
         title: formData.title,
         slug: formData.slug,
@@ -123,6 +124,7 @@ export function TemplateManager() {
         apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         page_id: templateId,
         mode: 'edit-template',
+        content_type: 'page',
       });
 
       const url = `https://www.ai-websitestudio.nl/index.html?${params.toString()}`;

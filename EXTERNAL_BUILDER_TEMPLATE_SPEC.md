@@ -14,6 +14,7 @@ https://www.ai-websitestudio.nl/index.html?
   api=<SUPABASE_URL>&
   apikey=<SUPABASE_ANON_KEY>&
   mode=create-template&
+  content_type=page&
   is_template=true&
   title=Home%201&
   slug=home-1&
@@ -29,6 +30,7 @@ https://www.ai-websitestudio.nl/index.html?
 | `api` | Ja | Supabase API URL | `https://xxx.supabase.co` |
 | `apikey` | Ja | Supabase Anon Key | `eyJhbGc...` |
 | `mode` | Ja | Modus (create-template of edit-template) | `create-template` |
+| `content_type` | Ja | Type content (MOET "page" zijn voor templates) | `page` |
 | `is_template` | Ja | Geeft aan dat dit een template is | `true` |
 | `title` | Ja | Titel van de template | `Home 1` |
 | `slug` | Ja | URL slug voor de template | `home-1` |
