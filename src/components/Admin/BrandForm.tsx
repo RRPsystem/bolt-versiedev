@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Upload, X } from 'lucide-react';
-import { db } from '../../lib/supabase';
+import { ArrowLeft, Upload, X, Lock, Mail } from 'lucide-react';
+import { db, supabase } from '../../lib/supabase';
 
 interface BrandFormProps {
   onBack: () => void;
@@ -25,6 +25,11 @@ export function BrandForm({ onBack, onSuccess, editingBrand }: BrandFormProps) {
     country: 'Netherlands',
     website_url: '',
     logo_url: ''
+  });
+
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: ''
   });
   
   const [loading, setLoading] = useState(false);
@@ -120,7 +125,20 @@ export function BrandForm({ onBack, onSuccess, editingBrand }: BrandFormProps) {
     try {
       if (isEditing) {
         await db.updateBrand(editingBrand.id, formData);
+        onSuccess();
       } else {
+        if (!loginData.email || !loginData.password) {
+          setError('Email en wachtwoord zijn verplicht voor nieuwe brands');
+          setLoading(false);
+          return;
+        }
+
+        if (loginData.password.length < 6) {
+          setError('Wachtwoord moet minimaal 6 karakters zijn');
+          setLoading(false);
+          return;
+        }
+
         const companies = await db.getCompanies();
         const defaultCompanyId = companies?.[0]?.id || '550e8400-e29b-41d4-a716-446655440100';
 
@@ -129,9 +147,36 @@ export function BrandForm({ onBack, onSuccess, editingBrand }: BrandFormProps) {
           company_id: defaultCompanyId
         };
 
-        await db.createBrand(brandData);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('Niet ingelogd');
+        }
+
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-brand-with-user`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              email: loginData.email,
+              password: loginData.password,
+              brandData
+            })
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Er is een fout opgetreden');
+        }
+
+        alert(`Brand aangemaakt!\n\nInloggegevens:\nEmail: ${loginData.email}\nWachtwoord: ${loginData.password}\n\nDeze gegevens worden maar 1x getoond!`);
+        onSuccess();
       }
-      onSuccess();
     } catch (err: any) {
       setError(err.message || `Er is een fout opgetreden bij het ${isEditing ? 'bijwerken' : 'aanmaken'} van de brand`);
     } finally {
@@ -365,6 +410,60 @@ export function BrandForm({ onBack, onSuccess, editingBrand }: BrandFormProps) {
               </div>
             </div>
           </div>
+
+          {/* Login Gegevens (alleen bij nieuwe brand) */}
+          {!isEditing && (
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-2 flex items-center space-x-2">
+                  <Lock size={20} className="text-orange-600" />
+                  <span>Login Gegevens</span>
+                </h2>
+                <p className="text-sm text-gray-600">Deze gegevens worden gebruikt voor het brand login account</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Mail size={16} />
+                      <span>Email <span className="text-red-500">*</span></span>
+                    </div>
+                  </label>
+                  <input
+                    type="email"
+                    value={loginData.email}
+                    onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="brand@example.com"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Lock size={16} />
+                      <span>Wachtwoord <span className="text-red-500">*</span></span>
+                    </div>
+                  </label>
+                  <input
+                    type="password"
+                    value={loginData.password}
+                    onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                    placeholder="Minimaal 6 karakters"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    required
+                    minLength={6}
+                  />
+                </div>
+              </div>
+              <div className="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <p className="text-sm text-orange-800">
+                  <strong>Let op:</strong> Noteer deze inloggegevens. Ze worden na het aanmaken nog één keer getoond!
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Contact Informatie */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
