@@ -31,7 +31,9 @@ interface AgentProfile {
   profile_image_url: string;
   city: string;
   province: string;
-  rrp_id: string;
+  recommended_trip_1: string;
+  recommended_trip_2: string;
+  recommended_trip_3: string;
   custom_links: CustomLink[];
   specializations: string[];
   years_experience: number;
@@ -60,7 +62,9 @@ export default function AgentProfileEdit() {
     profile_image_url: '',
     city: '',
     province: '',
-    rrp_id: '',
+    recommended_trip_1: '',
+    recommended_trip_2: '',
+    recommended_trip_3: '',
     custom_links: [],
     specializations: [],
     years_experience: 0,
@@ -443,17 +447,33 @@ export default function AgentProfileEdit() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              RRP ID
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Aanbevolen Reizen (Reis ID's)
             </label>
-            <input
-              type="text"
-              value={profile.rrp_id}
-              onChange={(e) => setProfile({ ...profile, rrp_id: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Voor reizen koppeling"
-            />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input
+                type="text"
+                value={profile.recommended_trip_1}
+                onChange={(e) => setProfile({ ...profile, recommended_trip_1: e.target.value })}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Reis ID 1"
+              />
+              <input
+                type="text"
+                value={profile.recommended_trip_2}
+                onChange={(e) => setProfile({ ...profile, recommended_trip_2: e.target.value })}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Reis ID 2"
+              />
+              <input
+                type="text"
+                value={profile.recommended_trip_3}
+                onChange={(e) => setProfile({ ...profile, recommended_trip_3: e.target.value })}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Reis ID 3"
+              />
+            </div>
           </div>
 
           <div>

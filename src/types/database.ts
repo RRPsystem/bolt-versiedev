@@ -40,7 +40,9 @@ export interface Agent {
   profile_image_url?: string;
   city?: string;
   province?: string;
-  rrp_id?: string;
+  recommended_trip_1?: string;
+  recommended_trip_2?: string;
+  recommended_trip_3?: string;
   custom_links?: CustomLink[];
   specializations?: string[];
   years_experience?: number;

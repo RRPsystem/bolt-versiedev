@@ -234,11 +234,37 @@ export default function AgentProfile({ slug }: AgentProfileProps) {
 
             {activeTab === 'trips' && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Recente Reizen</h2>
-                <div className="text-center py-12 text-gray-500">
-                  <p>Deze reizen worden binnenkort toegevoegd via de website builder.</p>
-                  <p className="text-sm mt-2">Beheerders kunnen reizen toevoegen via het CMS.</p>
-                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Aanbevolen Reizen</h2>
+                {(agent.recommended_trip_1 || agent.recommended_trip_2 || agent.recommended_trip_3) ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {agent.recommended_trip_1 && (
+                      <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="text-sm text-gray-500 mb-1">Reis ID</div>
+                        <div className="font-semibold text-blue-600">{agent.recommended_trip_1}</div>
+                        <div className="text-xs text-gray-400 mt-2">Deze reis wordt binnenkort gekoppeld</div>
+                      </div>
+                    )}
+                    {agent.recommended_trip_2 && (
+                      <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="text-sm text-gray-500 mb-1">Reis ID</div>
+                        <div className="font-semibold text-blue-600">{agent.recommended_trip_2}</div>
+                        <div className="text-xs text-gray-400 mt-2">Deze reis wordt binnenkort gekoppeld</div>
+                      </div>
+                    )}
+                    {agent.recommended_trip_3 && (
+                      <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="text-sm text-gray-500 mb-1">Reis ID</div>
+                        <div className="font-semibold text-blue-600">{agent.recommended_trip_3}</div>
+                        <div className="text-xs text-gray-400 mt-2">Deze reis wordt binnenkort gekoppeld</div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    <p>Nog geen reizen toegevoegd.</p>
+                    <p className="text-sm mt-2">De agent kan reizen toevoegen via het profiel dashboard.</p>
+                  </div>
+                )}
               </div>
             )}
 
