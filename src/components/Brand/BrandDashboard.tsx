@@ -10,6 +10,7 @@ import { TemplateGallery } from './WebsiteManagement/TemplateGallery';
 import { NewsApproval } from './ContentManagement/NewsApproval';
 import { TravelBro } from './AITools/TravelBro';
 import { SocialMedia } from './AITools/SocialMedia';
+import { BrandSettings } from './BrandSettings';
 import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe, Newspaper, MapPin, Plane, Share2 } from 'lucide-react';
 
 export function BrandDashboard() {
@@ -53,7 +54,6 @@ export function BrandDashboard() {
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Settings },
     { id: 'agents', label: 'Agents', icon: Users },
-    { id: 'settings', label: 'Brand Settings', icon: Settings },
   ];
 
   const websiteManagementItems = [
@@ -253,7 +253,18 @@ export function BrandDashboard() {
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-gray-700">
+        <div className="p-4 border-t border-gray-700 space-y-2">
+          <button
+            onClick={() => setActiveSection('settings')}
+            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+              activeSection === 'settings'
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:text-white hover:bg-gray-700'
+            }`}
+          >
+            <Settings size={20} />
+            <span>Brand Settings</span>
+          </button>
           <button
             onClick={signOut}
             className="w-full flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
@@ -318,6 +329,9 @@ export function BrandDashboard() {
           {activeSection === 'pages' && <PageManagementView />}
           {activeSection === 'menus' && <MenuBuilderView />}
           {activeSection === 'footers' && <FooterBuilderView />}
+
+          {/* Brand Settings */}
+          {activeSection === 'settings' && <BrandSettings />}
 
           {/* Content Management */}
           {activeSection === 'nieuwsbeheer' && <NewsApproval />}
