@@ -149,6 +149,14 @@ export default function RoadmapBoard() {
     e.preventDefault();
     if (!user || !newItem.title.trim()) return;
 
+    console.log('Creating item:', {
+      title: newItem.title,
+      description: newItem.description,
+      category: newItem.category,
+      created_by: user.id,
+      brand_id: user.brand_id
+    });
+
     try {
       const { error } = await supabase
         .from('roadmap_items')
@@ -160,13 +168,18 @@ export default function RoadmapBoard() {
           brand_id: user.brand_id
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Insert error:', error);
+        throw error;
+      }
 
+      console.log('Item created successfully!');
       setNewItem({ title: '', description: '', category: 'feature' });
       setShowNewForm(false);
       await loadRoadmapData();
     } catch (error) {
       console.error('Error creating item:', error);
+      alert('Failed to create item: ' + (error as any).message);
     }
   };
 
