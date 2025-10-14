@@ -35,6 +35,20 @@ export interface Agent {
   email: string;
   phone?: string;
   role?: string;
+  slug?: string;
+  bio?: string;
+  profile_image_url?: string;
+  location?: string;
+  specializations?: string[];
+  years_experience?: number;
+  rating?: number;
+  review_count?: number;
+  is_top_advisor?: boolean;
+  specialist_since?: string;
+  certifications?: string[];
+  phone_visible?: boolean;
+  whatsapp_enabled?: boolean;
+  is_published?: boolean;
   created_at: string;
   updated_at: string;
 }

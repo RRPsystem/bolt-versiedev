@@ -5,6 +5,7 @@ import { AdminDashboard } from './components/Admin/AdminDashboard';
 import { BrandDashboard } from './components/Brand/BrandDashboard';
 import { OperatorDashboard } from './components/Operator/OperatorDashboard';
 import { AgentDashboard } from './components/Agent/AgentDashboard';
+import AgentProfile from './components/Agent/AgentProfile';
 import { PreviewPage } from './components/Preview/PreviewPage';
 import { NewsPreview } from './components/Preview/NewsPreview';
 import { ClientInterface } from './components/TravelBro/ClientInterface';
@@ -17,6 +18,11 @@ function AppContent() {
 
   if (travelMatch) {
     return <ClientInterface shareToken={travelMatch[1]} />;
+  }
+
+  const agentProfileMatch = path.match(/^\/agents\/([a-z0-9-]+)$/);
+  if (agentProfileMatch) {
+    return <AgentProfile slug={agentProfileMatch[1]} />;
   }
 
   const newsPreviewMatch = path.match(/^\/preview\/news\/(.+)$/);
