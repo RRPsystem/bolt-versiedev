@@ -28,6 +28,9 @@ Deno.serve(async (req: Request) => {
         auth: {
           autoRefreshToken: false,
           persistSession: false
+        },
+        db: {
+          schema: 'public'
         }
       }
     );
@@ -113,6 +116,13 @@ Deno.serve(async (req: Request) => {
       throw new Error(`Failed to create user: ${authError.message}`);
     }
 
+    console.log('Inserting user into public.users table:', {
+      id: authData.user.id,
+      email,
+      role: 'brand',
+      brand_id: brandId
+    });
+
     const { error: userInsertError } = await supabaseAdmin
       .from('users')
       .insert({
@@ -123,10 +133,13 @@ Deno.serve(async (req: Request) => {
       });
 
     if (userInsertError) {
+      console.error('Failed to insert user into public.users:', userInsertError);
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
       await supabaseAdmin.from('brands').delete().eq('id', brandId);
       throw new Error(`Failed to create user record: ${userInsertError.message}`);
     }
+
+    console.log('Successfully created user in public.users table');
 
     return new Response(
       JSON.stringify({
