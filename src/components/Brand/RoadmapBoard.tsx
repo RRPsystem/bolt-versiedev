@@ -365,7 +365,7 @@ export default function RoadmapBoard() {
                       <td className="px-4 py-3">
                         <button
                           onClick={() => toggleExpand(item.id)}
-                          className="text-gray-400 hover:text-gray-600 transition-colors"
+                          className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg p-2 transition-colors shadow-sm"
                         >
                           {isExpanded ? (
                             <ChevronUp className="w-4 h-4" />
