@@ -4,26 +4,23 @@ import { useAuth } from '../../contexts/AuthContext';
 import { RoadmapItem, RoadmapVote } from '../../types/database';
 import {
   Lightbulb,
-  Wrench,
   Bug,
-  Plug,
   ThumbsUp,
   ChevronDown,
   ChevronUp,
   Plus,
   Filter,
-  Clock,
   CheckCircle2,
   XCircle,
-  AlertCircle,
   Play,
-  FileCheck,
-  Eye,
   Sparkles,
   Globe,
   Plane,
   Layers,
-  FileText
+  FileText,
+  Search,
+  Rocket,
+  TestTube
 } from 'lucide-react';
 
 const categoryConfig = {
@@ -36,13 +33,13 @@ const categoryConfig = {
 };
 
 const statusConfig = {
-  submitted: { icon: Clock, label: 'Submitted', color: 'text-gray-500' },
-  under_review: { icon: Eye, label: 'Under Review', color: 'text-blue-500' },
-  planned: { icon: AlertCircle, label: 'Planned', color: 'text-yellow-500' },
+  nieuw_idee: { icon: Lightbulb, label: 'Nieuw Idee', color: 'text-gray-500' },
+  pre_flight_check: { icon: Search, label: 'Pre-Flight Check', color: 'text-blue-500' },
+  take_off: { icon: Rocket, label: 'Take Off', color: 'text-yellow-500' },
   in_progress: { icon: Play, label: 'In Progress', color: 'text-orange-500' },
-  testing: { icon: FileCheck, label: 'Testing', color: 'text-indigo-500' },
-  completed: { icon: CheckCircle2, label: 'Completed', color: 'text-green-500' },
-  rejected: { icon: XCircle, label: 'Rejected', color: 'text-red-500' }
+  test_fase: { icon: TestTube, label: 'Test Fase', color: 'text-indigo-500' },
+  afgerond: { icon: CheckCircle2, label: 'Afgerond', color: 'text-green-500' },
+  afgekeurd: { icon: XCircle, label: 'Afgekeurd', color: 'text-red-500' }
 };
 
 const priorityConfig = {
@@ -308,13 +305,14 @@ export default function RoadmapBoard() {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="all">All Status</option>
-            <option value="submitted">Submitted</option>
-            <option value="under_review">Under Review</option>
-            <option value="planned">Planned</option>
+            <option value="all">Alle Statussen</option>
+            <option value="nieuw_idee">Nieuw Idee</option>
+            <option value="pre_flight_check">Pre-Flight Check</option>
+            <option value="take_off">Take Off</option>
             <option value="in_progress">In Progress</option>
-            <option value="testing">Testing</option>
-            <option value="completed">Completed</option>
+            <option value="test_fase">Test Fase</option>
+            <option value="afgerond">Afgerond</option>
+            <option value="afgekeurd">Afgekeurd</option>
           </select>
           <select
             value={filterCategory}

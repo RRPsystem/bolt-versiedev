@@ -157,7 +157,7 @@ export interface RoadmapItem {
   id: string;
   title: string;
   description?: string;
-  status: 'submitted' | 'under_review' | 'planned' | 'in_progress' | 'testing' | 'completed' | 'rejected';
+  status: 'nieuw_idee' | 'pre_flight_check' | 'take_off' | 'in_progress' | 'test_fase' | 'afgerond' | 'afgekeurd';
   category: 'ai_tools' | 'website' | 'traveldingen' | 'uitbreiding' | 'bug_probleem' | 'content';
   vote_count: number;
   created_by?: string;
