@@ -447,35 +447,6 @@ export default function AgentProfileEdit() {
             />
           </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Aanbevolen Reizen (Reis ID's)
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <input
-                type="text"
-                value={profile.recommended_trip_1}
-                onChange={(e) => setProfile({ ...profile, recommended_trip_1: e.target.value })}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Reis ID 1"
-              />
-              <input
-                type="text"
-                value={profile.recommended_trip_2}
-                onChange={(e) => setProfile({ ...profile, recommended_trip_2: e.target.value })}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Reis ID 2"
-              />
-              <input
-                type="text"
-                value={profile.recommended_trip_3}
-                onChange={(e) => setProfile({ ...profile, recommended_trip_3: e.target.value })}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Reis ID 3"
-              />
-            </div>
-          </div>
-
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Mail className="w-4 h-4 inline mr-1" />
@@ -685,6 +656,51 @@ export default function AgentProfileEdit() {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Aanbevolen Reizen</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Voeg tot 3 reis ID's toe die op je publieke profiel getoond worden.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Reis ID 1
+            </label>
+            <input
+              type="text"
+              value={profile.recommended_trip_1}
+              onChange={(e) => setProfile({ ...profile, recommended_trip_1: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Bijv: thailand-15-dagen"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Reis ID 2
+            </label>
+            <input
+              type="text"
+              value={profile.recommended_trip_2}
+              onChange={(e) => setProfile({ ...profile, recommended_trip_2: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Bijv: japan-rondreis"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Reis ID 3
+            </label>
+            <input
+              type="text"
+              value={profile.recommended_trip_3}
+              onChange={(e) => setProfile({ ...profile, recommended_trip_3: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Bijv: bali-vakantie"
+            />
           </div>
         </div>
       </div>
