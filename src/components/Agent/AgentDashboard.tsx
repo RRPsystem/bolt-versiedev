@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { TravelBro } from '../Brand/AITools/TravelBro';
 import { SocialMedia } from '../Brand/AITools/SocialMedia';
 import { AIContentGenerator } from '../Brand/AIContentGenerator';
+import AgentProfileEdit from './AgentProfileEdit';
 import { Bot, User, ChevronDown, ChevronRight, Share2, Plane, Sparkles, Import as FileImport, Map } from 'lucide-react';
 import RoadmapBoard from '../Brand/RoadmapBoard';
 
@@ -166,85 +167,7 @@ export function AgentDashboard() {
         </header>
 
         <main className="flex-1 overflow-auto">
-          {activeSection === 'profile' && (
-            <div className="p-6 max-w-4xl mx-auto">
-              <div className="bg-white rounded-lg shadow-sm border p-8">
-                <div className="flex items-start space-x-6">
-                  <div className="w-24 h-24 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white text-3xl font-bold">
-                    {user?.email?.charAt(0).toUpperCase()}
-                  </div>
-
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Welkom terug!</h2>
-                    <p className="text-gray-600 mb-6">Hier kun je binnenkort je profiel beheren en instellingen aanpassen.</p>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                        <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">
-                          {user?.email}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Telefoon</label>
-                        <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600">
-                          Binnenkort beschikbaar
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
-                        <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                            Agent
-                          </span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Brand ID</label>
-                        <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 font-mono text-sm">
-                          {user?.brand_id || 'Niet gekoppeld'}
-                        </div>
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Adres</label>
-                        <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600">
-                          Binnenkort beschikbaar
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Postcode</label>
-                        <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600">
-                          Binnenkort beschikbaar
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Plaats</label>
-                        <div className="px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600">
-                          Binnenkort beschikbaar
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <h3 className="font-semibold text-blue-900 mb-2">Wat kun je hier straks doen?</h3>
-                      <ul className="text-sm text-blue-800 space-y-1">
-                        <li>• Persoonlijke gegevens aanpassen</li>
-                        <li>• Profielfoto uploaden</li>
-                        <li>• Notificatie voorkeuren instellen</li>
-                        <li>• Wachtwoord wijzigen</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {activeSection === 'profile' && <AgentProfileEdit />}
 
           {activeSection === 'ai-content' && <AIContentGenerator />}
           {activeSection === 'ai-travelbro' && <TravelBro />}
