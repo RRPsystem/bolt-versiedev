@@ -461,5 +461,34 @@ export const db = {
     if (error) {
       console.warn('Could not increment API usage:', error);
     }
+  },
+
+  async getOpenAIKey(): Promise<string | null> {
+    if (!supabase) {
+      return import.meta.env.VITE_OPENAI_API_KEY || null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('api_settings')
+        .select('api_key, is_active')
+        .eq('provider', 'OpenAI')
+        .eq('service_name', 'OpenAI API')
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Could not fetch OpenAI key from database:', error);
+        return import.meta.env.VITE_OPENAI_API_KEY || null;
+      }
+
+      if (data?.is_active && data?.api_key) {
+        return data.api_key;
+      }
+
+      return import.meta.env.VITE_OPENAI_API_KEY || null;
+    } catch (err) {
+      console.warn('Error fetching OpenAI key:', err);
+      return import.meta.env.VITE_OPENAI_API_KEY || null;
+    }
   }
 };

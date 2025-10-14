@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
-import { supabase } from '../../../lib/supabase';
+import { supabase, db } from '../../../lib/supabase';
 import { SocialMediaConnector } from '../SocialMediaConnector';
 import {
   Facebook,
@@ -147,13 +147,16 @@ export function SocialMedia() {
       return;
     }
 
-    if (!import.meta.env.VITE_OPENAI_API_KEY) {
-      alert('OpenAI API key is niet ingesteld. Vraag de operator om deze in te stellen.');
-      return;
-    }
-
     setIsGenerating(true);
     try {
+      const apiKey = await db.getOpenAIKey();
+
+      if (!apiKey) {
+        alert('OpenAI API key is niet ingesteld. Vraag de operator om deze in te stellen.');
+        setIsGenerating(false);
+        return;
+      }
+
       const platformsText = selectedPlatforms.length > 0
         ? selectedPlatforms.join(', ')
         : 'social media';
@@ -183,7 +186,7 @@ Geef ALLEEN de post tekst terug, zonder extra uitleg.
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
+          'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
           model: 'gpt-4',
@@ -319,13 +322,15 @@ Geef ALLEEN de post tekst terug, zonder extra uitleg.
   };
 
   const generateContentSuggestions = async () => {
-    if (!import.meta.env.VITE_OPENAI_API_KEY) {
-      alert('OpenAI API key is niet ingesteld. Vraag de operator om deze in te stellen.');
-      return;
-    }
-
     setIsGeneratingSuggestions(true);
     try {
+      const apiKey = await db.getOpenAIKey();
+
+      if (!apiKey) {
+        alert('OpenAI API key is niet ingesteld. Vraag de operator om deze in te stellen.');
+        setIsGeneratingSuggestions(false);
+        return;
+      }
       const { data: userData } = await supabase
         .from('users')
         .select('brand_id')
@@ -393,7 +398,7 @@ Geef het resultaat als JSON array met deze structuur:
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`
+          'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
           model: 'gpt-4',
