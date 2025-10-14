@@ -18,14 +18,21 @@ import {
   AlertCircle,
   Play,
   FileCheck,
-  Eye
+  Eye,
+  Sparkles,
+  Globe,
+  Plane,
+  Layers,
+  FileText
 } from 'lucide-react';
 
 const categoryConfig = {
-  feature: { icon: Lightbulb, label: 'Feature', color: 'bg-blue-100 text-blue-700' },
-  improvement: { icon: Wrench, label: 'Improvement', color: 'bg-green-100 text-green-700' },
-  bug_fix: { icon: Bug, label: 'Bug Fix', color: 'bg-red-100 text-red-700' },
-  integration: { icon: Plug, label: 'Integration', color: 'bg-purple-100 text-purple-700' }
+  ai_tools: { icon: Sparkles, label: 'AI Tools', color: 'bg-blue-100 text-blue-700' },
+  website: { icon: Globe, label: 'Website', color: 'bg-green-100 text-green-700' },
+  traveldingen: { icon: Plane, label: 'Traveldingen', color: 'bg-sky-100 text-sky-700' },
+  uitbreiding: { icon: Layers, label: 'Uitbreiding', color: 'bg-amber-100 text-amber-700' },
+  bug_probleem: { icon: Bug, label: 'Bug/Probleem', color: 'bg-red-100 text-red-700' },
+  content: { icon: FileText, label: 'Content', color: 'bg-purple-100 text-purple-700' }
 };
 
 const statusConfig = {
