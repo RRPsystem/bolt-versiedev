@@ -18,7 +18,8 @@ import {
   AlertCircle,
   Play,
   FileCheck,
-  Eye
+  Eye,
+  Plus
 } from 'lucide-react';
 
 const categoryConfig = {
@@ -51,8 +52,16 @@ export default function RoadmapManagement() {
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showNewForm, setShowNewForm] = useState(false);
 
   const [editForm, setEditForm] = useState<Partial<RoadmapItem>>({});
+  const [newItem, setNewItem] = useState({
+    title: '',
+    description: '',
+    category: 'feature' as RoadmapItem['category'],
+    priority: 'medium' as RoadmapItem['priority'],
+    status: 'planned' as RoadmapItem['status']
+  });
 
   useEffect(() => {
     loadData();
@@ -128,6 +137,37 @@ export default function RoadmapManagement() {
     }
   };
 
+  const handleCreateItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newItem.title.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('roadmap_items')
+        .insert({
+          title: newItem.title,
+          description: newItem.description,
+          category: newItem.category,
+          priority: newItem.priority,
+          status: newItem.status
+        });
+
+      if (error) throw error;
+
+      setNewItem({
+        title: '',
+        description: '',
+        category: 'feature',
+        priority: 'medium',
+        status: 'planned'
+      });
+      setShowNewForm(false);
+      await loadData();
+    } catch (error) {
+      console.error('Error creating item:', error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -138,6 +178,114 @@ export default function RoadmapManagement() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-end mb-4">
+        <button
+          onClick={() => setShowNewForm(true)}
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Add Roadmap Item
+        </button>
+      </div>
+
+      {showNewForm && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold mb-4">Create New Roadmap Item</h3>
+          <form onSubmit={handleCreateItem} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Title
+              </label>
+              <input
+                type="text"
+                value={newItem.title}
+                onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Feature title"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <select
+                  value={newItem.category}
+                  onChange={(e) => setNewItem({ ...newItem, category: e.target.value as RoadmapItem['category'] })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="feature">Feature</option>
+                  <option value="improvement">Improvement</option>
+                  <option value="bug_fix">Bug Fix</option>
+                  <option value="integration">Integration</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Priority
+                </label>
+                <select
+                  value={newItem.priority}
+                  onChange={(e) => setNewItem({ ...newItem, priority: e.target.value as RoadmapItem['priority'] })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={newItem.status}
+                  onChange={(e) => setNewItem({ ...newItem, status: e.target.value as RoadmapItem['status'] })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="submitted">Submitted</option>
+                  <option value="under_review">Under Review</option>
+                  <option value="planned">Planned</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="testing">Testing</option>
+                  <option value="completed">Completed</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                value={newItem.description}
+                onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                rows={4}
+                placeholder="Detailed description..."
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Create Item
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowNewForm(false)}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div className="grid grid-cols-4 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-sm text-gray-600">Total Items</div>
