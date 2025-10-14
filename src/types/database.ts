@@ -152,3 +152,27 @@ export interface BuilderMedia {
   uploaded_by?: string;
   created_at: string;
 }
+
+export interface RoadmapItem {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'submitted' | 'under_review' | 'planned' | 'in_progress' | 'testing' | 'completed' | 'rejected';
+  category: 'feature' | 'improvement' | 'bug_fix' | 'integration';
+  vote_count: number;
+  created_by?: string;
+  brand_id?: string;
+  assigned_to?: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  estimated_release?: string;
+  operator_notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RoadmapVote {
+  id: string;
+  roadmap_item_id: string;
+  user_id: string;
+  created_at: string;
+}

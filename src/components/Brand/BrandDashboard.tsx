@@ -11,7 +11,8 @@ import { NewsApproval } from './ContentManagement/NewsApproval';
 import { TravelBro } from './AITools/TravelBro';
 import { SocialMedia } from './AITools/SocialMedia';
 import { BrandSettings } from './BrandSettings';
-import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe, Newspaper, MapPin, Plane, Share2 } from 'lucide-react';
+import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe, Newspaper, MapPin, Plane, Share2, Map } from 'lucide-react';
+import RoadmapBoard from './RoadmapBoard';
 
 export function BrandDashboard() {
   const { user, signOut } = useAuth();
@@ -54,6 +55,7 @@ export function BrandDashboard() {
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Settings },
     { id: 'agents', label: 'Agents', icon: Users },
+    { id: 'roadmap', label: 'Roadmap', icon: Map },
   ];
 
   const websiteManagementItems = [
@@ -294,6 +296,7 @@ export function BrandDashboard() {
                 {activeSection === 'ai-travelbro' && 'AI TravelBRO'}
                 {activeSection === 'ai-import' && 'AI TravelImport'}
                 {activeSection === 'ai-social' && 'Social Media Manager'}
+                {activeSection === 'roadmap' && 'Roadmap'}
               </h1>
               <p className="text-gray-600 mt-1">
                 {activeSection === 'websites' && 'Manage your travel websites'}
@@ -305,6 +308,7 @@ export function BrandDashboard() {
                 {activeSection === 'ai-travelbro' && 'Your AI travel assistant'}
                 {activeSection === 'ai-import' && 'Import travel data with AI'}
                 {activeSection === 'ai-social' && 'Manage your social media presence'}
+                {activeSection === 'roadmap' && 'Vote on features and track development progress'}
               </p>
             </div>
             
@@ -344,6 +348,8 @@ export function BrandDashboard() {
           {activeSection === 'ai-travelbro' && <TravelBro />}
 
           {activeSection === 'ai-social' && <SocialMedia />}
+
+          {activeSection === 'roadmap' && <RoadmapBoard />}
 
           {activeSection === 'ai-import' && (
             <div className="bg-white rounded-lg shadow-sm border p-8 text-center">

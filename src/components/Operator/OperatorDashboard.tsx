@@ -20,8 +20,10 @@ import {
   AlertTriangle,
   CheckCircle,
   TrendingUp,
-  Clock
+  Clock,
+  Map
 } from 'lucide-react';
+import RoadmapManagement from './RoadmapManagement';
 
 export function OperatorDashboard() {
   const { user, signOut } = useAuth();
@@ -64,6 +66,7 @@ export function OperatorDashboard() {
     { id: 'usage-monitoring', label: 'Usage Monitoring', icon: TrendingUp },
     { id: 'user-activity', label: 'User Activity', icon: Users },
     { id: 'system-health', label: 'System Health', icon: Activity },
+    { id: 'roadmap', label: 'Roadmap Management', icon: Map },
   ];
 
   return (
@@ -128,6 +131,7 @@ export function OperatorDashboard() {
                 {activeSection === 'usage-monitoring' && 'Usage Monitoring'}
                 {activeSection === 'user-activity' && 'User Activity'}
                 {activeSection === 'system-health' && 'System Health'}
+                {activeSection === 'roadmap' && 'Roadmap Management'}
               </h1>
               <p className="text-gray-600 mt-1">
                 {activeSection === 'overview' && 'Monitor system performance and key metrics'}
@@ -136,6 +140,7 @@ export function OperatorDashboard() {
                 {activeSection === 'usage-monitoring' && 'Track API usage and costs'}
                 {activeSection === 'user-activity' && 'Monitor user behavior and activity logs'}
                 {activeSection === 'system-health' && 'System status and performance monitoring'}
+                {activeSection === 'roadmap' && 'Manage feature requests and development priorities'}
               </p>
             </div>
             
@@ -300,6 +305,7 @@ export function OperatorDashboard() {
           {activeSection === 'usage-monitoring' && <UsageMonitoring />}
           {activeSection === 'user-activity' && <UserActivity />}
           {activeSection === 'system-health' && <SystemHealth />}
+          {activeSection === 'roadmap' && <RoadmapManagement />}
         </main>
       </div>
     </div>
