@@ -94,19 +94,28 @@ export default function RoadmapBoard() {
   };
 
   const handleVote = async (itemId: string) => {
-    if (!user) return;
+    if (!user) {
+      console.error('No user found');
+      return;
+    }
+
+    console.log('Voting on item:', itemId, 'User:', user.id);
 
     try {
       const hasVoted = userVotes.has(itemId);
 
       if (hasVoted) {
+        console.log('Removing vote...');
         const { error } = await supabase
           .from('roadmap_votes')
           .delete()
           .eq('roadmap_item_id', itemId)
           .eq('user_id', user.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Delete error:', error);
+          throw error;
+        }
 
         setUserVotes(prev => {
           const newSet = new Set(prev);
@@ -114,18 +123,25 @@ export default function RoadmapBoard() {
           return newSet;
         });
       } else {
+        console.log('Adding vote...');
         const { error } = await supabase
           .from('roadmap_votes')
           .insert({ roadmap_item_id: itemId, user_id: user.id });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
 
         setUserVotes(prev => new Set(prev).add(itemId));
       }
 
+      console.log('Reloading data...');
       await loadRoadmapData();
+      console.log('Vote successful!');
     } catch (error) {
       console.error('Error voting:', error);
+      alert('Failed to vote: ' + (error as any).message);
     }
   };
 
