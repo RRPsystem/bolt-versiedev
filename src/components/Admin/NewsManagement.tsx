@@ -80,12 +80,14 @@ export function NewsManagement() {
       });
 
       if (jwtResponse.url) {
+        console.log('🔗 Opening JWT response URL:', jwtResponse.url);
         window.open(jwtResponse.url, '_blank');
       } else {
         const builderBaseUrl = 'https://www.ai-websitestudio.nl';
         const apiBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
         const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&content_type=news_items#/mode/news`;
+        console.log('🔗 Opening fallback deeplink:', deeplink);
         window.open(deeplink, '_blank');
       }
     } catch (err) {
