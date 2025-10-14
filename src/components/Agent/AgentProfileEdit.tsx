@@ -12,10 +12,14 @@ import {
   Upload,
   Save,
   Eye,
-  EyeOff,
   CheckCircle,
-  XCircle
+  XCircle,
+  Link as LinkIcon,
+  X,
+  Image as ImageIcon,
+  MessageSquare
 } from 'lucide-react';
+import type { CustomLink, AgentReview } from '../../types/database';
 
 interface AgentProfile {
   id?: string;
@@ -25,7 +29,10 @@ interface AgentProfile {
   slug: string;
   bio: string;
   profile_image_url: string;
-  location: string;
+  city: string;
+  province: string;
+  rrp_id: string;
+  custom_links: CustomLink[];
   specializations: string[];
   years_experience: number;
   rating: number;
@@ -42,6 +49,7 @@ export default function AgentProfileEdit() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [profile, setProfile] = useState<AgentProfile>({
     name: '',
@@ -50,7 +58,10 @@ export default function AgentProfileEdit() {
     slug: '',
     bio: '',
     profile_image_url: '',
-    location: '',
+    city: '',
+    province: '',
+    rrp_id: '',
+    custom_links: [],
     specializations: [],
     years_experience: 0,
     rating: 0,
@@ -62,8 +73,21 @@ export default function AgentProfileEdit() {
     whatsapp_enabled: false,
     is_published: false
   });
+  const [reviews, setReviews] = useState<AgentReview[]>([]);
   const [newSpecialization, setNewSpecialization] = useState('');
   const [newCertification, setNewCertification] = useState('');
+  const [newLink, setNewLink] = useState<CustomLink>({ label: '', url: '' });
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [newReview, setNewReview] = useState({
+    reviewer_name: '',
+    reviewer_location: '',
+    rating: 5,
+    review_text: '',
+    trip_title: '',
+    travel_date: '',
+    is_verified: false,
+    is_published: true
+  });
 
   useEffect(() => {
     loadProfile();
@@ -86,8 +110,11 @@ export default function AgentProfileEdit() {
         setProfile({
           ...data,
           specializations: data.specializations || [],
-          certifications: data.certifications || []
+          certifications: data.certifications || [],
+          custom_links: data.custom_links || []
         });
+
+        await loadReviews(data.id);
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -97,10 +124,70 @@ export default function AgentProfileEdit() {
     }
   };
 
+  const loadReviews = async (agentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('agent_reviews')
+        .select('*')
+        .eq('agent_id', agentId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setReviews(data || []);
+    } catch (error) {
+      console.error('Error loading reviews:', error);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Alleen afbeeldingen zijn toegestaan' });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Afbeelding is te groot (max 5MB)' });
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user?.id || 'agent'}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('agent-photos')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('agent-photos')
+        .getPublicUrl(filePath);
+
+      setProfile({ ...profile, profile_image_url: publicUrl });
+      setMessage({ type: 'success', text: 'Foto succesvol geüpload!' });
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      setMessage({ type: 'error', text: error.message || 'Fout bij uploaden' });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
       setMessage(null);
+
+      if (!profile.slug || profile.slug.trim() === '') {
+        setMessage({ type: 'error', text: 'URL slug is verplicht' });
+        return;
+      }
 
       const profileData = {
         ...profile,
@@ -131,6 +218,73 @@ export default function AgentProfileEdit() {
       setMessage({ type: 'error', text: error.message || 'Fout bij opslaan van profiel' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAddReview = async () => {
+    if (!profile.id) {
+      setMessage({ type: 'error', text: 'Sla eerst je profiel op' });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('agent_reviews')
+        .insert([{
+          agent_id: profile.id,
+          ...newReview
+        }]);
+
+      if (error) throw error;
+
+      setMessage({ type: 'success', text: 'Review toegevoegd!' });
+      setShowReviewForm(false);
+      setNewReview({
+        reviewer_name: '',
+        reviewer_location: '',
+        rating: 5,
+        review_text: '',
+        trip_title: '',
+        travel_date: '',
+        is_verified: false,
+        is_published: true
+      });
+      await loadReviews(profile.id);
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Fout bij toevoegen review' });
+    }
+  };
+
+  const deleteReview = async (reviewId: string) => {
+    if (!confirm('Review verwijderen?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('agent_reviews')
+        .delete()
+        .eq('id', reviewId);
+
+      if (error) throw error;
+
+      setMessage({ type: 'success', text: 'Review verwijderd' });
+      if (profile.id) await loadReviews(profile.id);
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Fout bij verwijderen' });
+    }
+  };
+
+  const toggleReviewPublished = async (reviewId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('agent_reviews')
+        .update({ is_published: !currentStatus })
+        .eq('id', reviewId);
+
+      if (error) throw error;
+
+      if (profile.id) await loadReviews(profile.id);
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || 'Fout bij updaten' });
     }
   };
 
@@ -165,6 +319,23 @@ export default function AgentProfileEdit() {
     setProfile({
       ...profile,
       certifications: profile.certifications.filter(c => c !== cert)
+    });
+  };
+
+  const addLink = () => {
+    if (newLink.label.trim() && newLink.url.trim()) {
+      setProfile({
+        ...profile,
+        custom_links: [...profile.custom_links, { ...newLink }]
+      });
+      setNewLink({ label: '', url: '' });
+    }
+  };
+
+  const removeLink = (index: number) => {
+    setProfile({
+      ...profile,
+      custom_links: profile.custom_links.filter((_, i) => i !== index)
     });
   };
 
@@ -210,6 +381,46 @@ export default function AgentProfileEdit() {
           )}
         </div>
 
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <ImageIcon className="w-4 h-4 inline mr-1" />
+            Profielfoto
+          </label>
+          <div className="flex items-center gap-4">
+            {profile.profile_image_url ? (
+              <img
+                src={profile.profile_image_url}
+                alt="Profile"
+                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-3xl font-bold">
+                {profile.name.charAt(0) || 'A'}
+              </div>
+            )}
+            <div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+                id="profile-photo"
+                disabled={uploading}
+              />
+              <label
+                htmlFor="profile-photo"
+                className={`inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer ${
+                  uploading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                <Upload className="w-4 h-4" />
+                {uploading ? 'Uploaden...' : 'Upload Foto'}
+              </label>
+              <p className="text-xs text-gray-500 mt-1">Max 5MB, JPG/PNG</p>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -234,16 +445,15 @@ export default function AgentProfileEdit() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              URL Slug *
+              RRP ID
             </label>
             <input
               type="text"
-              value={profile.slug}
-              onChange={(e) => setProfile({ ...profile, slug: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-              placeholder="je-naam"
+              value={profile.rrp_id}
+              onChange={(e) => setProfile({ ...profile, rrp_id: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Voor reizen koppeling"
             />
-            <p className="text-xs text-gray-500 mt-1">Je profiel wordt: /agents/{profile.slug}</p>
           </div>
 
           <div>
@@ -276,29 +486,42 @@ export default function AgentProfileEdit() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <MapPin className="w-4 h-4 inline mr-1" />
-              Locatie *
+              Stad *
             </label>
             <input
               type="text"
-              value={profile.location}
-              onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+              value={profile.city}
+              onChange={(e) => setProfile({ ...profile, city: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Zwolle, Overijssel"
+              placeholder="Zwolle"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Upload className="w-4 h-4 inline mr-1" />
-              Profielfoto URL
+              Provincie *
             </label>
             <input
-              type="url"
-              value={profile.profile_image_url}
-              onChange={(e) => setProfile({ ...profile, profile_image_url: e.target.value })}
+              type="text"
+              value={profile.province}
+              onChange={(e) => setProfile({ ...profile, province: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="https://..."
+              placeholder="Overijssel"
             />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              URL Slug * (gebruikt voor profiel URL)
+            </label>
+            <input
+              type="text"
+              value={profile.slug}
+              onChange={(e) => setProfile({ ...profile, slug: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+              placeholder="provincie/stad/je-naam"
+            />
+            <p className="text-xs text-gray-500 mt-1">Bijv: overijssel/zwolle/jan-jansen - Profiel wordt: /agents/{profile.slug}</p>
           </div>
 
           <div className="md:col-span-2">
@@ -443,6 +666,217 @@ export default function AgentProfileEdit() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">
+          <LinkIcon className="w-5 h-5 inline mr-2" />
+          Custom Links (voor sidebar menu)
+        </h2>
+
+        <div className="mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+            <input
+              type="text"
+              value={newLink.label}
+              onChange={(e) => setNewLink({ ...newLink, label: e.target.value })}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Label (bijv. Mijn Reizen)"
+            />
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={newLink.url}
+                onChange={(e) => setNewLink({ ...newLink, url: e.target.value })}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="URL (bijv. https://...)"
+              />
+              <button
+                type="button"
+                onClick={addLink}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Toevoegen
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {profile.custom_links.map((link, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg"
+            >
+              <div>
+                <div className="font-medium text-gray-900">{link.label}</div>
+                <div className="text-sm text-gray-600">{link.url}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => removeLink(index)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          ))}
+          {profile.custom_links.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-4">Nog geen links toegevoegd</p>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">
+            <MessageSquare className="w-5 h-5 inline mr-2" />
+            Reviews ({reviews.length})
+          </h2>
+          <button
+            onClick={() => setShowReviewForm(!showReviewForm)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            {showReviewForm ? 'Annuleren' : 'Review Toevoegen'}
+          </button>
+        </div>
+
+        {showReviewForm && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="font-semibold text-gray-900 mb-4">Nieuwe Review</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                type="text"
+                value={newReview.reviewer_name}
+                onChange={(e) => setNewReview({ ...newReview, reviewer_name: e.target.value })}
+                className="px-4 py-2 border border-gray-300 rounded-lg"
+                placeholder="Naam reviewer *"
+              />
+              <input
+                type="text"
+                value={newReview.reviewer_location}
+                onChange={(e) => setNewReview({ ...newReview, reviewer_location: e.target.value })}
+                className="px-4 py-2 border border-gray-300 rounded-lg"
+                placeholder="Locatie reviewer"
+              />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                <select
+                  value={newReview.rating}
+                  onChange={(e) => setNewReview({ ...newReview, rating: parseInt(e.target.value) })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                >
+                  <option value={5}>5 sterren</option>
+                  <option value={4}>4 sterren</option>
+                  <option value={3}>3 sterren</option>
+                  <option value={2}>2 sterren</option>
+                  <option value={1}>1 ster</option>
+                </select>
+              </div>
+              <input
+                type="text"
+                value={newReview.trip_title}
+                onChange={(e) => setNewReview({ ...newReview, trip_title: e.target.value })}
+                className="px-4 py-2 border border-gray-300 rounded-lg"
+                placeholder="Reis titel"
+              />
+              <input
+                type="text"
+                value={newReview.travel_date}
+                onChange={(e) => setNewReview({ ...newReview, travel_date: e.target.value })}
+                className="px-4 py-2 border border-gray-300 rounded-lg"
+                placeholder="Reisdatum (bijv. Maart 2024)"
+              />
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={newReview.is_verified}
+                    onChange={(e) => setNewReview({ ...newReview, is_verified: e.target.checked })}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm">Geverifieerd</span>
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={newReview.is_published}
+                    onChange={(e) => setNewReview({ ...newReview, is_published: e.target.checked })}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm">Publiceren</span>
+                </label>
+              </div>
+              <div className="md:col-span-2">
+                <textarea
+                  value={newReview.review_text}
+                  onChange={(e) => setNewReview({ ...newReview, review_text: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  placeholder="Review tekst *"
+                />
+              </div>
+            </div>
+            <button
+              onClick={handleAddReview}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Review Opslaan
+            </button>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {reviews.map((review) => (
+            <div key={review.id} className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <div className="font-semibold text-gray-900">{review.reviewer_name}</div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    {review.reviewer_location && <span>• {review.reviewer_location}</span>}
+                    {review.is_verified && <span className="text-green-600">• Geverifieerd</span>}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => toggleReviewPublished(review.id, review.is_published)}
+                    className={`px-3 py-1 rounded text-sm ${
+                      review.is_published ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-600'
+                    }`}
+                  >
+                    {review.is_published ? 'Gepubliceerd' : 'Concept'}
+                  </button>
+                  <button
+                    onClick={() => deleteReview(review.id)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              {review.trip_title && (
+                <div className="text-sm font-medium text-gray-700 mb-1">{review.trip_title}</div>
+              )}
+              <p className="text-gray-700 text-sm">{review.review_text}</p>
+              {review.travel_date && (
+                <div className="text-xs text-gray-500 mt-2">{review.travel_date}</div>
+              )}
+            </div>
+          ))}
+          {reviews.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-8">Nog geen reviews</p>
+          )}
         </div>
       </div>
 

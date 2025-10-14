@@ -38,7 +38,10 @@ export interface Agent {
   slug?: string;
   bio?: string;
   profile_image_url?: string;
-  location?: string;
+  city?: string;
+  province?: string;
+  rrp_id?: string;
+  custom_links?: CustomLink[];
   specializations?: string[];
   years_experience?: number;
   rating?: number;
@@ -51,6 +54,25 @@ export interface Agent {
   is_published?: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface CustomLink {
+  label: string;
+  url: string;
+}
+
+export interface AgentReview {
+  id: string;
+  agent_id: string;
+  reviewer_name: string;
+  reviewer_location?: string;
+  rating: number;
+  review_text: string;
+  trip_title?: string;
+  travel_date?: string;
+  is_verified: boolean;
+  is_published: boolean;
+  created_at: string;
 }
 
 export interface Website {

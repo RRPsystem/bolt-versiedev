@@ -6,30 +6,11 @@ import {
   MessageCircle,
   Award,
   Briefcase,
-  Mail
+  Mail,
+  ExternalLink
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-
-interface Agent {
-  id: string;
-  slug: string;
-  name: string;
-  email: string;
-  phone?: string;
-  bio?: string;
-  profile_image_url?: string;
-  location?: string;
-  specializations?: string[];
-  years_experience?: number;
-  rating?: number;
-  review_count?: number;
-  is_top_advisor?: boolean;
-  specialist_since?: string;
-  certifications?: string[];
-  phone_visible?: boolean;
-  whatsapp_enabled?: boolean;
-  brand_id?: string;
-}
+import type { Agent, AgentReview, CustomLink } from '../../types/database';
 
 interface AgentProfileProps {
   slug: string;
@@ -37,6 +18,7 @@ interface AgentProfileProps {
 
 export default function AgentProfile({ slug }: AgentProfileProps) {
   const [agent, setAgent] = useState<Agent | null>(null);
+  const [reviews, setReviews] = useState<AgentReview[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'trips' | 'reviews' | 'contact'>('trips');
 
@@ -56,11 +38,38 @@ export default function AgentProfile({ slug }: AgentProfileProps) {
 
       if (error) throw error;
       setAgent(data);
+
+      if (data?.id) {
+        await loadReviews(data.id);
+      }
     } catch (error) {
       console.error('Error loading agent:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadReviews = async (agentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('agent_reviews')
+        .select('*')
+        .eq('agent_id', agentId)
+        .eq('is_published', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setReviews(data || []);
+    } catch (error) {
+      console.error('Error loading reviews:', error);
+    }
+  };
+
+  const displayLocation = () => {
+    if (agent?.city && agent?.province) {
+      return `${agent.city}, ${agent.province}`;
+    }
+    return agent?.city || agent?.province || '';
   };
 
   if (loading) {
@@ -81,6 +90,10 @@ export default function AgentProfile({ slug }: AgentProfileProps) {
       </div>
     );
   }
+
+  const avgRating = reviews.length > 0
+    ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
+    : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -128,17 +141,17 @@ export default function AgentProfile({ slug }: AgentProfileProps) {
               </div>
 
               <div className="flex items-center gap-6 text-white/90">
-                {agent.location && (
+                {displayLocation() && (
                   <div className="flex items-center gap-1.5">
                     <MapPin className="w-4 h-4" />
-                    <span>{agent.location}</span>
+                    <span>{displayLocation()}</span>
                   </div>
                 )}
-                {agent.rating && agent.rating > 0 && (
+                {avgRating && (
                   <div className="flex items-center gap-1.5">
                     <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-semibold">{agent.rating}</span>
-                    <span className="text-sm">({agent.review_count} reviews)</span>
+                    <span className="font-semibold">{avgRating}</span>
+                    <span className="text-sm">({reviews.length} reviews)</span>
                   </div>
                 )}
               </div>
@@ -191,7 +204,7 @@ export default function AgentProfile({ slug }: AgentProfileProps) {
                   : 'border-transparent text-gray-600 hover:text-gray-900'
               }`}
             >
-              Reviews
+              Reviews ({reviews.length})
             </button>
             <button
               onClick={() => setActiveTab('contact')}
@@ -232,9 +245,49 @@ export default function AgentProfile({ slug }: AgentProfileProps) {
             {activeTab === 'reviews' && (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Reviews</h2>
-                <div className="text-center py-12 text-gray-500">
-                  <p>Reviews komen binnenkort beschikbaar.</p>
-                </div>
+                {reviews.length > 0 ? (
+                  <div className="space-y-6">
+                    {reviews.map((review) => (
+                      <div key={review.id} className="border-b border-gray-200 pb-6 last:border-0">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <div className="font-semibold text-gray-900 text-lg">{review.reviewer_name}</div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                              {review.reviewer_location && <span>{review.reviewer_location}</span>}
+                              {review.is_verified && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-green-600 font-medium">✓ Geverifieerd</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-5 h-5 ${
+                                  i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        {review.trip_title && (
+                          <div className="text-sm font-medium text-blue-600 mb-2">{review.trip_title}</div>
+                        )}
+                        <p className="text-gray-700 leading-relaxed">{review.review_text}</p>
+                        {review.travel_date && (
+                          <div className="text-sm text-gray-500 mt-3">{review.travel_date}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    <p>Nog geen reviews beschikbaar.</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -276,16 +329,24 @@ export default function AgentProfile({ slug }: AgentProfileProps) {
 
               <div className="space-y-3">
                 {agent.phone_visible && agent.phone && (
-                  <button className="w-full bg-white text-blue-600 hover:bg-blue-50 py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2">
+                  <a
+                    href={`tel:${agent.phone}`}
+                    className="block w-full bg-white text-blue-600 hover:bg-blue-50 py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
                     <Phone className="w-5 h-5" />
                     Bel Nu
-                  </button>
+                  </a>
                 )}
                 {agent.whatsapp_enabled && agent.phone && (
-                  <button className="w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2">
+                  <a
+                    href={`https://wa.me/${agent.phone.replace(/\D/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full bg-green-500 hover:bg-green-600 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
                     <MessageCircle className="w-5 h-5" />
                     WhatsApp
-                  </button>
+                  </a>
                 )}
               </div>
             </div>
@@ -323,6 +384,26 @@ export default function AgentProfile({ slug }: AgentProfileProps) {
                       <Award className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                       <span className="text-sm text-gray-700">{cert}</span>
                     </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {agent.custom_links && agent.custom_links.length > 0 && (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="font-bold text-gray-900 mb-4">Links</h3>
+                <div className="space-y-2">
+                  {agent.custom_links.map((link, index) => (
+                    <a
+                      key={index}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"
+                    >
+                      <span className="text-sm font-medium text-gray-900">{link.label}</span>
+                      <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-600" />
+                    </a>
                   ))}
                 </div>
               </div>
