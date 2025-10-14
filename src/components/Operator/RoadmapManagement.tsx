@@ -20,14 +20,21 @@ import {
   Play,
   FileCheck,
   Eye,
-  Plus
+  Plus,
+  Sparkles,
+  Globe,
+  Plane,
+  Layers,
+  FileText
 } from 'lucide-react';
 
 const categoryConfig = {
-  feature: { icon: Lightbulb, label: 'Feature', color: 'bg-blue-100 text-blue-700' },
-  improvement: { icon: Wrench, label: 'Improvement', color: 'bg-green-100 text-green-700' },
-  bug_fix: { icon: Bug, label: 'Bug Fix', color: 'bg-red-100 text-red-700' },
-  integration: { icon: Plug, label: 'Integration', color: 'bg-purple-100 text-purple-700' }
+  ai_tools: { icon: Sparkles, label: 'AI Tools', color: 'bg-blue-100 text-blue-700' },
+  website: { icon: Globe, label: 'Website', color: 'bg-green-100 text-green-700' },
+  traveldingen: { icon: Plane, label: 'Traveldingen', color: 'bg-sky-100 text-sky-700' },
+  uitbreiding: { icon: Layers, label: 'Uitbreiding', color: 'bg-amber-100 text-amber-700' },
+  bug_probleem: { icon: Bug, label: 'Bug/Probleem', color: 'bg-red-100 text-red-700' },
+  content: { icon: FileText, label: 'Content', color: 'bg-purple-100 text-purple-700' }
 };
 
 const statusConfig = {
@@ -60,7 +67,7 @@ export default function RoadmapManagement() {
   const [newItem, setNewItem] = useState({
     title: '',
     description: '',
-    category: 'feature' as RoadmapItem['category'],
+    category: 'ai_tools' as RoadmapItem['category'],
     priority: 'medium' as RoadmapItem['priority'],
     status: 'planned' as RoadmapItem['status']
   });
@@ -218,10 +225,12 @@ export default function RoadmapManagement() {
                   onChange={(e) => setNewItem({ ...newItem, category: e.target.value as RoadmapItem['category'] })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="feature">Feature</option>
-                  <option value="improvement">Improvement</option>
-                  <option value="bug_fix">Bug Fix</option>
-                  <option value="integration">Integration</option>
+                  <option value="ai_tools">AI Tools</option>
+                  <option value="website">Website</option>
+                  <option value="traveldingen">Traveldingen</option>
+                  <option value="uitbreiding">Uitbreiding</option>
+                  <option value="bug_probleem">Bug/Probleem</option>
+                  <option value="content">Content</option>
                 </select>
               </div>
               <div>

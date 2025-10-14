@@ -66,7 +66,7 @@ export default function RoadmapBoard() {
   const [newItem, setNewItem] = useState({
     title: '',
     description: '',
-    category: 'feature' as RoadmapItem['category']
+    category: 'ai_tools' as RoadmapItem['category']
   });
 
   useEffect(() => {
@@ -258,10 +258,12 @@ export default function RoadmapBoard() {
                 onChange={(e) => setNewItem({ ...newItem, category: e.target.value as RoadmapItem['category'] })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="feature">Feature</option>
-                <option value="improvement">Improvement</option>
-                <option value="bug_fix">Bug Fix</option>
-                <option value="integration">Integration</option>
+                <option value="ai_tools">AI Tools</option>
+                <option value="website">Website</option>
+                <option value="traveldingen">Traveldingen</option>
+                <option value="uitbreiding">Uitbreiding</option>
+                <option value="bug_probleem">Bug/Probleem</option>
+                <option value="content">Content</option>
               </select>
             </div>
             <div>
@@ -320,10 +322,12 @@ export default function RoadmapBoard() {
             className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="all">All Categories</option>
-            <option value="feature">Features</option>
-            <option value="improvement">Improvements</option>
-            <option value="bug_fix">Bug Fixes</option>
-            <option value="integration">Integrations</option>
+            <option value="ai_tools">AI Tools</option>
+            <option value="website">Website</option>
+            <option value="traveldingen">Traveldingen</option>
+            <option value="uitbreiding">Uitbreiding</option>
+            <option value="bug_probleem">Bug/Probleem</option>
+            <option value="content">Content</option>
           </select>
           <select
             value={sortBy}
