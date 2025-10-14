@@ -82,10 +82,10 @@ export function NewsManagement() {
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');
       } else {
-        const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
-        const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const builderBaseUrl = 'https://www.ai-websitestudio.nl';
+        const apiBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
         const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&author_type=admin&author_id=${user.id}#/mode/news`;
+        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&content_type=news_items#/mode/news`;
         window.open(deeplink, '_blank');
       }
     } catch (err) {
@@ -112,10 +112,10 @@ export function NewsManagement() {
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');
       } else {
-        const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
-        const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const builderBaseUrl = 'https://www.ai-websitestudio.nl';
+        const apiBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
         const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&apikey=${encodeURIComponent(apiKey)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&news_slug=${news.slug}&author_type=admin&author_id=${user.id}#/mode/news`;
+        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&content_type=news_items&news_slug=${news.slug}#/mode/news`;
         window.open(deeplink, '_blank');
       }
     } catch (err) {

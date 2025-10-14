@@ -103,14 +103,14 @@ export function generateBuilderDeeplink(
     footerId?: string;
   } = {}
 ): string {
-  const builderBaseUrl = 'https://www.ai-websitestudio.nl/index.html';
-  const apiBaseUrl = import.meta.env.VITE_SUPABASE_URL || window.location.origin;
+  const builderBaseUrl = 'https://www.ai-websitestudio.nl';
+  const apiBaseUrl = `${import.meta.env.VITE_SUPABASE_URL || window.location.origin}/functions/v1`;
   const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   const params = new URLSearchParams({
+    api: apiBaseUrl,
     brand_id: brandId,
     token: token,
-    api: apiBaseUrl,
     apikey: apiKey
   });
 
@@ -134,7 +134,7 @@ export function generateBuilderDeeplink(
     params.append('footer_id', options.footerId);
   }
 
-  return `${builderBaseUrl}?${params.toString()}`;
+  return `${builderBaseUrl}/?${params.toString()}`;
 }
 
 /**

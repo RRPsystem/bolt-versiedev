@@ -71,8 +71,8 @@ export function TemplateManager() {
       );
 
       const params = new URLSearchParams({
+        api: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`,
         token: jwtResponse.token,
-        api: import.meta.env.VITE_SUPABASE_URL,
         apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         mode: 'create-template',
         content_type: 'page',
@@ -83,7 +83,7 @@ export function TemplateManager() {
         preview_image_url: formData.preview_image_url || '',
       });
 
-      const url = `https://www.ai-websitestudio.nl/index.html?${params.toString()}`;
+      const url = `https://www.ai-websitestudio.nl/?${params.toString()}`;
       window.open(url, '_blank');
 
       setShowCreateForm(false);
@@ -119,15 +119,15 @@ export function TemplateManager() {
       );
 
       const params = new URLSearchParams({
+        api: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`,
         token: jwtResponse.token,
-        api: import.meta.env.VITE_SUPABASE_URL,
         apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
         page_id: templateId,
         mode: 'edit-template',
         content_type: 'page',
       });
 
-      const url = `https://www.ai-websitestudio.nl/index.html?${params.toString()}`;
+      const url = `https://www.ai-websitestudio.nl/?${params.toString()}`;
       window.open(url, '_blank');
     } catch (error) {
       console.error('Error editing template:', error);
