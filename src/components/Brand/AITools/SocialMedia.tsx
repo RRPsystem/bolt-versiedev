@@ -147,6 +147,11 @@ export function SocialMedia() {
       return;
     }
 
+    if (!import.meta.env.VITE_OPENAI_API_KEY) {
+      alert('OpenAI API key is niet ingesteld. Vraag de operator om deze in te stellen.');
+      return;
+    }
+
     setIsGenerating(true);
     try {
       const platformsText = selectedPlatforms.length > 0
@@ -154,30 +159,36 @@ export function SocialMedia() {
         : 'social media';
 
       const prompt = `
-Je bent een social media content creator.
-${brandVoice.voice_prompt ? `Brand voice: ${brandVoice.voice_prompt}` : ''}
-${brandVoice.writing_style ? `Schrijfstijl: ${brandVoice.writing_style}` : ''}
-${brandVoice.target_audience ? `Doelgroep: ${brandVoice.target_audience}` : ''}
+Je bent een social media content creator voor een reisorganisatie.
+${brandVoice?.voice_prompt ? `Brand voice: ${brandVoice.voice_prompt}` : ''}
+${brandVoice?.writing_style ? `Schrijfstijl: ${brandVoice.writing_style}` : ''}
+${brandVoice?.target_audience ? `Doelgroep: ${brandVoice.target_audience}` : ''}
 
 Schrijf een aantrekkelijke social media post over: ${aiTopic}
 
 Voor platforms: ${platformsText}
 
-${brandVoice.always_include ? `Zorg dat je dit altijd includeert: ${brandVoice.always_include}` : ''}
+${brandVoice?.always_include ? `Zorg dat je dit altijd includeert: ${brandVoice.always_include}` : ''}
 
-Maak de post kort, krachtig en engaging. Max 280 karakters voor Twitter, iets langer mag voor andere platforms.
+Maak de post:
+- Kort en krachtig (max 280 karakters voor Twitter)
+- Engaging en persoonlijk
+- Met relevante hashtags als dat past
+- Zonder aanhalingstekens eromheen
+
+Geef ALLEEN de post tekst terug, zonder extra uitleg.
 `.trim();
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY || ''}`
+          'Authorization': `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`
         },
         body: JSON.stringify({
           model: 'gpt-4',
           messages: [
-            { role: 'system', content: 'Je bent een social media expert die engaging content maakt.' },
+            { role: 'system', content: 'Je bent een social media expert die engaging content maakt voor reisorganisaties.' },
             { role: 'user', content: prompt }
           ],
           temperature: 0.8,
@@ -186,16 +197,18 @@ Maak de post kort, krachtig en engaging. Max 280 karakters voor Twitter, iets la
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate content');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || 'Failed to generate content');
       }
 
       const data = await response.json();
-      const generatedContent = data.choices[0].message.content;
+      const generatedContent = data.choices[0].message.content.trim();
 
       setPostContent(generatedContent);
-    } catch (error) {
+      setAiTopic('');
+    } catch (error: any) {
       console.error('Error generating content:', error);
-      alert('Fout bij het genereren van content. Controleer of de OpenAI API key is ingesteld.');
+      alert(`Fout bij het genereren van content: ${error.message}`);
     } finally {
       setIsGenerating(false);
     }
@@ -306,6 +319,11 @@ Maak de post kort, krachtig en engaging. Max 280 karakters voor Twitter, iets la
   };
 
   const generateContentSuggestions = async () => {
+    if (!import.meta.env.VITE_OPENAI_API_KEY) {
+      alert('OpenAI API key is niet ingesteld. Vraag de operator om deze in te stellen.');
+      return;
+    }
+
     setIsGeneratingSuggestions(true);
     try {
       const { data: userData } = await supabase
@@ -330,19 +348,19 @@ Maak de post kort, krachtig en engaging. Max 280 karakters voor Twitter, iets la
       }));
 
       const prompt = `
-Je bent een social media strategie expert. Analyseer het volgende brand profiel en genereer een content kalender met slimme suggesties.
+Je bent een social media strategie expert voor reisorganisaties. Analyseer het volgende brand profiel en genereer een content kalender met slimme suggesties.
 
 BRAND INFORMATIE:
 Naam: ${brandData?.name || 'Onbekend'}
 Beschrijving: ${brandData?.description || 'Geen beschrijving'}
 
 BRAND VOICE:
-${brandVoice.voice_prompt || 'Geen voice prompt ingesteld'}
-Schrijfstijl: ${brandVoice.writing_style || 'Niet gespecificeerd'}
-Doelgroep: ${brandVoice.target_audience || 'Niet gespecificeerd'}
+${brandVoice?.voice_prompt || 'Geen voice prompt ingesteld'}
+Schrijfstijl: ${brandVoice?.writing_style || 'Niet gespecificeerd'}
+Doelgroep: ${brandVoice?.target_audience || 'Niet gespecificeerd'}
 
 RECENTE POSTS (laatste 10):
-${postThemes.map((p, i) => `${i + 1}. "${p.content}..." (${new Date(p.created).toLocaleDateString()})`).join('\n')}
+${postThemes.length > 0 ? postThemes.map((p, i) => `${i + 1}. "${p.content}..." (${new Date(p.created).toLocaleDateString()})`).join('\n') : 'Nog geen eerdere posts'}
 
 OPDRACHT:
 Genereer 7 slimme content suggesties voor de komende week. Elk voorstel moet bevatten:
@@ -389,7 +407,8 @@ Geef het resultaat als JSON array met deze structuur:
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate suggestions');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || 'Failed to generate suggestions');
       }
 
       const data = await response.json();
@@ -400,11 +419,11 @@ Geef het resultaat als JSON array met deze structuur:
         const suggestions = JSON.parse(jsonMatch[0]);
         setContentSuggestions(suggestions);
       } else {
-        throw new Error('Invalid response format');
+        throw new Error('Ongeldig antwoord formaat van AI. Probeer het opnieuw.');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating suggestions:', error);
-      alert('Fout bij het genereren van suggesties. Controleer of de OpenAI API key is ingesteld.');
+      alert(`Fout bij het genereren van suggesties: ${error.message}`);
     } finally {
       setIsGeneratingSuggestions(false);
     }
