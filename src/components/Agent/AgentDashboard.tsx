@@ -13,19 +13,19 @@ export function AgentDashboard() {
   const [showAISubmenu, setShowAISubmenu] = useState(false);
 
   React.useEffect(() => {
-    if (['ai-content', 'ai-travelbro', 'ai-social', 'ai-import'].includes(activeSection)) {
+    if (['ai-content', 'ai-travelbro', 'ai-import'].includes(activeSection)) {
       setShowAISubmenu(true);
     }
   }, [activeSection]);
 
   const sidebarItems = [
     { id: 'profile', label: 'Profiel', icon: User },
+    { id: 'social-media', label: 'Social Media', icon: Share2 },
   ];
 
   const aiToolsItems = [
     { id: 'ai-content', label: 'Travel Content Generator', icon: Sparkles },
     { id: 'ai-import', label: 'Reis Import', icon: FileImport },
-    { id: 'ai-social', label: 'Social Media', icon: Share2 },
     { id: 'ai-travelbro', label: 'AI TravelBRO', icon: Bot },
   ];
 
@@ -73,7 +73,7 @@ export function AgentDashboard() {
               <button
                 onClick={() => setShowAISubmenu(!showAISubmenu)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
-                  ['ai-content', 'ai-travelbro', 'ai-social', 'ai-import'].includes(activeSection)
+                  ['ai-content', 'ai-travelbro', 'ai-import'].includes(activeSection)
                     ? 'bg-gray-700 text-white'
                     : 'text-gray-300 hover:text-white hover:bg-gray-700'
                 }`}
@@ -148,18 +148,18 @@ export function AgentDashboard() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 {activeSection === 'profile' && 'Profiel'}
+                {activeSection === 'social-media' && 'Social Media'}
                 {activeSection === 'ai-content' && 'Travel Content Generator'}
                 {activeSection === 'ai-import' && 'Reis Import'}
                 {activeSection === 'ai-travelbro' && 'AI TravelBRO'}
-                {activeSection === 'ai-social' && 'Social Media Manager'}
                 {activeSection === 'roadmap' && 'Roadmap'}
               </h1>
               <p className="text-gray-600 mt-1">
                 {activeSection === 'profile' && 'Beheer je profiel en instellingen'}
+                {activeSection === 'social-media' && 'Beheer je social media accounts en posts'}
                 {activeSection === 'ai-content' && 'Generate travel content with AI'}
                 {activeSection === 'ai-import' && 'Import travel data with AI'}
                 {activeSection === 'ai-travelbro' && 'Your AI travel assistant'}
-                {activeSection === 'ai-social' && 'Manage your social media presence'}
                 {activeSection === 'roadmap' && 'Vote on features and track development progress'}
               </p>
             </div>
@@ -168,10 +168,10 @@ export function AgentDashboard() {
 
         <main className="flex-1 overflow-auto">
           {activeSection === 'profile' && <AgentProfileEdit />}
+          {activeSection === 'social-media' && <SocialMedia />}
 
           {activeSection === 'ai-content' && <AIContentGenerator />}
           {activeSection === 'ai-travelbro' && <TravelBro />}
-          {activeSection === 'ai-social' && <SocialMedia />}
           {activeSection === 'roadmap' && <RoadmapBoard />}
           {activeSection === 'ai-import' && (
             <div className="p-6">
