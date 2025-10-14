@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 import { RoadmapItem, User } from '../../types/database';
 import {
   Lightbulb,
@@ -47,6 +48,7 @@ const priorityConfig = {
 };
 
 export default function RoadmapManagement() {
+  const { user } = useAuth();
   const [items, setItems] = useState<RoadmapItem[]>([]);
   const [operators, setOperators] = useState<User[]>([]);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -139,7 +141,7 @@ export default function RoadmapManagement() {
 
   const handleCreateItem = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newItem.title.trim()) return;
+    if (!newItem.title.trim() || !user) return;
 
     try {
       const { error } = await supabase
@@ -149,7 +151,8 @@ export default function RoadmapManagement() {
           description: newItem.description,
           category: newItem.category,
           priority: newItem.priority,
-          status: newItem.status
+          status: newItem.status,
+          created_by: user.id
         });
 
       if (error) throw error;
