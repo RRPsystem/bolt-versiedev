@@ -167,11 +167,6 @@ export function BrandSettings() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="bg-white rounded-lg shadow-sm border">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Brand Settings</h2>
-          <p className="text-gray-600 mt-1">Manage your brand information and appearance</p>
-        </div>
-
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">

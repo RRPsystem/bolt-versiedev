@@ -55,7 +55,6 @@ export function BrandDashboard() {
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Settings },
     { id: 'agents', label: 'Agents', icon: Users },
-    { id: 'roadmap', label: 'Roadmap', icon: Map },
   ];
 
   const websiteManagementItems = [
@@ -266,6 +265,17 @@ export function BrandDashboard() {
           >
             <Settings size={20} />
             <span>Brand Settings</span>
+          </button>
+          <button
+            onClick={() => setActiveSection('roadmap')}
+            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+              activeSection === 'roadmap'
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:text-white hover:bg-gray-700'
+            }`}
+          >
+            <Map size={20} />
+            <span>Roadmap</span>
           </button>
           <button
             onClick={signOut}

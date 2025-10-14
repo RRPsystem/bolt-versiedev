@@ -19,7 +19,6 @@ export function AgentDashboard() {
 
   const sidebarItems = [
     { id: 'profile', label: 'Profiel', icon: User },
-    { id: 'roadmap', label: 'Roadmap', icon: Map },
   ];
 
   const aiToolsItems = [
@@ -121,7 +120,18 @@ export function AgentDashboard() {
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-gray-700">
+        <div className="p-4 border-t border-gray-700 space-y-2">
+          <button
+            onClick={() => setActiveSection('roadmap')}
+            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+              activeSection === 'roadmap'
+                ? 'bg-gray-700 text-white'
+                : 'text-gray-300 hover:text-white hover:bg-gray-700'
+            }`}
+          >
+            <Map size={20} />
+            <span>Roadmap</span>
+          </button>
           <button
             onClick={signOut}
             className="w-full flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"

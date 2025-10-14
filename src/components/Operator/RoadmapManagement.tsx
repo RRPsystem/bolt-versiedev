@@ -138,13 +138,6 @@ export default function RoadmapManagement() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-900">Roadmap Management</h2>
-        <p className="text-sm text-gray-600 mt-1">
-          Manage feature requests and track development priorities
-        </p>
-      </div>
-
       <div className="grid grid-cols-4 gap-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="text-sm text-gray-600">Total Items</div>
