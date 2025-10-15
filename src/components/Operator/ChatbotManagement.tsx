@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Clock, User, TrendingUp, AlertCircle, RefreshCw, Settings, Save } from 'lucide-react';
+import { MessageCircle, Clock, User, TrendingUp, AlertCircle, RefreshCw, Settings, Save, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface Conversation {
@@ -16,11 +16,13 @@ interface ConversationStats {
   total: number;
   byRole: Record<string, number>;
   recent24h: number;
+  helpfulCount: number;
+  notHelpfulCount: number;
 }
 
 export function ChatbotManagement() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [stats, setStats] = useState<ConversationStats>({ total: 0, byRole: {}, recent24h: 0 });
+  const [stats, setStats] = useState<ConversationStats>({ total: 0, byRole: {}, recent24h: 0, helpfulCount: 0, notHelpfulCount: 0 });
   const [loading, setLoading] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [filter, setFilter] = useState<'all' | 'operator' | 'admin' | 'brand' | 'agent'>('all');
@@ -52,15 +54,22 @@ export function ChatbotManagement() {
       const yesterday = new Date();
       yesterday.setHours(yesterday.getHours() - 24);
       let recent24h = 0;
+      let helpfulCount = 0;
+      let notHelpfulCount = 0;
 
       data?.forEach((conv) => {
         byRole[conv.user_role] = (byRole[conv.user_role] || 0) + 1;
         if (new Date(conv.created_at) > yesterday) {
           recent24h++;
         }
+        if (conv.was_helpful === true) {
+          helpfulCount++;
+        } else if (conv.was_helpful === false) {
+          notHelpfulCount++;
+        }
       });
 
-      setStats({ total, byRole, recent24h });
+      setStats({ total, byRole, recent24h, helpfulCount, notHelpfulCount });
     } catch (error) {
       console.error('Error loading conversations:', error);
     } finally {
@@ -166,7 +175,7 @@ export function ChatbotManagement() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-blue-100 rounded-lg">
@@ -212,12 +221,33 @@ export function ChatbotManagement() {
 
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-3">
+            <div className="p-3 bg-green-100 rounded-lg">
+              <ThumbsUp className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Nuttig / Niet Nuttig</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-lg font-bold text-green-600">{stats.helpfulCount}</span>
+                <span className="text-gray-400">/</span>
+                <span className="text-lg font-bold text-red-600">{stats.notHelpfulCount}</span>
+              </div>
+              {stats.helpfulCount + stats.notHelpfulCount > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {Math.round((stats.helpfulCount / (stats.helpfulCount + stats.notHelpfulCount)) * 100)}% positief
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center gap-3">
             <div className="p-3 bg-yellow-100 rounded-lg">
               <AlertCircle className="w-6 h-6 text-yellow-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-600">Meest Voorkomend</p>
-              <p className="text-sm font-semibold mt-1">
+              <p className="text-sm text-gray-600">Meest Voorkomende Rol</p>
+              <p className="text-sm font-semibold mt-1 capitalize">
                 {Object.entries(stats.byRole).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A'}
               </p>
             </div>
@@ -351,6 +381,21 @@ export function ChatbotManagement() {
                   {selectedConversation.bot_response}
                 </p>
               </div>
+              {selectedConversation.was_helpful !== null && (
+                <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-lg">
+                  {selectedConversation.was_helpful ? (
+                    <>
+                      <ThumbsUp className="w-5 h-5 text-green-600" />
+                      <span className="text-sm text-gray-700">Gebruiker vond dit nuttig</span>
+                    </>
+                  ) : (
+                    <>
+                      <ThumbsDown className="w-5 h-5 text-red-600" />
+                      <span className="text-sm text-gray-700">Gebruiker vond dit niet nuttig</span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader2, Bot, User } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, Bot, User, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface Message {
@@ -7,6 +7,8 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  conversationId?: string;
+  feedback?: 'helpful' | 'not_helpful';
 }
 
 export function HelpBot() {
@@ -30,6 +32,25 @@ export function HelpBot() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleFeedback = async (messageId: string, conversationId: string, helpful: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('helpbot_conversations')
+        .update({ was_helpful: helpful })
+        .eq('id', conversationId);
+
+      if (error) throw error;
+
+      setMessages(prev => prev.map(msg =>
+        msg.id === messageId
+          ? { ...msg, feedback: helpful ? 'helpful' : 'not_helpful' }
+          : msg
+      ));
+    } catch (error) {
+      console.error('Error saving feedback:', error);
+    }
+  };
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -212,7 +233,8 @@ Geef altijd concrete stappen en verwijs naar de juiste menu items!`
         id: (Date.now() + 1).toString(),
         role: 'assistant',
         content: data.choices[0].message.content,
-        timestamp: new Date()
+        timestamp: new Date(),
+        conversationId: data.conversation_id
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -278,18 +300,49 @@ Geef altijd concrete stappen en verwijs naar de juiste menu items!`
                     <Bot className="w-4 h-4 text-orange-600" style={{ color: '#ff7700' }} />
                   </div>
                 )}
-                <div
-                  className={`max-w-[80%] p-3 rounded-lg ${
-                    message.role === 'user'
-                      ? 'bg-orange-600 text-white'
-                      : 'bg-white text-gray-900 border border-gray-200'
-                  }`}
-                  style={message.role === 'user' ? { backgroundColor: '#ff7700' } : {}}
-                >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  <p className={`text-xs mt-1 ${message.role === 'user' ? 'text-orange-100' : 'text-gray-500'}`}>
-                    {message.timestamp.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
+                <div className="flex flex-col gap-1">
+                  <div
+                    className={`p-3 rounded-lg ${
+                      message.role === 'user'
+                        ? 'bg-orange-600 text-white'
+                        : 'bg-white text-gray-900 border border-gray-200'
+                    }`}
+                    style={message.role === 'user' ? { backgroundColor: '#ff7700' } : {}}
+                  >
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <p className={`text-xs mt-1 ${message.role === 'user' ? 'text-orange-100' : 'text-gray-500'}`}>
+                      {message.timestamp.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  {message.role === 'assistant' && message.conversationId && (
+                    <div className="flex gap-2 items-center pl-1">
+                      <button
+                        onClick={() => handleFeedback(message.id, message.conversationId!, true)}
+                        disabled={message.feedback !== undefined}
+                        className={`p-1 rounded hover:bg-gray-100 transition-colors disabled:opacity-50 ${
+                          message.feedback === 'helpful' ? 'text-green-600' : 'text-gray-400'
+                        }`}
+                        title="Nuttig"
+                      >
+                        <ThumbsUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleFeedback(message.id, message.conversationId!, false)}
+                        disabled={message.feedback !== undefined}
+                        className={`p-1 rounded hover:bg-gray-100 transition-colors disabled:opacity-50 ${
+                          message.feedback === 'not_helpful' ? 'text-red-600' : 'text-gray-400'
+                        }`}
+                        title="Niet nuttig"
+                      >
+                        <ThumbsDown className="w-3.5 h-3.5" />
+                      </button>
+                      {message.feedback && (
+                        <span className="text-xs text-gray-500 ml-1">
+                          Bedankt voor je feedback!
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {message.role === 'user' && (
                   <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">

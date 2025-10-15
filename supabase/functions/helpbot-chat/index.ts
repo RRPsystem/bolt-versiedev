@@ -131,17 +131,26 @@ Deno.serve(async (req: Request) => {
     const userQuestion = messages.find(m => m.role === 'user')?.content || '';
     const botResponse = data.choices[0]?.message?.content || '';
 
-    await supabase
+    const { data: conversation, error: insertError } = await supabase
       .from('helpbot_conversations')
       .insert({
         user_id: user.id,
         user_role: userData?.role || 'unknown',
         user_question: userQuestion,
         bot_response: botResponse,
-      });
+      })
+      .select('id')
+      .single();
+
+    if (insertError) {
+      console.error('Error inserting conversation:', insertError);
+    }
 
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify({
+        ...data,
+        conversation_id: conversation?.id
+      }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
