@@ -7,6 +7,7 @@ import { SystemHealth } from './SystemHealth';
 import { UserActivity } from './UserActivity';
 import { OAuthManagement } from './OAuthManagement';
 import { APISettings } from './APISettings';
+import { HelpBot } from '../shared/HelpBot';
 import {
   Settings,
   Bot,
@@ -313,6 +314,7 @@ export function OperatorDashboard() {
           {activeSection === 'roadmap' && <RoadmapManagement />}
         </main>
       </div>
+      <HelpBot />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { MenuBuilderView } from '../Brand/WebsiteManagement/MenuBuilderView';
 import { FooterBuilderView } from '../Brand/WebsiteManagement/FooterBuilderView';
 import { NewPage } from '../Brand/WebsiteManagement/NewPage';
 import DeeplinkTester from './DeeplinkTester';
+import { HelpBot } from '../shared/HelpBot';
 import { Users, Building2, FileText, Settings, Plus, Search, Filter, CreditCard as Edit, Trash2, LayoutGrid as Layout, Menu, Globe, Newspaper, MapPin, Plane, Link, Key, X, Lock } from 'lucide-react'
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
@@ -828,6 +829,7 @@ export function AdminDashboard() {
           </div>
         </div>
       )}
+      <HelpBot />
     </div>
   );
 }

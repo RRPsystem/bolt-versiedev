@@ -11,6 +11,7 @@ import { NewsApproval } from './ContentManagement/NewsApproval';
 import { TravelBro } from './AITools/TravelBro';
 import { SocialMedia } from './AITools/SocialMedia';
 import { BrandSettings } from './BrandSettings';
+import { HelpBot } from '../shared/HelpBot';
 import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe, Newspaper, MapPin, Plane, Share2, Map } from 'lucide-react';
 import RoadmapBoard from './RoadmapBoard';
 
@@ -441,6 +442,7 @@ export function BrandDashboard() {
           )}
         </main>
       </div>
+      <HelpBot />
     </div>
   );
 }

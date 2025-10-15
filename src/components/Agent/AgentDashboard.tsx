@@ -4,6 +4,7 @@ import { TravelBro } from '../Brand/AITools/TravelBro';
 import { SocialMedia } from '../Brand/AITools/SocialMedia';
 import { AIContentGenerator } from '../Brand/AIContentGenerator';
 import AgentProfileEdit from './AgentProfileEdit';
+import { HelpBot } from '../shared/HelpBot';
 import { Bot, User, ChevronDown, ChevronRight, Share2, Plane, Sparkles, Import as FileImport, Map } from 'lucide-react';
 import RoadmapBoard from '../Brand/RoadmapBoard';
 
@@ -189,6 +190,7 @@ export function AgentDashboard() {
           )}
         </main>
       </div>
+      <HelpBot />
     </div>
   );
 }
