@@ -7,6 +7,7 @@ import { SystemHealth } from './SystemHealth';
 import { UserActivity } from './UserActivity';
 import { OAuthManagement } from './OAuthManagement';
 import { APISettings } from './APISettings';
+import { ChatbotManagement } from './ChatbotManagement';
 import { HelpBot } from '../shared/HelpBot';
 import {
   Settings,
@@ -23,7 +24,8 @@ import {
   CheckCircle,
   TrendingUp,
   Clock,
-  Map
+  Map,
+  MessageCircle
 } from 'lucide-react';
 import RoadmapManagement from './RoadmapManagement';
 
@@ -66,6 +68,7 @@ export function OperatorDashboard() {
     { id: 'api-settings', label: 'API Settings', icon: Key },
     { id: 'gpt-management', label: 'GPT Management', icon: Bot },
     { id: 'oauth-management', label: 'OAuth Apps', icon: Settings },
+    { id: 'chatbot-management', label: 'Chatbot Logs', icon: MessageCircle },
     { id: 'usage-monitoring', label: 'Usage Monitoring', icon: TrendingUp },
     { id: 'user-activity', label: 'User Activity', icon: Users },
     { id: 'system-health', label: 'System Health', icon: Activity },
@@ -132,6 +135,7 @@ export function OperatorDashboard() {
                 {activeSection === 'api-settings' && 'API Settings'}
                 {activeSection === 'gpt-management' && 'GPT Management'}
                 {activeSection === 'oauth-management' && 'OAuth App Management'}
+                {activeSection === 'chatbot-management' && 'Chatbot Management'}
                 {activeSection === 'usage-monitoring' && 'Usage Monitoring'}
                 {activeSection === 'user-activity' && 'User Activity'}
                 {activeSection === 'system-health' && 'System Health'}
@@ -142,6 +146,7 @@ export function OperatorDashboard() {
                 {activeSection === 'api-settings' && 'Configure API keys and external service credentials'}
                 {activeSection === 'gpt-management' && 'Configure custom GPTs and content generation'}
                 {activeSection === 'oauth-management' && 'Manage social media OAuth apps and credentials'}
+                {activeSection === 'chatbot-management' && 'View helpbot conversations and improve responses'}
                 {activeSection === 'usage-monitoring' && 'Track API usage and costs'}
                 {activeSection === 'user-activity' && 'Monitor user behavior and activity logs'}
                 {activeSection === 'system-health' && 'System status and performance monitoring'}
@@ -308,6 +313,7 @@ export function OperatorDashboard() {
           {activeSection === 'api-settings' && <APISettings />}
           {activeSection === 'gpt-management' && <GPTManagement />}
           {activeSection === 'oauth-management' && <OAuthManagement />}
+          {activeSection === 'chatbot-management' && <ChatbotManagement />}
           {activeSection === 'usage-monitoring' && <UsageMonitoring />}
           {activeSection === 'user-activity' && <UserActivity />}
           {activeSection === 'system-health' && <SystemHealth />}

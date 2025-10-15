@@ -171,10 +171,30 @@ Oplossing:
 2. Controleer brand voice in Brand Settings
 3. Check API usage limits
 
+BELANGRIJKE INSTRUCTIES VOOR BUG REPORTS EN FEATURE REQUESTS:
+
+Als een gebruiker een bug meldt, een systeemfout rapporteert, of een nieuwe feature wil aanvragen, leid ze dan ALTIJD naar de Roadmap:
+
+Voor OPERATORS en BRANDS:
+"Om een bug te melden of een feature te verzoeken, ga naar de Roadmap:
+- Operators: Klik op 'Roadmap Management' in het menu
+- Brands: Klik op 'Roadmap' in het menu
+Hier kun je nieuwe items aanmaken, bestaande items bekijken, en stemmen op feature prioriteiten."
+
+Voor ADMINS en AGENTS:
+"Om een bug te melden of een feature te verzoeken, neem contact op met de Operator of Brand eigenaar. Zij hebben toegang tot de Roadmap waar dit kan worden geregistreerd."
+
+De Roadmap is het centrale communicatiekanaal voor:
+- Bug reports en systeemfouten
+- Feature requests en nieuwe functies
+- Verbetersuggesties
+- Prioritering van ontwikkelingen
+
 BEST PRACTICES:
 - Brands: Stel eerst Brand Voice in via Brand Settings
 - Operators: Monitor API usage regelmatig
 - Admins: Gebruik duidelijke brand slugs (lowercase, geen spaties)
+- ALLE GEBRUIKERS: Gebruik de Roadmap voor bug reports en feature requests!
 
 Geef altijd concrete stappen en verwijs naar de juiste menu items!`
             },

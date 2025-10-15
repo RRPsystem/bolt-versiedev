@@ -28,6 +28,36 @@ Deno.serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid token' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+
     const { messages }: RequestBody = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
@@ -84,6 +114,18 @@ Deno.serve(async (req: Request) => {
     }
 
     const data = await openaiResponse.json();
+
+    const userQuestion = messages.find(m => m.role === 'user')?.content || '';
+    const botResponse = data.choices[0]?.message?.content || '';
+
+    await supabase
+      .from('helpbot_conversations')
+      .insert({
+        user_id: user.id,
+        user_role: userData?.role || 'unknown',
+        user_question: userQuestion,
+        bot_response: botResponse,
+      });
 
     return new Response(
       JSON.stringify(data),
