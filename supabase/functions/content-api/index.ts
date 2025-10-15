@@ -52,9 +52,30 @@ async function verifyBearerToken(req: Request, requiredScope?: string): Promise<
   }
 }
 
-function corsHeaders(): Headers {
+function corsHeaders(req?: Request): Headers {
   const headers = new Headers();
-  headers.set('Access-Control-Allow-Origin', 'https://www.ai-websitestudio.nl');
+
+  const origin = req?.headers.get('origin') ?? '*';
+  const allowedOrigins = [
+    'https://www.ai-websitestudio.nl',
+    'https://ai-websitestudio.nl',
+    'https://www.ai-travelstudio.nl',
+    'https://ai-travelstudio.nl',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:8000'
+  ];
+
+  const isAllowed = allowedOrigins.includes(origin) ||
+                   origin.includes('ai-websitestudio.nl') ||
+                   origin.includes('ai-travelstudio.nl') ||
+                   origin.includes('localhost') ||
+                   origin.includes('127.0.0.1');
+
+  const allowOrigin = isAllowed ? origin : '*';
+
+  headers.set('Access-Control-Allow-Origin', allowOrigin);
+  headers.set('Vary', 'Origin');
   headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
   headers.set('Access-Control-Allow-Headers', 'Authorization, Content-Type, apikey');
   headers.set('Access-Control-Max-Age', '86400');
@@ -64,7 +85,7 @@ function corsHeaders(): Headers {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 200, headers: corsHeaders() });
+    return new Response(null, { status: 200, headers: corsHeaders(req) });
   }
 
   try {
@@ -81,7 +102,7 @@ Deno.serve(async (req: Request) => {
     if (!validTypes.includes(contentType)) {
       return new Response(
         JSON.stringify({ error: "Invalid content type. Must be: news_items, destinations, or trips" }),
-        { status: 400, headers: corsHeaders() }
+        { status: 400, headers: corsHeaders(req) }
       );
     }
 
@@ -93,14 +114,14 @@ Deno.serve(async (req: Request) => {
       if (claims.brand_id !== brand_id) {
         return new Response(
           JSON.stringify({ error: "Unauthorized" }),
-          { status: 403, headers: corsHeaders() }
+          { status: 403, headers: corsHeaders(req) }
         );
       }
 
       if (!brand_id || !title || !slug) {
         return new Response(
           JSON.stringify({ error: "brand_id, title, and slug required" }),
-          { status: 400, headers: corsHeaders() }
+          { status: 400, headers: corsHeaders(req) }
         );
       }
 
@@ -209,7 +230,7 @@ Deno.serve(async (req: Request) => {
           status: "draft",
           message: "Content saved successfully"
         }),
-        { status: 200, headers: corsHeaders() }
+        { status: 200, headers: corsHeaders(req) }
       );
     }
 
@@ -225,7 +246,7 @@ Deno.serve(async (req: Request) => {
       if (!brandId || claims.brand_id !== brandId) {
         return new Response(
           JSON.stringify({ error: "Unauthorized" }),
-          { status: 403, headers: corsHeaders() }
+          { status: 403, headers: corsHeaders(req) }
         );
       }
 
@@ -257,7 +278,7 @@ Deno.serve(async (req: Request) => {
       if (!targetId) {
         return new Response(
           JSON.stringify({ error: "Content not found" }),
-          { status: 404, headers: corsHeaders() }
+          { status: 404, headers: corsHeaders(req) }
         );
       }
 
@@ -279,7 +300,7 @@ Deno.serve(async (req: Request) => {
       if (!data) {
         return new Response(
           JSON.stringify({ error: "Content not found or unauthorized" }),
-          { status: 404, headers: corsHeaders() }
+          { status: 404, headers: corsHeaders(req) }
         );
       }
 
@@ -290,7 +311,7 @@ Deno.serve(async (req: Request) => {
           slug: data.slug,
           message: "Content updated successfully"
         }),
-        { status: 200, headers: corsHeaders() }
+        { status: 200, headers: corsHeaders(req) }
       );
     }
 
@@ -302,14 +323,14 @@ Deno.serve(async (req: Request) => {
       if (claims.brand_id !== brand_id) {
         return new Response(
           JSON.stringify({ error: "Unauthorized" }),
-          { status: 403, headers: corsHeaders() }
+          { status: 403, headers: corsHeaders(req) }
         );
       }
 
       if (!brand_id || (!id && !slug)) {
         return new Response(
           JSON.stringify({ error: "brand_id and (id or slug) required" }),
-          { status: 400, headers: corsHeaders() }
+          { status: 400, headers: corsHeaders(req) }
         );
       }
 
@@ -326,7 +347,7 @@ Deno.serve(async (req: Request) => {
       if (!item) {
         return new Response(
           JSON.stringify({ error: "Content not found" }),
-          { status: 404, headers: corsHeaders() }
+          { status: 404, headers: corsHeaders(req) }
         );
       }
 
@@ -382,7 +403,7 @@ Deno.serve(async (req: Request) => {
           assignment_updated: assignmentUpdated,
           message: "Content published successfully"
         }),
-        { status: 200, headers: corsHeaders() }
+        { status: 200, headers: corsHeaders(req) }
       );
     }
 
@@ -393,7 +414,7 @@ Deno.serve(async (req: Request) => {
       if (!itemId || itemId === "content-api") {
         return new Response(
           JSON.stringify({ error: "id is required" }),
-          { status: 400, headers: corsHeaders() }
+          { status: 400, headers: corsHeaders(req) }
         );
       }
 
@@ -406,14 +427,14 @@ Deno.serve(async (req: Request) => {
       if (!item) {
         return new Response(
           JSON.stringify({ error: "Content not found" }),
-          { status: 404, headers: corsHeaders() }
+          { status: 404, headers: corsHeaders(req) }
         );
       }
 
       if (claims.brand_id !== item.brand_id) {
         return new Response(
           JSON.stringify({ error: "Unauthorized" }),
-          { status: 403, headers: corsHeaders() }
+          { status: 403, headers: corsHeaders(req) }
         );
       }
 
@@ -426,7 +447,7 @@ Deno.serve(async (req: Request) => {
 
       return new Response(
         JSON.stringify({ success: true, message: "Content deleted successfully" }),
-        { status: 200, headers: corsHeaders() }
+        { status: 200, headers: corsHeaders(req) }
       );
     }
 
@@ -438,7 +459,7 @@ Deno.serve(async (req: Request) => {
       if (!brandId) {
         return new Response(
           JSON.stringify({ error: "brand_id is required" }),
-          { status: 400, headers: corsHeaders() }
+          { status: 400, headers: corsHeaders(req) }
         );
       }
 
@@ -487,7 +508,7 @@ Deno.serve(async (req: Request) => {
 
         const allNews = [...(ownNews || []), ...assignedNews];
 
-        return new Response(JSON.stringify({ items: allNews }), { status: 200, headers: corsHeaders() });
+        return new Response(JSON.stringify({ items: allNews }), { status: 200, headers: corsHeaders(req) });
       }
 
       let query = supabase
@@ -502,7 +523,7 @@ Deno.serve(async (req: Request) => {
       const { data, error } = await query.order("updated_at", { ascending: false });
       if (error) throw error;
 
-      return new Response(JSON.stringify({ items: data || [] }), { status: 200, headers: corsHeaders() });
+      return new Response(JSON.stringify({ items: data || [] }), { status: 200, headers: corsHeaders(req) });
     }
 
     if (req.method === "GET") {
@@ -513,7 +534,7 @@ Deno.serve(async (req: Request) => {
       if (!brandId) {
         return new Response(
           JSON.stringify({ error: "brand_id is required" }),
-          { status: 400, headers: corsHeaders() }
+          { status: 400, headers: corsHeaders(req) }
         );
       }
 
@@ -531,14 +552,14 @@ Deno.serve(async (req: Request) => {
           .maybeSingle();
 
         if (bySlug) {
-          return new Response(JSON.stringify({ item: bySlug }), { status: 200, headers: corsHeaders() });
+          return new Response(JSON.stringify({ item: bySlug }), { status: 200, headers: corsHeaders(req) });
         }
 
         query = query.eq("id", itemId);
       } else {
         return new Response(
           JSON.stringify({ error: "slug or id is required" }),
-          { status: 400, headers: corsHeaders() }
+          { status: 400, headers: corsHeaders(req) }
         );
       }
 
@@ -548,16 +569,16 @@ Deno.serve(async (req: Request) => {
       if (!data) {
         return new Response(
           JSON.stringify({ error: "Content not found" }),
-          { status: 404, headers: corsHeaders() }
+          { status: 404, headers: corsHeaders(req) }
         );
       }
 
-      return new Response(JSON.stringify({ item: data }), { status: 200, headers: corsHeaders() });
+      return new Response(JSON.stringify({ item: data }), { status: 200, headers: corsHeaders(req) });
     }
 
     return new Response(
       JSON.stringify({ error: "Not found" }),
-      { status: 404, headers: corsHeaders() }
+      { status: 404, headers: corsHeaders(req) }
     );
   } catch (error) {
     console.error("Error:", error);
@@ -567,7 +588,7 @@ Deno.serve(async (req: Request) => {
         error: error.message || "Internal server error",
         timestamp: new Date().toISOString()
       }),
-      { status: statusCode, headers: corsHeaders() }
+      { status: statusCode, headers: corsHeaders(req) }
     );
   }
 });
