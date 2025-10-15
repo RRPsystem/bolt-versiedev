@@ -90,6 +90,7 @@ De return URL verschilt per context waar de builder wordt geopend:
 | Pagina beheer | `https://app.com/#/brand/website/pages` |
 | Menu beheer | `https://app.com/#/brand/website/menu` |
 | Footer beheer | `https://app.com/#/brand/website/footer` |
+| Nieuwsbeheer | `https://app.com/#/brand/content/news` |
 
 ## Edge cases en foutafhandeling
 
@@ -173,6 +174,16 @@ https://www.ai-websitestudio.nl/?api=...&brand_id=...&token=...&page_id=123&retu
 ### Menu bewerken:
 ```
 https://www.ai-websitestudio.nl/?api=...&brand_id=...&token=...&menu_id=456&return_url=http://localhost:5173/%23/brand/website/menu#/mode/menu
+```
+
+### Nieuw nieuwsbericht maken:
+```
+https://www.ai-websitestudio.nl/?api=...&brand_id=...&token=...&content_type=news_items&return_url=http://localhost:5173/%23/brand/content/news#/mode/news
+```
+
+### Bestaand nieuwsbericht bewerken:
+```
+https://www.ai-websitestudio.nl/?api=...&brand_id=...&token=...&content_type=news_items&news_slug=my-article&return_url=http://localhost:5173/%23/brand/content/news#/mode/news
 ```
 
 **Let op**: De `#` in de return URL wordt URL-encoded als `%23`.
