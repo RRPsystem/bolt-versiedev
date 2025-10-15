@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Loader2, Bot, User } from 'lucide-react';
-import { db } from '../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 interface Message {
   id: string;
@@ -46,13 +46,25 @@ export function HelpBot() {
     setIsLoading(true);
 
     try {
-      const apiKey = await db.getOpenAIKey();
-
-      if (!apiKey) {
+      if (!supabase) {
         const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: 'Sorry, de OpenAI API key is niet ingesteld. Vraag de Operator om deze te configureren via API Settings.',
+          content: 'Sorry, er is een configuratiefout. Supabase is niet geïnitialiseerd.',
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: 'Sorry, je moet ingelogd zijn om de helpbot te gebruiken.',
           timestamp: new Date()
         };
         setMessages(prev => [...prev, errorMessage]);
@@ -70,14 +82,16 @@ export function HelpBot() {
         content: input.trim()
       });
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/helpbot-chat`;
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
         },
         body: JSON.stringify({
-          model: 'gpt-4',
           messages: [
             {
               role: 'system',
@@ -165,9 +179,7 @@ BEST PRACTICES:
 Geef altijd concrete stappen en verwijs naar de juiste menu items!`
             },
             ...conversationHistory
-          ],
-          temperature: 0.7,
-          max_tokens: 800
+          ]
         })
       });
 
