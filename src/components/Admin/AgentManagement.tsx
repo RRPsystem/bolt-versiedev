@@ -49,6 +49,14 @@ export function AgentManagement() {
   const [resetPasswordAgent, setResetPasswordAgent] = useState<Agent | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
+  const [editAgent, setEditAgent] = useState<Agent | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    brand_id: ''
+  });
+  const [editLoading, setEditLoading] = useState(false);
 
   useEffect(() => {
     loadAgents();
@@ -167,6 +175,67 @@ export function AgentManagement() {
     }
   };
 
+  const handleEditAgent = (agent: Agent) => {
+    setEditAgent(agent);
+    setEditFormData({
+      name: agent.name,
+      email: agent.email,
+      phone: agent.phone || '',
+      brand_id: agent.brand_id || ''
+    });
+  };
+
+  const handleUpdateAgent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editAgent) return;
+
+    setEditLoading(true);
+    setError('');
+
+    try {
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          name: editFormData.name,
+          phone: editFormData.phone,
+          brand_id: editFormData.brand_id
+        })
+        .eq('id', editAgent.id);
+
+      if (updateError) throw updateError;
+
+      alert('✅ Agent succesvol bijgewerkt!');
+      setEditAgent(null);
+      setEditFormData({ name: '', email: '', phone: '', brand_id: '' });
+      loadAgents();
+    } catch (err: any) {
+      setError(err.message || 'Failed to update agent');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleDeleteAgent = async (agent: Agent) => {
+    if (!confirm(`Weet je zeker dat je agent "${agent.name}" wilt verwijderen?\n\nLet op: Dit verwijdert ook de gebruikersaccount!`)) {
+      return;
+    }
+
+    try {
+      const { error: deleteError } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', agent.id);
+
+      if (deleteError) throw deleteError;
+
+      alert('✅ Agent succesvol verwijderd!');
+      loadAgents();
+    } catch (err: any) {
+      alert(`❌ Fout bij verwijderen: ${err.message}`);
+      console.error('Error deleting agent:', err);
+    }
+  };
+
   return (
     <div className="flex-1 bg-gray-50">
       <div className="bg-white border-b px-6 py-4">
@@ -257,10 +326,18 @@ export function AgentManagement() {
                         >
                           <Key size={16} className="text-orange-600" />
                         </button>
-                        <button className="p-1 hover:bg-gray-100 rounded">
+                        <button
+                          onClick={() => handleEditAgent(agent)}
+                          className="p-1 hover:bg-gray-100 rounded"
+                          title="Bewerk agent"
+                        >
                           <Edit size={16} className="text-blue-600" />
                         </button>
-                        <button className="p-1 hover:bg-gray-100 rounded">
+                        <button
+                          onClick={() => handleDeleteAgent(agent)}
+                          className="p-1 hover:bg-gray-100 rounded"
+                          title="Verwijder agent"
+                        >
                           <Trash2 size={16} className="text-red-600" />
                         </button>
                       </div>
@@ -495,6 +572,128 @@ export function AgentManagement() {
                   className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
                 >
                   {resetLoading ? 'Bezig...' : 'Wachtwoord Resetten'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editAgent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">Bewerk Agent</h2>
+              <button
+                onClick={() => {
+                  setEditAgent(null);
+                  setError('');
+                  setEditFormData({ name: '', email: '', phone: '', brand_id: '' });
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateAgent} className="p-6">
+              {error && (
+                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="flex items-center space-x-2">
+                      <User size={16} />
+                      <span>Name <span className="text-red-500">*</span></span>
+                    </div>
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                    placeholder="John Doe"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Mail size={16} />
+                      <span>Email</span>
+                    </div>
+                  </label>
+                  <input
+                    type="email"
+                    value={editFormData.email}
+                    disabled
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Email kan niet worden aangepast</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Phone size={16} />
+                      <span>Phone</span>
+                    </div>
+                  </label>
+                  <input
+                    type="tel"
+                    value={editFormData.phone}
+                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    placeholder="+31 20 123 4567"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Building2 size={16} />
+                      <span>Brand <span className="text-red-500">*</span></span>
+                    </div>
+                  </label>
+                  <select
+                    value={editFormData.brand_id}
+                    onChange={(e) => setEditFormData({ ...editFormData, brand_id: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Select a brand...</option>
+                    {brands.map((brand) => (
+                      <option key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-4 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditAgent(null);
+                    setError('');
+                    setEditFormData({ name: '', email: '', phone: '', brand_id: '' });
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Annuleren
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50"
+                >
+                  {editLoading ? 'Bijwerken...' : 'Wijzigingen Opslaan'}
                 </button>
               </div>
             </form>
