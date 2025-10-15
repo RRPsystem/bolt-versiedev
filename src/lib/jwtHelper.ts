@@ -20,7 +20,17 @@ export interface GenerateJWTResponse {
 export async function generateBuilderJWT(
   brandId: string,
   userId: string,
-  scopes: string[] = ['pages:write', 'layouts:write', 'menus:write'],
+  scopes: string[] = [
+    'pages:read',
+    'pages:write',
+    'layouts:read',
+    'layouts:write',
+    'menus:read',
+    'menus:write',
+    'content:read',
+    'content:write',
+    'news:write'
+  ],
   options: {
     pageId?: string;
     slug?: string;

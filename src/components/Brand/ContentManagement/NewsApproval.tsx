@@ -165,13 +165,25 @@ export function NewsApproval() {
 
     try {
       console.log('Opening builder for news item:', assignment.news_item);
-      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write'], {
-        slug: assignment.news_item.slug,
-        contentType: 'news_items',
-        authorType: 'brand',
-        authorId: user.id,
-        mode: 'news',
-      });
+      const jwtResponse = await generateBuilderJWT(
+        user.brand_id,
+        user.id,
+        [
+          'pages:read',
+          'pages:write',
+          'content:read',
+          'content:write',
+          'news:write'
+        ],
+        {
+          newsSlug: assignment.news_item.slug,
+          contentType: 'news_items',
+          authorType: 'brand',
+          authorId: user.id,
+          mode: 'news',
+          forceBrandId: true
+        }
+      );
 
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');
