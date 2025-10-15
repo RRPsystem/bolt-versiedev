@@ -197,6 +197,44 @@ export function AdminDashboard() {
     window.open('https://travelstudio.travelstudio-accept.bookunited.com/login', '_blank');
   };
 
+  const handleOpenNewsBuilder = async () => {
+    try {
+      if (!user?.id) {
+        alert('User not authenticated');
+        return;
+      }
+
+      const { generateBuilderJWT } = await import('../../lib/jwtHelper');
+
+      const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], {
+        forceBrandId: true,
+        authorType: 'admin',
+        authorId: user.id,
+        mode: 'news',
+      });
+
+      const builderBaseUrl = 'https://www.ai-websitestudio.nl';
+      const apiBaseUrl = jwtResponse.api_url || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+      const apiKey = jwtResponse.api_key || import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const params = new URLSearchParams({
+        api: apiBaseUrl,
+        brand_id: SYSTEM_BRAND_ID,
+        token: jwtResponse.token,
+        apikey: apiKey,
+        content_type: 'news_items',
+        mode: 'news'
+      });
+
+      const deeplink = `${builderBaseUrl}/?${params.toString()}#/mode/news`;
+      console.log('🔗 Opening news builder deeplink:', deeplink);
+      window.location.href = deeplink;
+    } catch (err) {
+      console.error('Error generating deeplink:', err);
+      alert('Failed to generate builder link');
+    }
+  };
+
   if (showBrandForm) {
     return (
       <div className="flex min-h-screen bg-gray-50">
@@ -412,7 +450,13 @@ export function AdminDashboard() {
                     return (
                       <li key={item.id}>
                         <button
-                          onClick={() => setActiveSection(item.id)}
+                          onClick={() => {
+                            if (item.id === 'admin-news') {
+                              handleOpenNewsBuilder();
+                            } else {
+                              setActiveSection(item.id);
+                            }
+                          }}
                           className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors text-sm ${
                             activeSection === item.id
                               ? 'bg-slate-700 text-white'
