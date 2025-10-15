@@ -8,6 +8,7 @@ import { UserActivity } from './UserActivity';
 import { OAuthManagement } from './OAuthManagement';
 import { APISettings } from './APISettings';
 import { ChatbotManagement } from './ChatbotManagement';
+import { MonitoringDashboard } from './MonitoringDashboard';
 import { HelpBot } from '../shared/HelpBot';
 import {
   Settings,
@@ -25,7 +26,8 @@ import {
   TrendingUp,
   Clock,
   Map,
-  MessageCircle
+  MessageCircle,
+  Bell
 } from 'lucide-react';
 import RoadmapManagement from './RoadmapManagement';
 
@@ -65,6 +67,7 @@ export function OperatorDashboard() {
 
   const sidebarItems = [
     { id: 'overview', label: 'System Overview', icon: BarChart3 },
+    { id: 'monitoring', label: 'Monitoring & Alerts', icon: Bell },
     { id: 'api-settings', label: 'API Settings', icon: Key },
     { id: 'gpt-management', label: 'GPT Management', icon: Bot },
     { id: 'oauth-management', label: 'OAuth Apps', icon: Settings },
@@ -132,6 +135,7 @@ export function OperatorDashboard() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 {activeSection === 'overview' && 'System Overview'}
+                {activeSection === 'monitoring' && 'Monitoring & Alerts'}
                 {activeSection === 'api-settings' && 'API Settings'}
                 {activeSection === 'gpt-management' && 'GPT Management'}
                 {activeSection === 'oauth-management' && 'OAuth App Management'}
@@ -143,6 +147,7 @@ export function OperatorDashboard() {
               </h1>
               <p className="text-gray-600 mt-1">
                 {activeSection === 'overview' && 'Monitor system performance and key metrics'}
+                {activeSection === 'monitoring' && 'Real-time error tracking, alerts, and performance monitoring'}
                 {activeSection === 'api-settings' && 'Configure API keys and external service credentials'}
                 {activeSection === 'gpt-management' && 'Configure custom GPTs and content generation'}
                 {activeSection === 'oauth-management' && 'Manage social media OAuth apps and credentials'}
@@ -310,6 +315,7 @@ export function OperatorDashboard() {
             </div>
           )}
 
+          {activeSection === 'monitoring' && <MonitoringDashboard />}
           {activeSection === 'api-settings' && <APISettings />}
           {activeSection === 'gpt-management' && <GPTManagement />}
           {activeSection === 'oauth-management' && <OAuthManagement />}
