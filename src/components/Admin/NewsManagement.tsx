@@ -84,17 +84,7 @@ export function NewsManagement() {
       const apiKey = jwtResponse.api_key || import.meta.env.VITE_SUPABASE_ANON_KEY;
       const returnUrl = `${window.location.origin}/#/admin/news`;
 
-      const params = new URLSearchParams({
-        api: apiBaseUrl,
-        brand_id: SYSTEM_BRAND_ID,
-        token: jwtResponse.token,
-        apikey: apiKey,
-        content_type: 'news_items',
-        mode: 'news',
-        return_url: returnUrl
-      });
-
-      const deeplink = `${builderBaseUrl}/?${params.toString()}#/mode/news`;
+      const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&content_type=news_items&return_url=${encodeURIComponent(returnUrl)}&mode=news#/mode/news`;
       console.log('🔗 Opening news builder deeplink:', deeplink);
       window.open(deeplink, '_blank');
     } catch (err) {
@@ -123,18 +113,7 @@ export function NewsManagement() {
       const apiKey = jwtResponse.api_key || import.meta.env.VITE_SUPABASE_ANON_KEY;
       const returnUrl = `${window.location.origin}/#/admin/news`;
 
-      const params = new URLSearchParams({
-        api: apiBaseUrl,
-        brand_id: SYSTEM_BRAND_ID,
-        token: jwtResponse.token,
-        apikey: apiKey,
-        content_type: 'news_items',
-        news_slug: news.slug,
-        mode: 'news',
-        return_url: returnUrl
-      });
-
-      const deeplink = `${builderBaseUrl}/?${params.toString()}#/mode/news`;
+      const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&content_type=news_items&news_slug=${news.slug}&return_url=${encodeURIComponent(returnUrl)}&mode=news#/mode/news`;
       console.log('🔗 Opening news edit deeplink:', deeplink);
       window.open(deeplink, '_blank');
     } catch (err) {
