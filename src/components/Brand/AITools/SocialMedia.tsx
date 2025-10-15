@@ -152,7 +152,7 @@ export function SocialMedia() {
       const apiKey = await db.getOpenAIKey();
 
       if (!apiKey) {
-        alert('OpenAI API key is niet ingesteld. Vraag de operator om deze in te stellen.');
+        alert('OpenAI API key is niet ingesteld. Vraag de operator om deze in te stellen in het Operator Dashboard onder GPT Management.');
         setIsGenerating(false);
         return;
       }
@@ -160,6 +160,13 @@ export function SocialMedia() {
       const platformsText = selectedPlatforms.length > 0
         ? selectedPlatforms.join(', ')
         : 'social media';
+
+      let charLimit = '';
+      if (selectedPlatforms.includes('twitter')) {
+        charLimit = 'Let op: Twitter heeft een limiet van 280 karakters.';
+      } else if (selectedPlatforms.includes('instagram')) {
+        charLimit = 'Instagram posts kunnen langer zijn maar eerste 125 karakters zijn het belangrijkst.';
+      }
 
       const prompt = `
 Je bent een social media content creator voor een reisorganisatie.
@@ -170,14 +177,16 @@ ${brandVoice?.target_audience ? `Doelgroep: ${brandVoice.target_audience}` : ''}
 Schrijf een aantrekkelijke social media post over: ${aiTopic}
 
 Voor platforms: ${platformsText}
+${charLimit}
 
 ${brandVoice?.always_include ? `Zorg dat je dit altijd includeert: ${brandVoice.always_include}` : ''}
 
 Maak de post:
-- Kort en krachtig (max 280 karakters voor Twitter)
 - Engaging en persoonlijk
-- Met relevante hashtags als dat past
+- Met relevante hashtags die passen bij het onderwerp (2-5 hashtags)
 - Zonder aanhalingstekens eromheen
+- Een call-to-action aan het einde
+- Gebruik emoji's waar passend voor meer engagement
 
 Geef ALLEEN de post tekst terug, zonder extra uitleg.
 `.trim();
@@ -189,19 +198,28 @@ Geef ALLEEN de post tekst terug, zonder extra uitleg.
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'gpt-4',
+          model: 'gpt-4o-mini',
           messages: [
-            { role: 'system', content: 'Je bent een social media expert die engaging content maakt voor reisorganisaties.' },
+            { role: 'system', content: 'Je bent een social media expert die engaging, authentieke content maakt voor reisorganisaties. Je gebruikt emoji\'s, hashtags en een conversational tone om maximale engagement te creëren.' },
             { role: 'user', content: prompt }
           ],
-          temperature: 0.8,
-          max_tokens: 300
+          temperature: 0.9,
+          max_tokens: 500
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || 'Failed to generate content');
+
+        if (response.status === 401) {
+          throw new Error('Ongeldige OpenAI API key. Controleer de key in het Operator Dashboard.');
+        } else if (response.status === 429) {
+          throw new Error('Rate limit bereikt. Probeer het over een paar minuten opnieuw.');
+        } else if (response.status === 500) {
+          throw new Error('OpenAI server fout. Probeer het over een paar minuten opnieuw.');
+        }
+
+        throw new Error(errorData.error?.message || 'Fout bij het genereren van content');
       }
 
       const data = await response.json();
