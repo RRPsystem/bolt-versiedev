@@ -31,10 +31,13 @@ export function BrandSettings() {
 
   useEffect(() => {
     loadBrandData();
-  }, [user?.brand_id]);
+  }, [user]);
 
   const loadBrandData = async () => {
-    if (!user?.brand_id) return;
+    if (!user?.brand_id) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -42,7 +45,7 @@ export function BrandSettings() {
         .from('brands')
         .select('*')
         .eq('id', user.brand_id)
-        .single();
+        .maybeSingle();
 
       if (fetchError) throw fetchError;
 
