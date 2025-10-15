@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Clock, User, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react';
+import { MessageCircle, Clock, User, TrendingUp, AlertCircle, RefreshCw, Settings, Save } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface Conversation {
@@ -24,6 +24,9 @@ export function ChatbotManagement() {
   const [loading, setLoading] = useState(true);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [filter, setFilter] = useState<'all' | 'operator' | 'admin' | 'brand' | 'agent'>('all');
+  const [showSystemPrompt, setShowSystemPrompt] = useState(false);
+  const [systemPrompt, setSystemPrompt] = useState('');
+  const [savingPrompt, setSavingPrompt] = useState(false);
 
   const loadConversations = async () => {
     setLoading(true);
@@ -65,8 +68,56 @@ export function ChatbotManagement() {
     }
   };
 
+  const loadSystemPrompt = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('chatbot_settings')
+        .select('system_prompt')
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        setSystemPrompt(data.system_prompt);
+      }
+    } catch (error) {
+      console.error('Error loading system prompt:', error);
+    }
+  };
+
+  const saveSystemPrompt = async () => {
+    setSavingPrompt(true);
+    try {
+      const { data: settings } = await supabase
+        .from('chatbot_settings')
+        .select('id')
+        .limit(1)
+        .maybeSingle();
+
+      if (settings) {
+        const { error } = await supabase
+          .from('chatbot_settings')
+          .update({
+            system_prompt: systemPrompt,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', settings.id);
+
+        if (error) throw error;
+      }
+
+      alert('System prompt succesvol opgeslagen!');
+    } catch (error) {
+      console.error('Error saving system prompt:', error);
+      alert('Fout bij opslaan van system prompt');
+    } finally {
+      setSavingPrompt(false);
+    }
+  };
+
   useEffect(() => {
     loadConversations();
+    loadSystemPrompt();
   }, [filter]);
 
   const formatDate = (dateString: string) => {
@@ -97,13 +148,22 @@ export function ChatbotManagement() {
           <h1 className="text-3xl font-bold">Chatbot Management</h1>
           <p className="text-gray-600 mt-1">Bekijk en analyseer helpbot conversaties</p>
         </div>
-        <button
-          onClick={loadConversations}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Ververs
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowSystemPrompt(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+            System Prompt Bewerken
+          </button>
+          <button
+            onClick={loadConversations}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Ververs
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -291,6 +351,67 @@ export function ChatbotManagement() {
                   {selectedConversation.bot_response}
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSystemPrompt && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={() => setShowSystemPrompt(false)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">System Prompt Bewerken</h2>
+                <button
+                  onClick={() => setShowSystemPrompt(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                Hier kun je de system prompt aanpassen die de chatbot gebruikt.
+                Zorg ervoor dat alle belangrijke informatie behouden blijft.
+              </p>
+            </div>
+            <div className="p-6 flex-1 overflow-y-auto">
+              <textarea
+                value={systemPrompt}
+                onChange={(e) => setSystemPrompt(e.target.value)}
+                className="w-full h-[500px] p-4 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="System prompt..."
+              />
+            </div>
+            <div className="p-6 border-t border-gray-100 flex justify-end gap-2">
+              <button
+                onClick={() => setShowSystemPrompt(false)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Annuleren
+              </button>
+              <button
+                onClick={saveSystemPrompt}
+                disabled={savingPrompt}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+              >
+                {savingPrompt ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Opslaan...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Opslaan
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

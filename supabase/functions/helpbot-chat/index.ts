@@ -87,6 +87,19 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    const { data: chatbotSettings } = await supabase
+      .from('chatbot_settings')
+      .select('system_prompt')
+      .limit(1)
+      .maybeSingle();
+
+    const systemPrompt = chatbotSettings?.system_prompt || messages.find(m => m.role === 'system')?.content || '';
+
+    const messagesWithSystemPrompt = messages.filter(m => m.role !== 'system');
+    if (systemPrompt) {
+      messagesWithSystemPrompt.unshift({ role: 'system', content: systemPrompt });
+    }
+
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -95,7 +108,7 @@ Deno.serve(async (req: Request) => {
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
-        messages: messages,
+        messages: messagesWithSystemPrompt,
         temperature: 0.7,
         max_tokens: 1000,
       }),
