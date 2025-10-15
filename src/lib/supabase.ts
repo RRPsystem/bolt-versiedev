@@ -464,11 +464,15 @@ export const db = {
   },
 
   async getOpenAIKey(): Promise<string | null> {
+    console.log('🔑 getOpenAIKey called');
+
     if (!supabase) {
+      console.log('⚠️ No supabase client');
       return import.meta.env.VITE_OPENAI_API_KEY || null;
     }
 
     try {
+      console.log('🔄 Fetching OpenAI key from database...');
       const { data, error } = await supabase
         .from('api_settings')
         .select('api_key, is_active')
@@ -476,18 +480,27 @@ export const db = {
         .eq('service_name', 'OpenAI API')
         .maybeSingle();
 
+      console.log('📥 Database response:', {
+        hasData: !!data,
+        isActive: data?.is_active,
+        hasApiKey: !!data?.api_key,
+        error: error
+      });
+
       if (error) {
-        console.warn('Could not fetch OpenAI key from database:', error);
+        console.error('❌ Could not fetch OpenAI key from database:', error);
         return import.meta.env.VITE_OPENAI_API_KEY || null;
       }
 
       if (data?.is_active && data?.api_key) {
+        console.log('✅ OpenAI key found and active');
         return data.api_key;
       }
 
+      console.log('⚠️ No active OpenAI key in database');
       return import.meta.env.VITE_OPENAI_API_KEY || null;
     } catch (err) {
-      console.warn('Error fetching OpenAI key:', err);
+      console.error('❌ Error fetching OpenAI key:', err);
       return import.meta.env.VITE_OPENAI_API_KEY || null;
     }
   }
