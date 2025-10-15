@@ -122,7 +122,11 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
         console.log('Using URL:', jwtResponse.url);
         window.open(jwtResponse.url, '_blank');
       } else {
-        const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token, { pageId });
+        const builderBaseUrl = 'https://www.ai-websitestudio.nl';
+        const apiBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+        const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const encodedReturnUrl = encodeURIComponent(returnUrl.replace('#', '%23'));
+        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${brandId}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&page_id=${pageId}&return_url=${encodedReturnUrl}#/mode/page`;
         console.log('Generated deeplink:', deeplink);
         const newWindow = window.open(deeplink, '_blank');
         if (!newWindow) {
@@ -147,7 +151,11 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');
       } else {
-        const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token);
+        const builderBaseUrl = 'https://www.ai-websitestudio.nl';
+        const apiBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+        const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const encodedReturnUrl = encodeURIComponent(returnUrl.replace('#', '%23'));
+        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${brandId}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&return_url=${encodedReturnUrl}#/mode/page`;
         window.open(deeplink, '_blank');
       }
     } catch (error) {
