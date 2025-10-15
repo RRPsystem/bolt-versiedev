@@ -1,17 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { db } from '../../lib/supabase';
 import { TravelBro } from '../Brand/AITools/TravelBro';
 import { SocialMedia } from '../Brand/AITools/SocialMedia';
 import { AIContentGenerator } from '../Brand/AIContentGenerator';
 import AgentProfileEdit from './AgentProfileEdit';
 import { HelpBot } from '../shared/HelpBot';
-import { Bot, User, ChevronDown, ChevronRight, Share2, Plane, Sparkles, Import as FileImport, Map } from 'lucide-react';
+import { Bot, User, ChevronDown, ChevronRight, Share2, Plane, Sparkles, Import as FileImport, Map, ArrowRight, Bell } from 'lucide-react';
 import RoadmapBoard from '../Brand/RoadmapBoard';
 
 export function AgentDashboard() {
   const { user, signOut } = useAuth();
-  const [activeSection, setActiveSection] = useState('profile');
+  const [activeSection, setActiveSection] = useState('dashboard');
   const [showAISubmenu, setShowAISubmenu] = useState(false);
+  const [agentData, setAgentData] = useState<any>(null);
+  const [newRoadmapCount, setNewRoadmapCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadAgentData();
+    loadRoadmapNotifications();
+  }, [user]);
+
+  const loadAgentData = async () => {
+    if (!user?.id) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await db.supabase
+        .from('agents')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (data) {
+        setAgentData(data);
+      }
+    } catch (error) {
+      console.error('Error loading agent data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadRoadmapNotifications = async () => {
+    try {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const { data, error } = await db.supabase
+        .from('roadmap_items')
+        .select('id')
+        .gte('created_at', oneWeekAgo.toISOString());
+
+      if (data) {
+        setNewRoadmapCount(data.length);
+      }
+    } catch (error) {
+      console.error('Error loading roadmap notifications:', error);
+    }
+  };
 
   React.useEffect(() => {
     if (['ai-content', 'ai-travelbro', 'ai-import'].includes(activeSection)) {
@@ -20,6 +68,7 @@ export function AgentDashboard() {
   }, [activeSection]);
 
   const sidebarItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: Sparkles },
     { id: 'profile', label: 'Profiel', icon: User },
     { id: 'social-media', label: 'Social Media', icon: Share2 },
   ];
@@ -33,6 +82,37 @@ export function AgentDashboard() {
   const handleTravelStudioClick = () => {
     window.open('https://travelstudio.travelstudio-accept.bookunited.com/login', '_blank');
   };
+
+  const quickActions = [
+    {
+      title: 'Profiel Bewerken',
+      description: 'Update je foto, bio en contactgegevens',
+      icon: User,
+      color: 'from-blue-500 to-blue-600',
+      action: () => setActiveSection('profile')
+    },
+    {
+      title: 'Social Media',
+      description: 'Beheer je social media posts',
+      icon: Share2,
+      color: 'from-pink-500 to-pink-600',
+      action: () => setActiveSection('social-media')
+    },
+    {
+      title: 'Content Generator',
+      description: 'Genereer reiscontent met AI',
+      icon: Sparkles,
+      color: 'from-purple-500 to-purple-600',
+      action: () => setActiveSection('ai-content')
+    },
+    {
+      title: 'TravelBRO',
+      description: 'Chat met je AI reisassistent',
+      icon: Bot,
+      color: 'from-orange-500 to-orange-600',
+      action: () => setActiveSection('ai-travelbro')
+    }
+  ];
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -125,14 +205,21 @@ export function AgentDashboard() {
         <div className="p-4 border-t border-gray-700 space-y-2">
           <button
             onClick={() => setActiveSection('roadmap')}
-            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
               activeSection === 'roadmap'
                 ? 'bg-gray-700 text-white'
                 : 'text-gray-300 hover:text-white hover:bg-gray-700'
             }`}
           >
-            <Map size={20} />
-            <span>Roadmap</span>
+            <div className="flex items-center space-x-3">
+              <Map size={20} />
+              <span>Roadmap</span>
+            </div>
+            {newRoadmapCount > 0 && (
+              <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {newRoadmapCount}
+              </span>
+            )}
           </button>
           <button
             onClick={signOut}
@@ -148,6 +235,7 @@ export function AgentDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
+                {activeSection === 'dashboard' && 'Dashboard'}
                 {activeSection === 'profile' && 'Profiel'}
                 {activeSection === 'social-media' && 'Social Media'}
                 {activeSection === 'ai-content' && 'Travel Content Generator'}
@@ -156,6 +244,7 @@ export function AgentDashboard() {
                 {activeSection === 'roadmap' && 'Roadmap'}
               </h1>
               <p className="text-gray-600 mt-1">
+                {activeSection === 'dashboard' && 'Welkom terug bij je agent dashboard'}
                 {activeSection === 'profile' && 'Beheer je profiel en instellingen'}
                 {activeSection === 'social-media' && 'Beheer je social media accounts en posts'}
                 {activeSection === 'ai-content' && 'Generate travel content with AI'}
@@ -168,9 +257,105 @@ export function AgentDashboard() {
         </header>
 
         <main className="flex-1 overflow-auto">
+          {activeSection === 'dashboard' && (
+            <div className="p-6">
+              {loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#ff7700' }}></div>
+                </div>
+              ) : (
+                <div className="max-w-7xl mx-auto">
+                  <div className="mb-8">
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 text-white shadow-lg">
+                      <h2 className="text-3xl font-bold mb-2">Hallo, {agentData?.first_name || 'Agent'}!</h2>
+                      <p className="text-orange-100">Klaar om je klanten te helpen met hun droomreis?</p>
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Snelkoppelingen</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      {quickActions.map((action, index) => {
+                        const Icon = action.icon;
+                        return (
+                          <button
+                            key={index}
+                            onClick={action.action}
+                            className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+                          >
+                            <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                              <Icon className="w-7 h-7 text-white" />
+                            </div>
+                            <h4 className="font-semibold text-gray-900 mb-2">{action.title}</h4>
+                            <p className="text-sm text-gray-600 mb-3">{action.description}</p>
+                            <div className="flex items-center text-sm font-medium" style={{ color: '#ff7700' }}>
+                              Start <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {agentData && (
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="font-semibold text-gray-900">Profiel Status</h4>
+                          <div className={`w-3 h-3 rounded-full ${agentData.profile_image_url ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Profielfoto</span>
+                            <span className="font-medium">{agentData.profile_image_url ? '✓' : '–'}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Bio</span>
+                            <span className="font-medium">{agentData.bio ? '✓' : '–'}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Specialisaties</span>
+                            <span className="font-medium">{agentData.specializations?.length > 0 ? '✓' : '–'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                        <h4 className="font-semibold text-gray-900 mb-4">Contact</h4>
+                        <div className="space-y-3">
+                          <div className="text-sm">
+                            <span className="text-gray-600">Email</span>
+                            <p className="font-medium text-gray-900 truncate">{agentData.contact_email || user?.email}</p>
+                          </div>
+                          {agentData.phone && (
+                            <div className="text-sm">
+                              <span className="text-gray-600">Telefoon</span>
+                              <p className="font-medium text-gray-900">{agentData.phone}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                        <h4 className="font-semibold text-gray-900 mb-4">Reviews</h4>
+                        <div className="text-center">
+                          <div className="text-3xl font-bold text-gray-900 mb-1">
+                            {agentData.average_rating ? agentData.average_rating.toFixed(1) : '–'}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {agentData.review_count || 0} reviews
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {activeSection === 'profile' && <AgentProfileEdit />}
           {activeSection === 'social-media' && <SocialMedia />}
-
           {activeSection === 'ai-content' && <AIContentGenerator />}
           {activeSection === 'ai-travelbro' && <TravelBro />}
           {activeSection === 'roadmap' && <RoadmapBoard />}

@@ -12,7 +12,7 @@ import { TravelBro } from './AITools/TravelBro';
 import { SocialMedia } from './AITools/SocialMedia';
 import { BrandSettings } from './BrandSettings';
 import { HelpBot } from '../shared/HelpBot';
-import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe, Newspaper, MapPin, Plane, Share2, Map } from 'lucide-react';
+import { Users, Settings, Plus, Bot, Sparkles, Import as FileImport, ChevronDown, ChevronRight, LayoutGrid as Layout, FileText, Globe, Newspaper, MapPin, Plane, Share2, Map, ArrowRight } from 'lucide-react';
 import RoadmapBoard from './RoadmapBoard';
 
 export function BrandDashboard() {
@@ -22,7 +22,60 @@ export function BrandDashboard() {
   const [showWebsiteSubmenu, setShowWebsiteSubmenu] = useState(false);
   const [showContentSubmenu, setShowContentSubmenu] = useState(false);
   const [websites, setWebsites] = useState<any[]>([]);
+  const [brandData, setBrandData] = useState<any>(null);
+  const [stats, setStats] = useState({ pages: 0, newsItems: 0, agents: 0 });
+  const [newRoadmapCount, setNewRoadmapCount] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeSection === 'dashboard') {
+      loadDashboardData();
+    }
+  }, [activeSection, user?.brand_id]);
+
+  const loadDashboardData = async () => {
+    if (!user?.brand_id) return;
+    setLoading(true);
+    try {
+      const [brandResult, pagesResult, newsResult, agentsResult] = await Promise.all([
+        db.supabase.from('brands').select('*').eq('id', user.brand_id).maybeSingle(),
+        db.supabase.from('website_pages').select('id', { count: 'exact' }).eq('brand_id', user.brand_id),
+        db.supabase.from('news_items').select('id', { count: 'exact' }).eq('brand_id', user.brand_id),
+        db.supabase.from('agents').select('id', { count: 'exact' }).eq('brand_id', user.brand_id)
+      ]);
+
+      if (brandResult.data) setBrandData(brandResult.data);
+      setStats({
+        pages: pagesResult.count || 0,
+        newsItems: newsResult.count || 0,
+        agents: agentsResult.count || 0
+      });
+
+      loadRoadmapNotifications();
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadRoadmapNotifications = async () => {
+    try {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const { data, error } = await db.supabase
+        .from('roadmap_items')
+        .select('id')
+        .gte('created_at', oneWeekAgo.toISOString());
+
+      if (data) {
+        setNewRoadmapCount(data.length);
+      }
+    } catch (error) {
+      console.error('Error loading roadmap notifications:', error);
+    }
+  };
 
   const loadWebsites = async () => {
     if (!user?.brand_id) return;
@@ -54,7 +107,7 @@ export function BrandDashboard() {
   }, [activeSection, user?.brand_id]);
 
   const sidebarItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Settings },
+    { id: 'dashboard', label: 'Dashboard', icon: Sparkles },
     { id: 'agents', label: 'Agents', icon: Users },
   ];
 
@@ -82,9 +135,54 @@ export function BrandDashboard() {
   const handleTravelStudioClick = () => {
     window.open('https://travelstudio.travelstudio-accept.bookunited.com/login', '_blank');
   };
+
+  const quickActions = [
+    {
+      title: 'Nieuwe Pagina',
+      description: 'Maak een nieuwe website pagina',
+      icon: Plus,
+      color: 'from-blue-500 to-blue-600',
+      action: () => setActiveSection('new-page')
+    },
+    {
+      title: 'AI Content',
+      description: 'Genereer content met AI',
+      icon: Sparkles,
+      color: 'from-purple-500 to-purple-600',
+      action: () => setActiveSection('ai-content')
+    },
+    {
+      title: 'Social Media',
+      description: 'Beheer je sociale media',
+      icon: Share2,
+      color: 'from-pink-500 to-pink-600',
+      action: () => setActiveSection('ai-social')
+    },
+    {
+      title: 'TravelBRO',
+      description: 'Chat met je AI assistent',
+      icon: Bot,
+      color: 'from-orange-500 to-orange-600',
+      action: () => setActiveSection('ai-travelbro')
+    },
+    {
+      title: 'Nieuws Beheer',
+      description: 'Bekijk en publiceer nieuws',
+      icon: Newspaper,
+      color: 'from-green-500 to-green-600',
+      action: () => setActiveSection('nieuwsbeheer')
+    },
+    {
+      title: 'Templates',
+      description: 'Kies uit professionele templates',
+      icon: Layout,
+      color: 'from-indigo-500 to-indigo-600',
+      action: () => setActiveSection('template-gallery')
+    }
+  ];
+
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
       <div className="w-64 bg-gray-800 text-white flex flex-col">
         <div className="p-4 border-b border-gray-700">
           <div className="flex items-center space-x-2">
@@ -119,7 +217,6 @@ export function BrandDashboard() {
               );
             })}
 
-            {/* Website Management Menu */}
             <li>
               <button
                 onClick={() => setShowWebsiteSubmenu(!showWebsiteSubmenu)}
@@ -160,7 +257,6 @@ export function BrandDashboard() {
               )}
             </li>
 
-            {/* Content Menu */}
             <li>
               <button
                 onClick={() => setShowContentSubmenu(!showContentSubmenu)}
@@ -201,7 +297,6 @@ export function BrandDashboard() {
               )}
             </li>
 
-            {/* AI Tools Menu */}
             <li>
               <button
                 onClick={() => setShowAISubmenu(!showAISubmenu)}
@@ -242,7 +337,6 @@ export function BrandDashboard() {
               )}
             </li>
 
-            {/* Travel Studio Link */}
             <li>
               <button
                 onClick={handleTravelStudioClick}
@@ -269,14 +363,21 @@ export function BrandDashboard() {
           </button>
           <button
             onClick={() => setActiveSection('roadmap')}
-            className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
               activeSection === 'roadmap'
                 ? 'bg-gray-700 text-white'
                 : 'text-gray-300 hover:text-white hover:bg-gray-700'
             }`}
           >
-            <Map size={20} />
-            <span>Roadmap</span>
+            <div className="flex items-center space-x-3">
+              <Map size={20} />
+              <span>Roadmap</span>
+            </div>
+            {newRoadmapCount > 0 && (
+              <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {newRoadmapCount}
+              </span>
+            )}
           </button>
           <button
             onClick={signOut}
@@ -287,9 +388,7 @@ export function BrandDashboard() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -310,8 +409,8 @@ export function BrandDashboard() {
                 {activeSection === 'roadmap' && 'Roadmap'}
               </h1>
               <p className="text-gray-600 mt-1">
+                {activeSection === 'dashboard' && 'Welkom terug bij je brand dashboard'}
                 {activeSection === 'websites' && 'Manage your travel websites'}
-                {activeSection === 'dashboard' && 'Overview of your brand performance'}
                 {activeSection === 'pages' && 'Beheer alle pagina\'s van je website'}
                 {activeSection === 'menus' && 'Beheer menu\'s en hun structuur'}
                 {activeSection === 'footers' && 'Beheer footer layouts voor je website'}
@@ -322,7 +421,7 @@ export function BrandDashboard() {
                 {activeSection === 'roadmap' && 'Vote on features and track development progress'}
               </p>
             </div>
-            
+
             {activeSection === 'websites' && (
               <button className="text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-orange-700 transition-colors" style={{ backgroundColor: '#ff7700' }}>
                 <Plus size={16} />
@@ -332,8 +431,77 @@ export function BrandDashboard() {
           </div>
         </header>
 
-        {/* Content */}
         <main className="flex-1 overflow-auto">
+          {activeSection === 'dashboard' && (
+            <div className="p-6">
+              {loading ? (
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#ff7700' }}></div>
+                </div>
+              ) : (
+                <div className="max-w-7xl mx-auto">
+                  <div className="mb-8">
+                    <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 text-white shadow-lg">
+                      <h2 className="text-3xl font-bold mb-2">Welkom, {brandData?.name || 'Brand'}!</h2>
+                      <p className="text-orange-100">Bouw en beheer je reiswebsite met krachtige AI tools</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-gray-600">Website Pagina's</h4>
+                        <FileText className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <p className="text-3xl font-bold text-gray-900">{stats.pages}</p>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-gray-600">Nieuwsberichten</h4>
+                        <Newspaper className="w-5 h-5 text-green-500" />
+                      </div>
+                      <p className="text-3xl font-bold text-gray-900">{stats.newsItems}</p>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-gray-600">Agenten</h4>
+                        <Users className="w-5 h-5 text-purple-500" />
+                      </div>
+                      <p className="text-3xl font-bold text-gray-900">{stats.agents}</p>
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Snelkoppelingen</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {quickActions.map((action, index) => {
+                        const Icon = action.icon;
+                        return (
+                          <button
+                            key={index}
+                            onClick={action.action}
+                            className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100"
+                          >
+                            <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                              <Icon className="w-7 h-7 text-white" />
+                            </div>
+                            <h4 className="font-semibold text-gray-900 mb-2">{action.title}</h4>
+                            <p className="text-sm text-gray-600 mb-3">{action.description}</p>
+                            <div className="flex items-center text-sm font-medium" style={{ color: '#ff7700' }}>
+                              Start <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {activeSection === 'template-gallery' && user?.brand_id && (
             <TemplateGallery
               brandId={user.brand_id}
@@ -344,22 +512,11 @@ export function BrandDashboard() {
           {activeSection === 'pages' && <PageManagementView />}
           {activeSection === 'menus' && <MenuBuilderView />}
           {activeSection === 'footers' && <FooterBuilderView />}
-
-          {/* Brand Settings */}
           {activeSection === 'settings' && <BrandSettings />}
-
-          {/* Content Management */}
           {activeSection === 'nieuwsbeheer' && <NewsApproval />}
-
-          {/* AI Tools Content */}
-          {activeSection === 'ai-content' && (
-            <AIContentGenerator />
-          )}
-
+          {activeSection === 'ai-content' && <AIContentGenerator />}
           {activeSection === 'ai-travelbro' && <TravelBro />}
-
           {activeSection === 'ai-social' && <SocialMedia />}
-
           {activeSection === 'roadmap' && <RoadmapBoard />}
 
           {activeSection === 'ai-import' && (
@@ -372,18 +529,6 @@ export function BrandDashboard() {
               <button className="text-white px-6 py-3 rounded-lg font-medium transition-colors hover:bg-orange-700" style={{ backgroundColor: '#ff7700' }}>
                 Start Import Process
               </button>
-            </div>
-          )}
-          
-          {activeSection === 'dashboard' && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff7700, #ffaa44)' }}>
-                  <Settings className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Brand Dashboard</h2>
-                <p className="text-gray-600">Welkom bij het Brand Dashboard</p>
-              </div>
             </div>
           )}
 
