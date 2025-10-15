@@ -136,58 +136,6 @@ export function BrandDashboard() {
     window.open('https://travelstudio.travelstudio-accept.bookunited.com/login', '_blank');
   };
 
-  const handleOpenNewsBuilder = async () => {
-    try {
-      if (!user?.id || !user?.brand_id) {
-        alert('User not authenticated');
-        return;
-      }
-
-      const { generateBuilderJWT } = await import('../../lib/jwtHelper');
-
-      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write'], {
-        forceBrandId: true,
-        authorType: 'brand',
-        authorId: user.id,
-        mode: 'news',
-      });
-
-      const builderBaseUrl = 'https://www.ai-websitestudio.nl';
-      const apiBaseUrl = jwtResponse.api_url || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-      const apiKey = jwtResponse.api_key || import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const returnUrl = `${window.location.origin}/#/brand/content/news`;
-
-      const params = new URLSearchParams({
-        api: apiBaseUrl,
-        brand_id: user.brand_id,
-        token: jwtResponse.token,
-        apikey: apiKey,
-        content_type: 'news_items',
-        mode: 'news',
-        return_url: returnUrl
-      });
-
-      const deeplink = `${builderBaseUrl}/?${params.toString()}#/mode/news`;
-      console.log('🔗 Opening news builder deeplink:', deeplink);
-      console.log('📝 Deeplink parameters:', {
-        api: apiBaseUrl,
-        brand_id: user.brand_id,
-        token: jwtResponse.token.substring(0, 20) + '...',
-        apikey: apiKey.substring(0, 20) + '...',
-        content_type: 'news_items',
-        mode: 'news',
-        return_url: returnUrl
-      });
-      const newWindow = window.open(deeplink, '_blank');
-      if (!newWindow) {
-        alert('Popup geblokkeerd! Sta popups toe voor deze website.');
-      }
-    } catch (err) {
-      console.error('Error generating deeplink:', err);
-      alert('Failed to generate builder link');
-    }
-  };
-
   const quickActions = [
     {
       title: 'Nieuwe Pagina',
@@ -222,7 +170,7 @@ export function BrandDashboard() {
       description: 'Bekijk en publiceer nieuws',
       icon: Newspaper,
       color: 'from-green-500 to-green-600',
-      action: () => handleOpenNewsBuilder()
+      action: () => setActiveSection('nieuwsbeheer')
     },
     {
       title: 'Templates',
@@ -332,13 +280,7 @@ export function BrandDashboard() {
                     return (
                       <li key={item.id}>
                         <button
-                          onClick={() => {
-                            if (item.id === 'nieuwsbeheer') {
-                              handleOpenNewsBuilder();
-                            } else {
-                              setActiveSection(item.id);
-                            }
-                          }}
+                          onClick={() => setActiveSection(item.id)}
                           className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors text-sm ${
                             activeSection === item.id
                               ? 'bg-gray-700 text-white'
@@ -457,6 +399,7 @@ export function BrandDashboard() {
                 {activeSection === 'pages' && 'Pagina Beheer'}
                 {activeSection === 'menus' && 'Menu Builder'}
                 {activeSection === 'footers' && 'Footer Builder'}
+                {activeSection === 'nieuwsbeheer' && 'Nieuwsbeheer'}
                 {activeSection === 'content' && 'Nieuwsberichten'}
                 {activeSection === 'destinations' && 'Bestemmingen'}
                 {activeSection === 'settings' && 'Brand Settings'}
@@ -472,6 +415,7 @@ export function BrandDashboard() {
                 {activeSection === 'pages' && 'Beheer alle pagina\'s van je website'}
                 {activeSection === 'menus' && 'Beheer menu\'s en hun structuur'}
                 {activeSection === 'footers' && 'Beheer footer layouts voor je website'}
+                {activeSection === 'nieuwsbeheer' && 'Beheer en publiceer je nieuwsberichten'}
                 {activeSection === 'ai-content' && 'Generate travel content with AI'}
                 {activeSection === 'ai-travelbro' && 'Your AI travel assistant'}
                 {activeSection === 'ai-import' && 'Import travel data with AI'}
