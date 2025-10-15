@@ -6,6 +6,7 @@ import { UsageMonitoring } from './UsageMonitoring';
 import { SystemHealth } from './SystemHealth';
 import { UserActivity } from './UserActivity';
 import { OAuthManagement } from './OAuthManagement';
+import { APISettings } from './APISettings';
 import {
   Settings,
   Bot,
@@ -61,8 +62,9 @@ export function OperatorDashboard() {
 
   const sidebarItems = [
     { id: 'overview', label: 'System Overview', icon: BarChart3 },
+    { id: 'api-settings', label: 'API Settings', icon: Key },
     { id: 'gpt-management', label: 'GPT Management', icon: Bot },
-    { id: 'oauth-management', label: 'OAuth Apps', icon: Key },
+    { id: 'oauth-management', label: 'OAuth Apps', icon: Settings },
     { id: 'usage-monitoring', label: 'Usage Monitoring', icon: TrendingUp },
     { id: 'user-activity', label: 'User Activity', icon: Users },
     { id: 'system-health', label: 'System Health', icon: Activity },
@@ -126,6 +128,7 @@ export function OperatorDashboard() {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 {activeSection === 'overview' && 'System Overview'}
+                {activeSection === 'api-settings' && 'API Settings'}
                 {activeSection === 'gpt-management' && 'GPT Management'}
                 {activeSection === 'oauth-management' && 'OAuth App Management'}
                 {activeSection === 'usage-monitoring' && 'Usage Monitoring'}
@@ -135,6 +138,7 @@ export function OperatorDashboard() {
               </h1>
               <p className="text-gray-600 mt-1">
                 {activeSection === 'overview' && 'Monitor system performance and key metrics'}
+                {activeSection === 'api-settings' && 'Configure API keys and external service credentials'}
                 {activeSection === 'gpt-management' && 'Configure custom GPTs and content generation'}
                 {activeSection === 'oauth-management' && 'Manage social media OAuth apps and credentials'}
                 {activeSection === 'usage-monitoring' && 'Track API usage and costs'}
@@ -300,6 +304,7 @@ export function OperatorDashboard() {
             </div>
           )}
 
+          {activeSection === 'api-settings' && <APISettings />}
           {activeSection === 'gpt-management' && <GPTManagement />}
           {activeSection === 'oauth-management' && <OAuthManagement />}
           {activeSection === 'usage-monitoring' && <UsageMonitoring />}

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Activity, 
-  Server, 
-  Database, 
-  Globe, 
-  AlertTriangle, 
-  CheckCircle, 
+import {
+  Activity,
+  Server,
+  Database,
+  Globe,
+  AlertTriangle,
+  CheckCircle,
   XCircle,
   Clock,
   Cpu,
@@ -13,7 +13,7 @@ import {
   Wifi,
   RefreshCw
 } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { supabase, db } from '../../lib/supabase';
 
 interface SystemMetric {
   name: string;
@@ -196,17 +196,16 @@ export function SystemHealth() {
 
     // Test OpenAI API
     try {
-      const openaiKey = import.meta.env.VITE_OPENAI_API_KEY;
+      const openaiKey = await db.getOpenAIKey();
       const isValidKey = openaiKey && openaiKey.startsWith('sk-') && !openaiKey.includes('your-openai');
-      
+
       if (isValidKey) {
-        // Don't actually call OpenAI to avoid costs, just check key format
         services.push({
           name: 'OpenAI API',
           status: 'operational',
           uptime: '99.8%',
           responseTime: '~1200ms',
-          lastIncident: 'No recent incidents',
+          lastIncident: 'API key configured from database',
           lastCheck: now
         });
       } else {
@@ -215,7 +214,7 @@ export function SystemHealth() {
           status: 'outage',
           uptime: '0%',
           responseTime: 'N/A',
-          lastIncident: 'API key not configured',
+          lastIncident: 'API key not configured in database',
           lastCheck: now
         });
       }
@@ -563,16 +562,8 @@ export function SystemHealth() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">OpenAI API:</span>
-                  <span className={`${(() => {
-                    const key = import.meta.env.VITE_OPENAI_API_KEY;
-                    const isPlaceholder = key === 'your-openai-api-key' || key?.startsWith('your-openai');
-                    return key?.startsWith('sk-') && !isPlaceholder ? 'text-green-600' : 'text-red-600';
-                  })()}`}>
-                    {(() => {
-                      const key = import.meta.env.VITE_OPENAI_API_KEY;
-                      const isPlaceholder = key === 'your-openai-api-key' || key?.startsWith('your-openai');
-                      return key?.startsWith('sk-') && !isPlaceholder ? 'Configured' : 'Not configured';
-                    })()}
+                  <span className="text-blue-600">
+                    Check API Settings
                   </span>
                 </div>
                 <div className="flex justify-between">
