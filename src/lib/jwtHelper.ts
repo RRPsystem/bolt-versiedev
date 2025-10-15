@@ -43,6 +43,7 @@ export async function generateBuilderJWT(
     contentType?: string;
     newsSlug?: string;
     mode?: string;
+    returnUrl?: string;
   } = {}
 ): Promise<GenerateJWTResponse> {
   const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-builder-jwt`;
@@ -82,6 +83,7 @@ export async function generateBuilderJWT(
   if (options.contentType) requestBody.content_type = options.contentType;
   if (options.newsSlug) requestBody.news_slug = options.newsSlug;
   if (options.mode) requestBody.mode = options.mode;
+  if (options.returnUrl) requestBody.return_url = options.returnUrl;
 
   const response = await fetch(apiUrl, {
     method: 'POST',

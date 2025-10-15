@@ -138,7 +138,8 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
     if (!user || !brandId) return;
 
     try {
-      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { menuId, forceBrandId: true });
+      const returnUrl = `${window.location.origin}/#/brand/website/menu`;
+      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { menuId, forceBrandId: true, returnUrl });
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');
       } else {
@@ -154,7 +155,8 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
     if (!user || !brandId) return;
 
     try {
-      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { menuId: 'new', forceBrandId: true });
+      const returnUrl = `${window.location.origin}/#/brand/website/menu`;
+      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { menuId: 'new', forceBrandId: true, returnUrl });
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');
       } else {

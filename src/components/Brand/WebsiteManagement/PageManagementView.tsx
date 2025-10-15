@@ -108,11 +108,13 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       console.log('Opening builder for page:', pageId);
       console.log('Brand ID:', brandId, 'User ID:', user.id);
 
+      const returnUrl = `${window.location.origin}/#/brand/website/pages`;
       const page = pages.find(p => p.id === pageId);
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, {
         pageId,
         slug: page?.slug || '',
         forceBrandId: true,
+        returnUrl: returnUrl,
       });
       console.log('Token generated successfully');
 
@@ -137,8 +139,10 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     if (!user || !brandId) return;
 
     try {
+      const returnUrl = `${window.location.origin}/#/brand/website/pages`;
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, {
         forceBrandId: true,
+        returnUrl: returnUrl,
       });
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');

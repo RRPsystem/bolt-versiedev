@@ -73,7 +73,8 @@ export function FooterBuilderView({ brandId: propBrandId }: Props = {}) {
     if (!user || !brandId) return;
 
     try {
-      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { footerId, forceBrandId: true });
+      const returnUrl = `${window.location.origin}/#/brand/website/footer`;
+      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { footerId, forceBrandId: true, returnUrl });
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');
       } else {
@@ -89,7 +90,8 @@ export function FooterBuilderView({ brandId: propBrandId }: Props = {}) {
     if (!user || !brandId) return;
 
     try {
-      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { footerId: 'new', forceBrandId: true });
+      const returnUrl = `${window.location.origin}/#/brand/website/footer`;
+      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { footerId: 'new', forceBrandId: true, returnUrl });
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');
       } else {
