@@ -48,8 +48,14 @@ export function NewPage({ brandId: propBrandId, onPageCreated }: Props = {}) {
   }, [propBrandId, initialPageCount, onPageCreated]);
 
   const handleOpenPageBuilder = async () => {
-    if (!propBrandId) {
-      alert('Brand ID ontbreekt. Kan de builder niet openen.');
+    const brandId = propBrandId || user?.brand_id;
+
+    if (!brandId) {
+      console.error('Brand ID debug:', { propBrandId, userBrandId: user?.brand_id, user });
+      alert('Brand ID ontbreekt. Kan de builder niet openen.\n\nDebug info:\n' +
+            `- propBrandId: ${propBrandId}\n` +
+            `- user.brand_id: ${user?.brand_id}\n` +
+            `- user.role: ${user?.role}`);
       return;
     }
 
@@ -59,11 +65,11 @@ export function NewPage({ brandId: propBrandId, onPageCreated }: Props = {}) {
     }
 
     try {
-      const jwtResponse = await generateBuilderJWT(propBrandId, user.id, undefined, { forceBrandId: true });
+      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { forceBrandId: true });
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');
       } else {
-        const deeplink = generateBuilderDeeplink(propBrandId, jwtResponse.token);
+        const deeplink = generateBuilderDeeplink(brandId, jwtResponse.token);
         window.open(deeplink, '_blank');
       }
     } catch (error) {
