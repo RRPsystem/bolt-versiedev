@@ -194,7 +194,7 @@ export function AgentManagement() {
 
     try {
       const { error: updateError } = await supabase
-        .from('users')
+        .from('agents')
         .update({
           name: editFormData.name,
           phone: editFormData.phone,
@@ -222,7 +222,7 @@ export function AgentManagement() {
 
     try {
       const { error: deleteError } = await supabase
-        .from('users')
+        .from('agents')
         .delete()
         .eq('id', agent.id);
 
