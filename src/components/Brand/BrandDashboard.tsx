@@ -136,6 +136,44 @@ export function BrandDashboard() {
     window.open('https://travelstudio.travelstudio-accept.bookunited.com/login', '_blank');
   };
 
+  const handleOpenNewsBuilder = async () => {
+    try {
+      if (!user?.id || !user?.brand_id) {
+        alert('User not authenticated');
+        return;
+      }
+
+      const { generateBuilderJWT } = await import('../../lib/jwtHelper');
+
+      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write'], {
+        forceBrandId: true,
+        authorType: 'brand',
+        authorId: user.id,
+        mode: 'news',
+      });
+
+      const builderBaseUrl = 'https://www.ai-websitestudio.nl';
+      const apiBaseUrl = jwtResponse.api_url || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+      const apiKey = jwtResponse.api_key || import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      const params = new URLSearchParams({
+        api: apiBaseUrl,
+        brand_id: user.brand_id,
+        token: jwtResponse.token,
+        apikey: apiKey,
+        content_type: 'news_items',
+        mode: 'news'
+      });
+
+      const deeplink = `${builderBaseUrl}/?${params.toString()}#/mode/news`;
+      console.log('🔗 Opening news builder deeplink:', deeplink);
+      window.location.href = deeplink;
+    } catch (err) {
+      console.error('Error generating deeplink:', err);
+      alert('Failed to generate builder link');
+    }
+  };
+
   const quickActions = [
     {
       title: 'Nieuwe Pagina',
@@ -170,7 +208,7 @@ export function BrandDashboard() {
       description: 'Bekijk en publiceer nieuws',
       icon: Newspaper,
       color: 'from-green-500 to-green-600',
-      action: () => setActiveSection('nieuwsbeheer')
+      action: () => handleOpenNewsBuilder()
     },
     {
       title: 'Templates',
@@ -280,7 +318,13 @@ export function BrandDashboard() {
                     return (
                       <li key={item.id}>
                         <button
-                          onClick={() => setActiveSection(item.id)}
+                          onClick={() => {
+                            if (item.id === 'nieuwsbeheer') {
+                              handleOpenNewsBuilder();
+                            } else {
+                              setActiveSection(item.id);
+                            }
+                          }}
                           className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors text-sm ${
                             activeSection === item.id
                               ? 'bg-gray-700 text-white'
