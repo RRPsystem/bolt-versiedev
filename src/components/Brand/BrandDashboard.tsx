@@ -95,7 +95,7 @@ export function BrandDashboard() {
     if (['new-page', 'pages', 'menus', 'footers'].includes(activeSection)) {
       setShowWebsiteSubmenu(true);
     }
-    if (['ai-content', 'ai-travelbro', 'ai-import', 'ai-social'].includes(activeSection)) {
+    if (['ai-content', 'ai-travelbro', 'ai-import'].includes(activeSection)) {
       setShowAISubmenu(true);
     }
     if (['nieuwsbeheer', 'destinations', 'trips'].includes(activeSection)) {
@@ -109,6 +109,7 @@ export function BrandDashboard() {
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Sparkles },
     { id: 'agents', label: 'Agents', icon: Users },
+    { id: 'social-media', label: 'Social Media', icon: Share2 },
   ];
 
   const websiteManagementItems = [
@@ -123,7 +124,6 @@ export function BrandDashboard() {
     { id: 'ai-content', label: 'AI Content Generator', icon: Sparkles },
     { id: 'ai-travelbro', label: 'AI TravelBRO', icon: Bot },
     { id: 'ai-import', label: 'AI TravelImport', icon: FileImport },
-    { id: 'ai-social', label: 'Social Media', icon: Share2 },
   ];
 
   const contentItems = [
@@ -156,7 +156,7 @@ export function BrandDashboard() {
       description: 'Beheer je sociale media',
       icon: Share2,
       color: 'from-pink-500 to-pink-600',
-      action: () => setActiveSection('ai-social')
+      action: () => setActiveSection('social-media')
     },
     {
       title: 'TravelBRO',
@@ -301,7 +301,7 @@ export function BrandDashboard() {
               <button
                 onClick={() => setShowAISubmenu(!showAISubmenu)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
-                  ['ai-content', 'ai-travelbro', 'ai-import', 'ai-social'].includes(activeSection)
+                  ['ai-content', 'ai-travelbro', 'ai-import'].includes(activeSection)
                     ? 'bg-gray-700 text-white'
                     : 'text-gray-300 hover:text-white hover:bg-gray-700'
                 }`}
@@ -405,7 +405,7 @@ export function BrandDashboard() {
                 {activeSection === 'ai-content' && 'AI Content Generator'}
                 {activeSection === 'ai-travelbro' && 'AI TravelBRO'}
                 {activeSection === 'ai-import' && 'AI TravelImport'}
-                {activeSection === 'ai-social' && 'Social Media Manager'}
+                {activeSection === 'social-media' && 'Social Media Manager'}
                 {activeSection === 'roadmap' && 'Roadmap'}
               </h1>
               <p className="text-gray-600 mt-1">
@@ -417,7 +417,7 @@ export function BrandDashboard() {
                 {activeSection === 'ai-content' && 'Generate travel content with AI'}
                 {activeSection === 'ai-travelbro' && 'Your AI travel assistant'}
                 {activeSection === 'ai-import' && 'Import travel data with AI'}
-                {activeSection === 'ai-social' && 'Manage your social media presence'}
+                {activeSection === 'social-media' && 'Manage your social media presence'}
                 {activeSection === 'roadmap' && 'Vote on features and track development progress'}
               </p>
             </div>
@@ -516,7 +516,7 @@ export function BrandDashboard() {
           {activeSection === 'nieuwsbeheer' && <NewsApproval />}
           {activeSection === 'ai-content' && <AIContentGenerator />}
           {activeSection === 'ai-travelbro' && <TravelBro />}
-          {activeSection === 'ai-social' && <SocialMedia />}
+          {activeSection === 'social-media' && <SocialMedia />}
           {activeSection === 'roadmap' && <RoadmapBoard />}
 
           {activeSection === 'ai-import' && (
