@@ -1,3 +1,82 @@
+# ⚠️ BELANGRIJKE SECURITY UPDATE VEREIST
+
+## Probleem
+De externe builder integratie werkt niet omdat `JWT_SECRET` ontbreekt in Supabase Secrets.
+
+## Foutmelding
+```
+❌ Test save mislukt: {"code":401,"message":"Invalid JWT"}
+```
+
+## Oplossing
+
+### Stap 1: Genereer een JWT Secret
+Gebruik een van deze methoden om een veilige secret te genereren:
+
+**Optie A - Node.js:**
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**Optie B - OpenSSL:**
+```bash
+openssl rand -hex 32
+```
+
+**Optie C - Online Generator:**
+Ga naar https://generate-secret.vercel.app/32
+
+### Stap 2: Voeg JWT_SECRET toe aan Supabase
+
+1. Ga naar **Supabase Dashboard**: https://supabase.com/dashboard
+2. Selecteer je project: `huaaogdxxdcakxryecnw`
+3. Ga naar **Project Settings** → **Edge Functions** → **Secrets**
+4. Klik op **Add new secret**
+5. Naam: `JWT_SECRET`
+6. Waarde: *[Plak de gegenereerde secret hier]*
+7. Klik op **Save**
+
+### Stap 3: Test de integratie
+1. Ga naar **Pagina Beheer** in AI Travel Studio
+2. Klik op de **"🧪 Test Save"** button
+3. Als het werkt zie je: `✅ Test save succesvol! Page ID: ...`
+
+## Wat doet JWT_SECRET?
+
+`JWT_SECRET` wordt gebruikt om:
+- JWT tokens te ondertekenen voor de externe builder (ai-websitestudio.nl)
+- Tokens te verifiëren bij het opslaan van pagina's, menu's en content
+- Veilige communicatie tussen AI Travel Studio en de externe builder te waarborgen
+
+## Beveiliging
+
+⚠️ **BELANGRIJK:**
+- Bewaar de `JWT_SECRET` VEILIG
+- Deel deze NOOIT publiekelijk
+- Gebruik een STERKE, WILLEKEURIGE waarde (minimaal 32 karakters)
+- Wijzig de secret NIET zonder goede reden (dit breekt bestaande tokens)
+
+## Betrokken Edge Functions
+
+Deze Edge Functions gebruiken `JWT_SECRET`:
+- `generate-builder-jwt` - Genereert JWT tokens voor de builder
+- `pages-api` - Valideert JWT tokens bij pagina operaties
+- `menus-api` - Valideert JWT tokens bij menu operaties
+- `layouts-api` - Valideert JWT tokens bij layout operaties
+- `content-api` - Valideert JWT tokens bij content operaties
+
+## Status Check
+
+Na het toevoegen van `JWT_SECRET`, controleer deze functies:
+- ✅ Pagina openen in externe builder
+- ✅ Pagina opslaan in externe builder
+- ✅ Pagina terugkeren naar AI Travel Studio
+- ✅ Menu bewerken
+- ✅ Footer bewerken
+- ✅ Templates maken
+
+---
+
 # Security Update - API Endpoints
 
 ## Uitgevoerde wijzigingen

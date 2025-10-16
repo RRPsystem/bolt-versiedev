@@ -342,8 +342,27 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
 
     try {
       console.log('[TEST] Testing save API...');
-      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { forceBrandId: true });
-      console.log('[TEST] JWT token generated');
+      console.log('[TEST] Method 1: Trying with custom JWT...');
+
+      let jwtToken;
+      try {
+        const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { forceBrandId: true });
+        console.log('[TEST] Custom JWT generated:', {
+          has_token: !!jwtResponse.token,
+          token_length: jwtResponse.token?.length
+        });
+        jwtToken = jwtResponse.token;
+      } catch (jwtError) {
+        console.error('[TEST] Custom JWT generation failed:', jwtError);
+        console.log('[TEST] Method 2: Trying with Supabase session token...');
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          throw new Error('No session token available');
+        }
+        console.log('[TEST] Using Supabase session token');
+        jwtToken = session.access_token;
+      }
 
       const testData = {
         brand_id: brandId,
@@ -357,7 +376,7 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/save`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${jwtResponse.token}`,
+          'Authorization': `Bearer ${jwtToken}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(testData)
