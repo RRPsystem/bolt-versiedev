@@ -307,34 +307,21 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
   };
 
   const testSaveAPI = async () => {
-    if (!brandId || !user) {
-      alert('Brand ID of gebruiker ontbreekt');
+    if (!brandId) {
+      alert('Brand ID ontbreekt');
       return;
     }
 
     try {
       console.log('[TEST] Testing save API...');
-      console.log('[TEST] Method 1: Trying with custom JWT...');
+      console.log('[TEST] Using Supabase session token directly...');
 
-      let jwtToken;
-      try {
-        const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { forceBrandId: true });
-        console.log('[TEST] Custom JWT generated:', {
-          has_token: !!jwtResponse.token,
-          token_length: jwtResponse.token?.length
-        });
-        jwtToken = jwtResponse.token;
-      } catch (jwtError) {
-        console.error('[TEST] Custom JWT generation failed:', jwtError);
-        console.log('[TEST] Method 2: Trying with Supabase session token...');
-
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.access_token) {
-          throw new Error('No session token available');
-        }
-        console.log('[TEST] Using Supabase session token');
-        jwtToken = session.access_token;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No session token available');
       }
+
+      console.log('[TEST] Session found, user:', session.user?.email);
 
       const testData = {
         brand_id: brandId,
@@ -344,17 +331,29 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       };
 
       console.log('[TEST] Sending test save request:', testData);
+      console.log('[TEST] Brand ID:', brandId);
 
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/save`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${jwtToken}`,
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(testData)
       });
 
-      const result = await response.json();
+      console.log('[TEST] Response status:', response.status);
+
+      const responseText = await response.text();
+      console.log('[TEST] Response body (raw):', responseText);
+
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (e) {
+        result = { error: 'Invalid JSON response', body: responseText };
+      }
+
       console.log('[TEST] Save response:', { status: response.status, result });
 
       if (response.ok) {
@@ -365,7 +364,7 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       }
     } catch (error) {
       console.error('[TEST] Test save error:', error);
-      alert('❌ Test save error: ' + error.message);
+      alert('❌ Test save error: ' + (error instanceof Error ? error.message : String(error)));
     }
   };
 
