@@ -33,34 +33,6 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     loadBrandAndPages();
   }, [user, propBrandId]);
 
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && brandId) {
-        console.log('Tab became visible, reloading pages...');
-        setTimeout(() => loadPages(brandId, false), 500);
-      }
-    };
-
-    const handleHashChange = () => {
-      if (window.location.hash.includes('/brand/website/pages') && brandId) {
-        console.log('Hash change detected, reloading pages...');
-        setTimeout(() => loadPages(brandId, false), 500);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('hashchange', handleHashChange);
-
-    if (window.location.hash.includes('/brand/website/pages') && brandId) {
-      console.log('Initial hash detection, reloading pages...');
-      setTimeout(() => loadPages(brandId, false), 1000);
-    }
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('hashchange', handleHashChange);
-    };
-  }, [brandId]);
 
   const loadBrandAndPages = async () => {
     if (!user) return;
