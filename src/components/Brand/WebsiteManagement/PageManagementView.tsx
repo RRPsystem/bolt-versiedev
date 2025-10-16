@@ -36,6 +36,12 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
   const loadBrandAndPages = async () => {
     if (!user) return;
 
+    if (!supabase) {
+      console.error('Supabase not configured');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (propBrandId) {
         const { data: brand } = await supabase
@@ -64,6 +70,8 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       }
     } catch (error) {
       console.error('Error loading brand:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

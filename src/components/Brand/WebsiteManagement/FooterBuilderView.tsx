@@ -29,6 +29,12 @@ export function FooterBuilderView({ brandId: propBrandId }: Props = {}) {
   const loadBrandAndFooters = async () => {
     if (!user) return;
 
+    if (!supabase) {
+      console.error('Supabase not configured');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (propBrandId) {
         setBrandId(propBrandId);
@@ -47,10 +53,14 @@ export function FooterBuilderView({ brandId: propBrandId }: Props = {}) {
       }
     } catch (error) {
       console.error('Error loading brand:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadFooters = async (brandId: string) => {
+    if (!supabase) return;
+
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -104,6 +114,7 @@ export function FooterBuilderView({ brandId: propBrandId }: Props = {}) {
   };
 
   const deleteFooter = async (footerId: string) => {
+    if (!supabase) return;
     if (!confirm('Weet je zeker dat je deze footer wilt verwijderen?')) return;
 
     try {
@@ -115,6 +126,8 @@ export function FooterBuilderView({ brandId: propBrandId }: Props = {}) {
   };
 
   const setAsDefault = async (footerId: string) => {
+    if (!supabase) return;
+
     try {
       await supabase
         .from('layouts')

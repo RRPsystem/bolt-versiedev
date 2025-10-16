@@ -61,6 +61,12 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
   const loadBrandAndMenus = async () => {
     if (!user) return;
 
+    if (!supabase) {
+      console.error('Supabase not configured');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (propBrandId) {
         setBrandId(propBrandId);
@@ -79,10 +85,14 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
       }
     } catch (error) {
       console.error('Error loading brand:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const loadMenus = async (brandId: string) => {
+    if (!supabase) return;
+
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -104,6 +114,8 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
   };
 
   const loadPages = async (brandId: string) => {
+    if (!supabase) return;
+
     try {
       const { data, error } = await supabase
         .from('pages')
@@ -120,6 +132,8 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
   };
 
   const loadMenuItems = async (menuId: string) => {
+    if (!supabase) return;
+
     try {
       const { data, error } = await supabase
         .from('menu_items')
@@ -169,6 +183,7 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
   };
 
   const deleteMenu = async (menuId: string) => {
+    if (!supabase) return;
     if (!confirm('Weet je zeker dat je dit menu wilt verwijderen?')) return;
 
     try {
