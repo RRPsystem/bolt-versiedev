@@ -10,7 +10,7 @@ interface JWTPayload {
   is_template?: boolean;
 }
 
-async function verifyBearerToken(req: Request, requiredScope?: string, alternativeScopes?: string[]): Promise<JWTPayload> {
+async function verifyBearerToken(req: Request, supabaseClient: any, requiredScope?: string, alternativeScopes?: string[]): Promise<JWTPayload> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     const error = new Error("Missing or invalid Authorization header");
@@ -30,10 +30,11 @@ async function verifyBearerToken(req: Request, requiredScope?: string, alternati
 
   const encoder = new TextEncoder();
   const secretKey = encoder.encode(jwtSecret);
+
   try {
-    console.log("[VERIFY] Attempting to verify JWT...");
+    console.log("[VERIFY] Attempting to verify custom JWT...");
     const { payload } = await jwtVerify(token, secretKey, { algorithms: ["HS256"] });
-    console.log("[VERIFY] JWT verified successfully:", payload);
+    console.log("[VERIFY] Custom JWT verified successfully:", payload);
     const typedPayload = payload as unknown as JWTPayload;
 
     if (requiredScope) {
@@ -49,12 +50,39 @@ async function verifyBearerToken(req: Request, requiredScope?: string, alternati
 
     return typedPayload;
   } catch (err) {
-    if ((err as any).statusCode) {
-      throw err;
+    console.log("[VERIFY] Custom JWT verification failed, trying Supabase auth...");
+
+    try {
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+      if (userError || !user) {
+        throw new Error('Supabase auth verification failed');
+      }
+
+      console.log("[VERIFY] Supabase auth verified, fetching user data...");
+      const { data: userData, error: dbError } = await supabaseClient
+        .from('users')
+        .select('brand_id, role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (dbError || !userData || !userData.brand_id) {
+        throw new Error('User data not found or no brand assigned');
+      }
+
+      console.log("[VERIFY] Supabase auth successful:", { brand_id: userData.brand_id, user_id: user.id });
+
+      return {
+        brand_id: userData.brand_id,
+        sub: user.id,
+        user_id: user.id,
+        scope: ['pages:read', 'pages:write', 'content:read', 'content:write']
+      };
+    } catch (supabaseErr) {
+      console.error("[VERIFY] Both JWT and Supabase auth failed");
+      const error = new Error(`Invalid JWT: ${err.message}`);
+      (error as any).statusCode = 401;
+      throw error;
     }
-    const error = new Error(`Invalid JWT: ${err.message}`);
-    (error as any).statusCode = 401;
-    throw error;
   }
 }
 
@@ -101,7 +129,7 @@ Deno.serve(async (req: Request) => {
         content_json_sample: body.content_json ? JSON.stringify(body.content_json).substring(0, 200) : null
       });
 
-      const claims = await verifyBearerToken(req, "content:write", ["pages:write"]);
+      const claims = await verifyBearerToken(req, supabase, "content:write", ["pages:write"]);
       console.log("[DEBUG] Claims verified:", { brand_id: claims.brand_id, sub: claims.sub });
 
       const { brand_id, page_id, title, slug, is_template, template_category, preview_image_url } = body;
@@ -286,7 +314,7 @@ Deno.serve(async (req: Request) => {
 
     if (req.method === "POST" && pathParts.includes("publish")) {
       const body = await req.json();
-      const claims = await verifyBearerToken(req, "content:write", ["pages:write"]);
+      const claims = await verifyBearerToken(req, supabase, "content:write", ["pages:write"]);
       const pageId = pathParts[pathParts.length - 2];
       const { body_html } = body;
 
@@ -345,7 +373,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (req.method === "GET" && pathParts.includes("list")) {
-      const claims = await verifyBearerToken(req, "content:read", ["pages:read"]);
+      const claims = await verifyBearerToken(req, supabase, "content:read", ["pages:read"]);
       const brandId = url.searchParams.get("brand_id") || claims.brand_id;
 
       if (claims.brand_id !== brandId) {
@@ -369,7 +397,7 @@ Deno.serve(async (req: Request) => {
     if (req.method === "GET" && pathParts.length >= 2) {
       const pageId = pathParts[pathParts.length - 1];
       if (pageId !== "pages-api" && pageId !== "list") {
-        const claims = await verifyBearerToken(req, "content:read", ["pages:read"]);
+        const claims = await verifyBearerToken(req, supabase, "content:read", ["pages:read"]);
 
         const { data, error } = await supabase
           .from("pages")
@@ -399,7 +427,7 @@ Deno.serve(async (req: Request) => {
     if (req.method === "DELETE" && pathParts.length >= 2) {
       const pageId = pathParts[pathParts.length - 1];
       if (pageId !== "pages-api") {
-        const claims = await verifyBearerToken(req, "content:read", ["pages:read"]);
+        const claims = await verifyBearerToken(req, supabase, "content:read", ["pages:read"]);
 
         const { data: page, error: fetchError } = await supabase
           .from("pages")
