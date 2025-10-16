@@ -60,9 +60,10 @@ Deno.serve(async (req: Request) => {
       .from('users')
       .select('brand_id, role')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     if (dbError || !userData) {
+      console.error('[JWT] User data error:', dbError);
       throw new Error('User data not found');
     }
 
