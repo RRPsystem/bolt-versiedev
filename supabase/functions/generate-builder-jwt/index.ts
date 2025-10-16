@@ -8,13 +8,15 @@ async function signJWT(payload: any): Promise<string> {
     throw new Error("JWT_SECRET not configured");
   }
 
+  console.log("[JWT] Secret available:", { length: jwtSecret.length, first10: jwtSecret.substring(0, 10) });
+
   const encoder = new TextEncoder();
   const secretKey = encoder.encode(jwtSecret);
 
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime(payload.exp)
+    .setExpirationTime('24h')
     .sign(secretKey);
 }
 
@@ -71,11 +73,10 @@ Deno.serve(async (req: Request) => {
       brand_id: brandId,
       sub: user.id,
       scope: scopes,
-      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24),
-      iat: Math.floor(Date.now() / 1000),
     };
 
     const jwt = await signJWT(payload);
+    console.log("[JWT] Token generated:", { length: jwt.length, first30: jwt.substring(0, 30) });
 
     return new Response(
       JSON.stringify({ token: jwt, brand_id: brandId }),
