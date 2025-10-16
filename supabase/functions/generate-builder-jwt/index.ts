@@ -69,11 +69,14 @@ Deno.serve(async (req: Request) => {
 
     if (requestBody.brand_id && requestBody.forceBrandId) {
       brandId = requestBody.brand_id;
+      console.log('[JWT] Force brand ID:', { requested: requestBody.brand_id, user_role: userData.role });
     }
 
     if (!brandId) {
       throw new Error('User has no brand assigned');
     }
+
+    console.log('[JWT] Final brand ID:', { brandId, user_role: userData.role, forced: !!requestBody.forceBrandId });
 
     const payload = {
       brand_id: brandId,
