@@ -156,7 +156,7 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
       console.log('Token generated successfully');
 
       if (jwtResponse.url) {
-        console.log('Using URL:', jwtResponse.url);
+        console.log('[openInBuilder] Using URL:', jwtResponse.url);
         window.open(jwtResponse.url, '_blank');
       } else {
         const builderBaseUrl = 'https://www.ai-websitestudio.nl';
@@ -164,7 +164,14 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
         const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         const encodedReturnUrl = encodeURIComponent(returnUrl.replace('#', '%23'));
         const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${brandId}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&page_id=${pageId}&return_url=${encodedReturnUrl}#/mode/page`;
-        console.log('Generated deeplink:', deeplink);
+        console.log('[openInBuilder] Generated deeplink:', deeplink);
+        console.log('[openInBuilder] Deeplink params:', {
+          api: apiBaseUrl,
+          brand_id: brandId,
+          page_id: pageId,
+          return_url: returnUrl,
+          token_length: jwtResponse.token.length
+        });
         const newWindow = window.open(deeplink, '_blank');
         if (!newWindow) {
           alert('Popup geblokkeerd! Sta popups toe voor deze website.');
@@ -327,6 +334,50 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     }
   };
 
+  const testSaveAPI = async () => {
+    if (!brandId || !user) {
+      alert('Brand ID of gebruiker ontbreekt');
+      return;
+    }
+
+    try {
+      console.log('[TEST] Testing save API...');
+      const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { forceBrandId: true });
+      console.log('[TEST] JWT token generated');
+
+      const testData = {
+        brand_id: brandId,
+        title: 'Test Pagina ' + Date.now(),
+        slug: 'test-' + Date.now(),
+        content_json: { test: true, created: new Date().toISOString() }
+      };
+
+      console.log('[TEST] Sending test save request:', testData);
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pages-api/save`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${jwtResponse.token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(testData)
+      });
+
+      const result = await response.json();
+      console.log('[TEST] Save response:', { status: response.status, result });
+
+      if (response.ok) {
+        alert('✅ Test save succesvol! Page ID: ' + result.page_id);
+        await loadPages(brandId, false);
+      } else {
+        alert('❌ Test save mislukt: ' + JSON.stringify(result));
+      }
+    } catch (error) {
+      console.error('[TEST] Test save error:', error);
+      alert('❌ Test save error: ' + error.message);
+    }
+  };
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('nl-NL', {
@@ -341,6 +392,13 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
   return (
     <div className="p-8">
       <div className="flex items-center justify-end mb-8 space-x-3">
+        <button
+          onClick={testSaveAPI}
+          className="inline-flex items-center space-x-2 px-4 py-3 bg-purple-100 text-purple-700 rounded-lg font-medium transition-colors hover:bg-purple-200"
+          title="Test Save API"
+        >
+          <span>🧪 Test Save</span>
+        </button>
         <button
           onClick={() => loadPages(brandId, false)}
           className="inline-flex items-center space-x-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium transition-colors hover:bg-gray-200"
