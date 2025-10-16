@@ -30,7 +30,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initAuth = async () => {
       try {
+        console.log('🔐 Auth Init - Starting, current URL hash:', window.location.hash);
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('🔐 Auth Init - Session check:', {
+          hasSession: !!session,
+          hasToken: !!session?.access_token,
+          userId: session?.user?.id
+        });
 
         if (session?.access_token) {
           console.log('🔐 Auth Init - Session found, loading profile');

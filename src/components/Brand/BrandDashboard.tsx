@@ -30,17 +30,17 @@ export function BrandDashboard() {
   useEffect(() => {
     const hash = window.location.hash;
     if (hash.includes('/brand/website/pages')) {
+      console.log('Hash routing: Navigating to pages section');
       setActiveSection('pages');
       setShowWebsiteSubmenu(true);
-      window.history.replaceState(null, '', window.location.pathname);
     } else if (hash.includes('/brand/website/menu')) {
+      console.log('Hash routing: Navigating to menu section');
       setActiveSection('menu');
       setShowWebsiteSubmenu(true);
-      window.history.replaceState(null, '', window.location.pathname);
     } else if (hash.includes('/brand/website/footer')) {
+      console.log('Hash routing: Navigating to footer section');
       setActiveSection('footer');
       setShowWebsiteSubmenu(true);
-      window.history.replaceState(null, '', window.location.pathname);
     }
   }, []);
 
