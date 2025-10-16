@@ -52,6 +52,9 @@ Deno.serve(async (req: Request) => {
       throw new Error('Unauthorized');
     }
 
+    const requestBody = await req.json();
+    const requestedScopes = requestBody.scopes || ['pages:read', 'pages:write', 'layouts:read', 'layouts:write', 'menus:read', 'menus:write', 'content:read', 'content:write'];
+
     const { data: userData, error: dbError } = await supabaseClient
       .from('users')
       .select('brand_id, role')
@@ -62,21 +65,24 @@ Deno.serve(async (req: Request) => {
       throw new Error('User data not found');
     }
 
-    const brandId = userData.brand_id;
+    let brandId = userData.brand_id;
+
+    if (requestBody.brand_id && requestBody.forceBrandId) {
+      brandId = requestBody.brand_id;
+    }
+
     if (!brandId) {
       throw new Error('User has no brand assigned');
     }
 
-    const scopes = ['pages:read', 'pages:write', 'layouts:read', 'layouts:write', 'menus:read', 'menus:write'];
-
     const payload = {
       brand_id: brandId,
       sub: user.id,
-      scope: scopes,
+      scope: requestedScopes,
     };
 
     const jwt = await signJWT(payload);
-    console.log("[JWT] Token generated:", { length: jwt.length, first30: jwt.substring(0, 30) });
+    console.log("[JWT] Token generated:", { length: jwt.length, first30: jwt.substring(0, 30), scopes: requestedScopes });
 
     return new Response(
       JSON.stringify({ token: jwt, brand_id: brandId }),
