@@ -53,6 +53,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const requestBody = await req.json();
+    console.log('[JWT] Request body received:', JSON.stringify(requestBody, null, 2));
     const requestedScopes = requestBody.scopes || ['pages:read', 'pages:write', 'layouts:read', 'layouts:write', 'menus:read', 'menus:write', 'content:read', 'content:write'];
 
     const { data: userData, error: dbError } = await supabaseClient
@@ -66,10 +67,14 @@ Deno.serve(async (req: Request) => {
     }
 
     let brandId = userData.brand_id;
+    console.log('[JWT] Initial brand ID from user:', { user_brand_id: userData.brand_id, user_role: userData.role });
 
     if (requestBody.brand_id && requestBody.forceBrandId) {
+      console.log('[JWT] Force brand ID requested:', { requested: requestBody.brand_id, forceBrandId: requestBody.forceBrandId });
       brandId = requestBody.brand_id;
-      console.log('[JWT] Force brand ID:', { requested: requestBody.brand_id, user_role: userData.role });
+      console.log('[JWT] Brand ID forced to:', brandId);
+    } else {
+      console.log('[JWT] NO force brand ID:', { has_brand_id: !!requestBody.brand_id, has_forceBrandId: !!requestBody.forceBrandId });
     }
 
     if (!brandId) {
