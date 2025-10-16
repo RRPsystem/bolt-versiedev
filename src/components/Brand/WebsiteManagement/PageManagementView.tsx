@@ -33,6 +33,18 @@ export function PageManagementView({ brandId: propBrandId, hideCreateButtons = f
     loadBrandAndPages();
   }, [user, propBrandId]);
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && brandId) {
+        console.log('Tab became visible, reloading pages...');
+        loadPages(brandId, false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [brandId]);
+
   const loadBrandAndPages = async () => {
     if (!user) return;
 

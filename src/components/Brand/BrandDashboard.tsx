@@ -28,6 +28,23 @@ export function BrandDashboard() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('/brand/website/pages')) {
+      setActiveSection('pages');
+      setShowWebsiteSubmenu(true);
+      window.history.replaceState(null, '', window.location.pathname);
+    } else if (hash.includes('/brand/website/menu')) {
+      setActiveSection('menu');
+      setShowWebsiteSubmenu(true);
+      window.history.replaceState(null, '', window.location.pathname);
+    } else if (hash.includes('/brand/website/footer')) {
+      setActiveSection('footer');
+      setShowWebsiteSubmenu(true);
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
+
+  useEffect(() => {
     if (activeSection === 'dashboard') {
       loadDashboardData();
     }
