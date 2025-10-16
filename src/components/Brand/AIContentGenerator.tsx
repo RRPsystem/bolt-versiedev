@@ -50,7 +50,7 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
   const [selectedDays, setSelectedDays] = useState('');
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState('');
-  const [selectedVacationType, setSelectedVacationType] = useState('');
+  const [selectedMoreSetting, setSelectedMoreSetting] = useState('');
   const [selectedImageStyle, setSelectedImageStyle] = useState('');
   const [currentInput, setCurrentInput] = useState('');
   const [routeFrom, setRouteFrom] = useState('');
@@ -105,12 +105,14 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
     { id: '3-dagen', label: '3 Dagen', icon: '🗓️', description: 'Lang weekend' }
   ];
 
-  const vacationTypes = [
-    { id: 'familie-met-kinderen', label: 'Familie met kinderen', icon: '👨‍👩‍👧‍👦' },
-    { id: 'stelletjes', label: 'Stelletjes', icon: '💑' },
-    { id: 'vrienden', label: 'Vrienden', icon: '👥' },
-    { id: 'solo', label: 'Solo reiziger', icon: '🎒' },
-    { id: 'zakelijk', label: 'Zakelijk', icon: '💼' }
+  const moreSettings = [
+    { id: 'rondreis', label: 'Rondreis', icon: '🗺️', description: 'Meerdere bestemmingen' },
+    { id: 'strandvakantie', label: 'Strandvakantie', icon: '🏖️', description: 'Zon, zee en strand' },
+    { id: 'offerte', label: 'Offerte', icon: '💰', description: 'Zakelijk met prijzen' },
+    { id: 'roadbook', label: 'Roadbook', icon: '📋', description: 'Reis al geboekt' },
+    { id: 'webtekst', label: 'Webtekst', icon: '🌐', description: 'SEO geoptimaliseerd' },
+    { id: 'social-media', label: 'Social Media', icon: '📱', description: 'Kort en catchy' },
+    { id: 'nieuwsbrief', label: 'Nieuwsbrief', icon: '✉️', description: 'Persoonlijk met CTA' }
   ];
 
   const handleContentTypeSelect = (type: string) => {
@@ -151,7 +153,7 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
       contentType: contentTypes.find(c => c.id === selectedContentType)?.label || '',
       lastActivity: new Date(),
       writingStyle: selectedWritingStyle,
-      vacationType: selectedVacationType,
+      vacationType: selectedMoreSetting,
       routeType: selectedRouteType,
       days: selectedDays,
       messages: [
@@ -182,7 +184,7 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
             selectedWritingStyle || 'professional',
             additionalData,
             {
-              vacationType: selectedVacationType || 'algemene',
+              vacationType: selectedMoreSetting || 'algemene',
               routeType: selectedRouteType,
               days: selectedDays,
               destination: currentInput
@@ -223,6 +225,7 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
     setSelectedWritingStyle('');
     setSelectedRouteType('');
     setSelectedDays('');
+    setSelectedMoreSetting('');
     setCurrentInput('');
     setRouteFrom('');
     setRouteTo('');
@@ -593,22 +596,23 @@ export function AIContentGenerator({ onClose }: AIContentGeneratorProps) {
               </div>
             </div>
 
-            {/* Vacation Type */}
+            {/* More Settings */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Type Reis:</h3>
-              <div className="grid grid-cols-2 gap-3">
-                {vacationTypes.map((type) => (
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Meer Instellingen:</h3>
+              <div className="grid grid-cols-3 gap-2">
+                {moreSettings.map((setting) => (
                   <button
-                    key={type.id}
-                    onClick={() => setSelectedVacationType(type.id)}
-                    className={`p-3 border-2 rounded-xl transition-all ${
-                      selectedVacationType === type.id
-                        ? 'border-orange-500 bg-orange-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                    key={setting.id}
+                    onClick={() => setSelectedMoreSetting(setting.id)}
+                    className={`p-2 border-2 rounded-lg transition-all shadow-sm hover:shadow-md ${
+                      selectedMoreSetting === setting.id
+                        ? 'border-orange-500 bg-orange-50 shadow-md'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
                     }`}
                   >
-                    <div className="text-lg mb-1">{type.icon}</div>
-                    <div className="text-sm font-medium text-gray-900">{type.label}</div>
+                    <div className="text-base mb-0.5">{setting.icon}</div>
+                    <div className="text-xs font-medium text-gray-900">{setting.label}</div>
+                    <div className="text-[10px] text-gray-500 mt-0.5">{setting.description}</div>
                   </button>
                 ))}
               </div>
