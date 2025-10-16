@@ -18,17 +18,22 @@ async function verifyBearerToken(req: Request, requiredScope?: string, alternati
     throw error;
   }
   const token = authHeader.substring(7);
+  console.log("[VERIFY] Token received:", { length: token.length, first30: token.substring(0, 30) });
+
   const jwtSecret = Deno.env.get("JWT_SECRET");
   if (!jwtSecret) {
     const error = new Error("JWT_SECRET not configured");
     (error as any).statusCode = 500;
     throw error;
   }
+  console.log("[VERIFY] Secret available:", { length: jwtSecret.length, first10: jwtSecret.substring(0, 10) });
 
   const encoder = new TextEncoder();
   const secretKey = encoder.encode(jwtSecret);
   try {
+    console.log("[VERIFY] Attempting to verify JWT...");
     const { payload } = await jwtVerify(token, secretKey, { algorithms: ["HS256"] });
+    console.log("[VERIFY] JWT verified successfully:", payload);
     const typedPayload = payload as unknown as JWTPayload;
 
     if (requiredScope) {
