@@ -84,8 +84,16 @@ Deno.serve(async (req: Request) => {
     const jwt = await signJWT(payload);
     console.log("[JWT] Token generated:", { length: jwt.length, first30: jwt.substring(0, 30), scopes: requestedScopes });
 
+    const apiUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1`;
+    const apiKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+
     return new Response(
-      JSON.stringify({ token: jwt, brand_id: brandId }),
+      JSON.stringify({
+        token: jwt,
+        brand_id: brandId,
+        api_url: apiUrl,
+        api_key: apiKey
+      }),
       {
         headers: {
           ...corsHeaders,
