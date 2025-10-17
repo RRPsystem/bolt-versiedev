@@ -83,7 +83,8 @@ export function FooterBuilderView({ brandId: propBrandId }: Props = {}) {
     if (!user || !brandId) return;
 
     try {
-      const returnUrl = `${window.location.origin}/#/brand/website/footer`;
+      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      const returnUrl = `${appUrl}/#/brand/website/footer`;
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { footerId, forceBrandId: true, returnUrl });
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');
@@ -100,7 +101,8 @@ export function FooterBuilderView({ brandId: propBrandId }: Props = {}) {
     if (!user || !brandId) return;
 
     try {
-      const returnUrl = `${window.location.origin}/#/brand/website/footer`;
+      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      const returnUrl = `${appUrl}/#/brand/website/footer`;
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { footerId: 'new', forceBrandId: true, returnUrl });
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');

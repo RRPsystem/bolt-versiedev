@@ -152,7 +152,8 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
     if (!user || !brandId) return;
 
     try {
-      const returnUrl = `${window.location.origin}/#/brand/website/menu`;
+      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      const returnUrl = `${appUrl}/#/brand/website/menu`;
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { menuId, forceBrandId: true, returnUrl });
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');
@@ -169,7 +170,8 @@ export function MenuBuilderView({ brandId: propBrandId }: Props = {}) {
     if (!user || !brandId) return;
 
     try {
-      const returnUrl = `${window.location.origin}/#/brand/website/menu`;
+      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      const returnUrl = `${appUrl}/#/brand/website/menu`;
       const jwtResponse = await generateBuilderJWT(brandId, user.id, undefined, { menuId: 'new', forceBrandId: true, returnUrl });
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');

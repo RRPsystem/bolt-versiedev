@@ -172,8 +172,10 @@ export function NewsApproval() {
         return;
       }
 
-      const returnUrl = `${window.location.origin}/#/brand/content/news`;
+      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      const returnUrl = `${appUrl}/#/brand/content/news`;
       console.log('[NewsApproval] Opening builder with return URL:', returnUrl);
+      console.log('[NewsApproval] App URL:', appUrl);
       console.log('[NewsApproval] Current origin:', window.location.origin);
       console.log('[NewsApproval] Current href:', window.location.href);
 
@@ -240,7 +242,8 @@ export function NewsApproval() {
     if (!user?.brand_id || !user?.id) return;
 
     try {
-      const returnUrl = `${window.location.origin}/#/brand/content/news`;
+      const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      const returnUrl = `${appUrl}/#/brand/content/news`;
       const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, undefined, {
         contentType: 'news',
         forceBrandId: true,
