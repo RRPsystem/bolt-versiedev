@@ -102,6 +102,8 @@ export function NewsManagement() {
 
       console.log('📰 Editing news item:', { id: news.id, slug: news.slug, title: news.title });
 
+      alert(`DEBUG news.slug:\nValue: "${news.slug}"\nType: ${typeof news.slug}\nLength: ${news.slug?.length}\nIs empty string? ${news.slug === ''}`);
+
       if (!news.slug) {
         alert('News item has no slug. Cannot edit.');
         return;
