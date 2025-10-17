@@ -100,16 +100,10 @@ export function NewsManagement() {
         return;
       }
 
-      console.log('📰 Editing news item:', { id: news.id, slug: news.slug, title: news.title });
-
-      alert(`DEBUG news.slug:\nValue: "${news.slug}"\nType: ${typeof news.slug}\nLength: ${news.slug?.length}\nIs empty string? ${news.slug === ''}`);
-
       if (!news.slug) {
         alert('News item has no slug. Cannot edit.');
         return;
       }
-
-      console.log('✅ news.slug validated:', news.slug, 'type:', typeof news.slug);
 
       const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], {
         forceBrandId: true,
@@ -124,61 +118,9 @@ export function NewsManagement() {
       const apiKey = jwtResponse.api_key || import.meta.env.VITE_SUPABASE_ANON_KEY;
       const returnUrl = `${window.location.origin}/#/admin/news`;
 
-      const newsSlugParam = news.slug;
-      console.log('🔍 About to add news_slug to params:', newsSlugParam);
+      const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&news_slug=${encodeURIComponent(news.slug)}&author_type=admin&author_id=${user.id}&content_type=news_items&return_url=${encodeURIComponent(returnUrl)}&mode=news`;
 
-      const params = new URLSearchParams({
-        api: apiBaseUrl,
-        brand_id: SYSTEM_BRAND_ID,
-        token: jwtResponse.token,
-        apikey: apiKey,
-        news_slug: newsSlugParam,
-        author_type: 'admin',
-        author_id: user.id,
-        content_type: 'news_items',
-        return_url: returnUrl,
-        mode: 'news'
-      });
-
-      console.log('🔍 URLSearchParams created, has news_slug?', params.has('news_slug'), 'value:', params.get('news_slug'));
-
-      const paramsString = params.toString();
-      console.log('🔍 params.toString() output:', paramsString);
-      console.log('🔍 Does params string contain news_slug?', paramsString.includes('news_slug'));
-
-      const deeplink = `${builderBaseUrl}/?${paramsString}#/mode/news`;
-
-      console.log('🔍 Final deeplink string length:', deeplink.length);
-      console.log('🔍 Does final deeplink contain news_slug?', deeplink.includes('news_slug'));
-
-      console.log('🔧 Building deeplink with parameters:', {
-        builderBaseUrl,
-        apiBaseUrl,
-        brand_id: SYSTEM_BRAND_ID,
-        token: jwtResponse.token.substring(0, 20) + '...',
-        news_slug: news.slug,
-        author_type: 'admin',
-        author_id: user.id,
-        content_type: 'news_items'
-      });
-
-      console.log('🔗 FULL DEEPLINK URL:', deeplink);
-
-      const testUrl = new URL(deeplink);
-      console.log('📝 URL Check:', {
-        has_news_slug: testUrl.searchParams.has('news_slug'),
-        news_slug_value: testUrl.searchParams.get('news_slug'),
-        all_params: Object.fromEntries(testUrl.searchParams.entries())
-      });
-
-      console.log('🔗 Opening deeplink:', deeplink);
-
-      navigator.clipboard.writeText(deeplink).then(() => {
-        console.log('✅ URL copied to clipboard');
-      }).catch(err => {
-        console.warn('⚠️ Could not copy to clipboard:', err);
-      });
-
+      console.log('🔗 Opening news edit deeplink:', deeplink);
       window.open(deeplink, '_blank');
     } catch (err) {
       console.error('Error generating deeplink:', err);
@@ -413,10 +355,7 @@ export function NewsManagement() {
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => {
-                        alert(`🔍 Clicked Edit button\nitem.id: ${item.id}\nitem.slug: "${item.slug}"\nitem.title: "${item.title}"`);
-                        handleEditNews(item);
-                      }}
+                      onClick={() => handleEditNews(item)}
                       className="text-orange-600 hover:text-orange-800"
                       title="Bewerken"
                     >
