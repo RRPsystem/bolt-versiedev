@@ -13,17 +13,30 @@ async function verifyBearerToken(req: Request, requiredScope?: string): Promise<
   console.log("[AUTH DEBUG] Starting token verification...");
   console.log("[AUTH DEBUG] All headers:", Object.fromEntries(req.headers.entries()));
 
+  const url = new URL(req.url);
   const authHeader = req.headers.get("Authorization");
-  console.log("[AUTH DEBUG] Authorization header:", authHeader ? `${authHeader.substring(0, 20)}...` : "MISSING");
+  const tokenFromQuery = url.searchParams.get("token");
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    console.error("[AUTH DEBUG] Missing or invalid Authorization header");
-    const error = new Error("Missing or invalid Authorization header");
+  console.log("[AUTH DEBUG] Authorization header:", authHeader ? `${authHeader.substring(0, 20)}...` : "MISSING");
+  console.log("[AUTH DEBUG] Token from query:", tokenFromQuery ? `${tokenFromQuery.substring(0, 20)}...` : "MISSING");
+
+  let token: string | null = null;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.substring(7);
+    console.log("[AUTH DEBUG] Using token from Authorization header");
+  } else if (tokenFromQuery) {
+    token = tokenFromQuery;
+    console.log("[AUTH DEBUG] Using token from query parameter");
+  }
+
+  if (!token) {
+    console.error("[AUTH DEBUG] No token found in Authorization header or query parameter");
+    const error = new Error("Missing authentication token");
     (error as any).statusCode = 401;
     throw error;
   }
 
-  const token = authHeader.substring(7);
   console.log("[AUTH DEBUG] Token extracted:", token.substring(0, 30) + "...");
 
   const jwtSecret = Deno.env.get("JWT_SECRET");
