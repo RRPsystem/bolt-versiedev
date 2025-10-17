@@ -140,7 +140,14 @@ export function NewsManagement() {
 
       console.log('🔍 URLSearchParams created, has news_slug?', params.has('news_slug'), 'value:', params.get('news_slug'));
 
-      const deeplink = `${builderBaseUrl}/?${params.toString()}#/mode/news`;
+      const paramsString = params.toString();
+      console.log('🔍 params.toString() output:', paramsString);
+      console.log('🔍 Does params string contain news_slug?', paramsString.includes('news_slug'));
+
+      const deeplink = `${builderBaseUrl}/?${paramsString}#/mode/news`;
+
+      console.log('🔍 Final deeplink string length:', deeplink.length);
+      console.log('🔍 Does final deeplink contain news_slug?', deeplink.includes('news_slug'));
 
       console.log('🔧 Building deeplink with parameters:', {
         builderBaseUrl,
