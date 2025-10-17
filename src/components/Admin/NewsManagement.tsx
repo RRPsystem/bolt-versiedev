@@ -120,22 +120,40 @@ export function NewsManagement() {
       const apiKey = jwtResponse.api_key || import.meta.env.VITE_SUPABASE_ANON_KEY;
       const returnUrl = `${window.location.origin}/#/admin/news`;
 
+      const params = new URLSearchParams({
+        api: apiBaseUrl,
+        brand_id: SYSTEM_BRAND_ID,
+        token: jwtResponse.token,
+        apikey: apiKey,
+        news_slug: news.slug,
+        author_type: 'admin',
+        author_id: user.id,
+        content_type: 'news_items',
+        return_url: returnUrl,
+        mode: 'news'
+      });
+
+      const deeplink = `${builderBaseUrl}/?${params.toString()}#/mode/news`;
+
       console.log('🔧 Building deeplink with parameters:', {
         builderBaseUrl,
         apiBaseUrl,
         brand_id: SYSTEM_BRAND_ID,
         token: jwtResponse.token.substring(0, 20) + '...',
         news_slug: news.slug,
-        news_slug_encoded: encodeURIComponent(news.slug),
         author_type: 'admin',
         author_id: user.id,
         content_type: 'news_items'
       });
 
-      const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&news_slug=${encodeURIComponent(news.slug)}&author_type=admin&author_id=${user.id}&content_type=news_items&return_url=${encodeURIComponent(returnUrl)}&mode=news#/mode/news`;
-
       console.log('🔗 FULL DEEPLINK URL:', deeplink);
-      console.log('📝 Extracted news_slug from URL:', new URL(deeplink).searchParams.get('news_slug'));
+
+      const testUrl = new URL(deeplink);
+      console.log('📝 URL Check:', {
+        has_news_slug: testUrl.searchParams.has('news_slug'),
+        news_slug_value: testUrl.searchParams.get('news_slug'),
+        all_params: Object.fromEntries(testUrl.searchParams.entries())
+      });
 
       window.open(deeplink, '_blank');
     } catch (err) {
