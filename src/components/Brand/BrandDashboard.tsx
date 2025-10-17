@@ -58,16 +58,26 @@ export function BrandDashboard() {
     if (!user?.brand_id) return;
     setLoading(true);
     try {
-      const [brandResult, pagesResult, newsResult, agentsResult] = await Promise.all([
+      const [brandResult, websitesResult, newsResult, agentsResult] = await Promise.all([
         db.supabase.from('brands').select('*').eq('id', user.brand_id).maybeSingle(),
-        db.supabase.from('website_pages').select('id', { count: 'exact' }).eq('brand_id', user.brand_id),
+        db.supabase.from('websites').select('id', { count: 'exact' }).eq('brand_id', user.brand_id),
         db.supabase.from('news_items').select('id', { count: 'exact' }).eq('brand_id', user.brand_id),
         db.supabase.from('agents').select('id', { count: 'exact' }).eq('brand_id', user.brand_id)
       ]);
 
+      let pagesCount = 0;
+      if (websitesResult.data && websitesResult.data.length > 0) {
+        const websiteIds = websitesResult.data.map((w: any) => w.id);
+        const pagesResult = await db.supabase
+          .from('website_pages')
+          .select('id', { count: 'exact' })
+          .in('website_id', websiteIds);
+        pagesCount = pagesResult.count || 0;
+      }
+
       if (brandResult.data) setBrandData(brandResult.data);
       setStats({
-        pages: pagesResult.count || 0,
+        pages: pagesCount,
         newsItems: newsResult.count || 0,
         agents: agentsResult.count || 0
       });
