@@ -10,25 +10,40 @@ interface JWTPayload {
 }
 
 async function verifyBearerToken(req: Request, requiredScope?: string): Promise<JWTPayload> {
+  console.log("[AUTH DEBUG] Starting token verification...");
+  console.log("[AUTH DEBUG] All headers:", Object.fromEntries(req.headers.entries()));
+
   const authHeader = req.headers.get("Authorization");
+  console.log("[AUTH DEBUG] Authorization header:", authHeader ? `${authHeader.substring(0, 20)}...` : "MISSING");
+
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.error("[AUTH DEBUG] Missing or invalid Authorization header");
     const error = new Error("Missing or invalid Authorization header");
     (error as any).statusCode = 401;
     throw error;
   }
+
   const token = authHeader.substring(7);
+  console.log("[AUTH DEBUG] Token extracted:", token.substring(0, 30) + "...");
+
   const jwtSecret = Deno.env.get("JWT_SECRET");
   if (!jwtSecret) {
+    console.error("[AUTH DEBUG] JWT_SECRET not configured in environment!");
     const error = new Error("JWT_SECRET not configured");
     (error as any).statusCode = 500;
     throw error;
   }
+  console.log("[AUTH DEBUG] JWT_SECRET found, length:", jwtSecret.length);
 
   const encoder = new TextEncoder();
   const secretKey = encoder.encode(jwtSecret);
   try {
+    console.log("[AUTH DEBUG] Attempting to verify JWT...");
     const { payload } = await jwtVerify(token, secretKey, { algorithms: ["HS256"] });
+    console.log("[AUTH DEBUG] JWT verified successfully! Payload:", JSON.stringify(payload, null, 2));
+
     if (!payload.brand_id) {
+      console.error("[AUTH DEBUG] Token missing brand_id in payload");
       const error = new Error("Invalid token: missing brand_id");
       (error as any).statusCode = 401;
       throw error;
@@ -36,15 +51,19 @@ async function verifyBearerToken(req: Request, requiredScope?: string): Promise<
 
     if (requiredScope) {
       const scopes = (payload.scope as string[]) || [];
+      console.log("[AUTH DEBUG] Checking scope:", requiredScope, "Available scopes:", scopes);
       if (!scopes.includes(requiredScope)) {
+        console.error("[AUTH DEBUG] Insufficient permissions");
         const error = new Error(`Insufficient permissions: ${requiredScope} required`);
         (error as any).statusCode = 403;
         throw error;
       }
     }
 
+    console.log("[AUTH DEBUG] Authorization successful!");
     return payload as JWTPayload;
   } catch (err) {
+    console.error("[AUTH DEBUG] JWT verification failed:", err);
     if ((err as any).statusCode) throw err;
     const error = new Error("Invalid or expired token");
     (error as any).statusCode = 401;
