@@ -356,12 +356,21 @@ Deno.serve(async (req: Request) => {
     if (req.method === "POST" && (pathParts.includes("publish") || url.pathname.includes("/publish"))) {
       const body = await req.json();
       const claims = await verifyBearerToken(req, "content:write");
-      const { brand_id, id, slug } = body;
+
+      // Get brand_id from body, query param, or JWT
+      let brand_id = body.brand_id || url.searchParams.get("brand_id") || claims.brand_id;
+
+      // Get id or slug from body or query params
+      let id = body.id || url.searchParams.get("id");
+      let slug = body.slug || url.searchParams.get("slug");
+
+      console.log("[PUBLISH DEBUG] Extracted params:", { brand_id, id, slug, body, query: Object.fromEntries(url.searchParams) });
 
       const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000999';
       const isSystemBrand = claims.brand_id === SYSTEM_BRAND_ID;
 
       if (!isSystemBrand && claims.brand_id !== brand_id) {
+        console.error("[PUBLISH DEBUG] Brand mismatch:", { claimsBrandId: claims.brand_id, providedBrandId: brand_id });
         return new Response(
           JSON.stringify({ error: "Unauthorized" }),
           { status: 403, headers: corsHeaders(req) }
@@ -369,6 +378,7 @@ Deno.serve(async (req: Request) => {
       }
 
       if (!brand_id || (!id && !slug)) {
+        console.error("[PUBLISH DEBUG] Missing required params:", { brand_id, id, slug });
         return new Response(
           JSON.stringify({ error: "brand_id and (id or slug) required" }),
           { status: 400, headers: corsHeaders(req) }
