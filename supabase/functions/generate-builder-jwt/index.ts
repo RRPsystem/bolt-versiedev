@@ -96,13 +96,20 @@ Deno.serve(async (req: Request) => {
     const apiUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1`;
     const apiKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 
+    const responseData: any = {
+      token: jwt,
+      brand_id: brandId,
+      api_url: apiUrl,
+      api_key: apiKey
+    };
+
+    if (requestBody.return_url) {
+      responseData.return_url = requestBody.return_url;
+      console.log('[JWT] Including return_url in response:', requestBody.return_url);
+    }
+
     return new Response(
-      JSON.stringify({
-        token: jwt,
-        brand_id: brandId,
-        api_url: apiUrl,
-        api_key: apiKey
-      }),
+      JSON.stringify(responseData),
       {
         headers: {
           ...corsHeaders,

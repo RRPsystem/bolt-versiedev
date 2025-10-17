@@ -173,6 +173,10 @@ export function NewsApproval() {
       }
 
       const returnUrl = `${window.location.origin}/#/brand/content/news`;
+      console.log('[NewsApproval] Opening builder with return URL:', returnUrl);
+      console.log('[NewsApproval] Current origin:', window.location.origin);
+      console.log('[NewsApproval] Current href:', window.location.href);
+
       const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, undefined, {
         pageId: pageId,
         slug: assignment.news_item.slug,
@@ -180,7 +184,14 @@ export function NewsApproval() {
         returnUrl: returnUrl,
       });
 
+      console.log('[NewsApproval] JWT Response:', {
+        hasUrl: !!jwtResponse.url,
+        hasReturnUrl: !!(jwtResponse as any).return_url,
+        returnUrl: (jwtResponse as any).return_url
+      });
+
       if (jwtResponse.url) {
+        console.log('[NewsApproval] Using jwtResponse.url:', jwtResponse.url);
         window.open(jwtResponse.url, '_blank');
       } else {
         const builderBaseUrl = 'https://www.ai-websitestudio.nl';
@@ -188,6 +199,7 @@ export function NewsApproval() {
         const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         const encodedReturnUrl = encodeURIComponent(returnUrl.replace('#', '%23'));
         const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&page_id=${pageId}&return_url=${encodedReturnUrl}#/mode/news`;
+        console.log('[NewsApproval] Generated deeplink:', deeplink);
         window.open(deeplink, '_blank');
       }
     } catch (error) {
