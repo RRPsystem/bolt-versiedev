@@ -357,10 +357,7 @@ Deno.serve(async (req: Request) => {
       const body = await req.json();
       const claims = await verifyBearerToken(req, "content:write");
 
-      // Get brand_id from body, query param, or JWT
       let brand_id = body.brand_id || url.searchParams.get("brand_id") || claims.brand_id;
-
-      // Get id or slug from body or query params
       let id = body.id || url.searchParams.get("id");
       let slug = body.slug || url.searchParams.get("slug");
 
