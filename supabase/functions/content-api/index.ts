@@ -111,7 +111,7 @@ Deno.serve(async (req: Request) => {
       const claims = await verifyBearerToken(req, "content:write");
       const { brand_id, id, title, slug, content, author_type, author_id, ...otherFields } = body;
 
-      const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
+      const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000999';
       const isSystemBrand = claims.brand_id === SYSTEM_BRAND_ID;
 
       if (!isSystemBrand && claims.brand_id !== brand_id) {
@@ -246,7 +246,7 @@ Deno.serve(async (req: Request) => {
 
       const { content: bodyContent, ...otherFields } = body;
 
-      const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
+      const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000999';
       const isSystemBrand = claims.brand_id === SYSTEM_BRAND_ID;
 
       if (!brandId || (!isSystemBrand && claims.brand_id !== brandId)) {
@@ -326,7 +326,7 @@ Deno.serve(async (req: Request) => {
       const claims = await verifyBearerToken(req, "content:write");
       const { brand_id, id, slug } = body;
 
-      const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
+      const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000999';
       const isSystemBrand = claims.brand_id === SYSTEM_BRAND_ID;
 
       if (!isSystemBrand && claims.brand_id !== brand_id) {
@@ -440,7 +440,7 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
+      const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000999';
       const isSystemBrand = claims.brand_id === SYSTEM_BRAND_ID;
 
       if (!isSystemBrand && claims.brand_id !== item.brand_id) {
