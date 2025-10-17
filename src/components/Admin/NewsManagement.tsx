@@ -155,6 +155,14 @@ export function NewsManagement() {
         all_params: Object.fromEntries(testUrl.searchParams.entries())
       });
 
+      console.log('🔗 Opening deeplink:', deeplink);
+
+      navigator.clipboard.writeText(deeplink).then(() => {
+        console.log('✅ URL copied to clipboard');
+      }).catch(err => {
+        console.warn('⚠️ Could not copy to clipboard:', err);
+      });
+
       window.open(deeplink, '_blank');
     } catch (err) {
       console.error('Error generating deeplink:', err);
