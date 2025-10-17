@@ -67,14 +67,10 @@ export function NewsManagement() {
 
   const handleCreateNews = async () => {
     try {
-      alert('🚀 Create News clicked!');
-
       if (!user?.id) {
         alert('User not authenticated');
         return;
       }
-
-      alert('✅ User authenticated, generating JWT...');
 
       const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], {
         forceBrandId: true,
@@ -83,16 +79,19 @@ export function NewsManagement() {
         mode: 'news',
       });
 
-      alert('✅ JWT generated, opening builder...');
-
       const builderBaseUrl = 'https://www.ai-websitestudio.nl';
       const apiBaseUrl = jwtResponse.api_url || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
       const apiKey = jwtResponse.api_key || import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const returnUrl = `${window.location.origin}/#/admin/news`;
+      const returnUrl = 'https://www.ai-travelstudio.nl/#/admin/news';
 
       const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&author_type=admin&author_id=${user.id}&content_type=news_items&return_url=${encodeURIComponent(returnUrl)}&mode=news#/mode/news`;
       console.log('🔗 Opening news builder deeplink:', deeplink);
-      window.open(deeplink, '_blank');
+
+      const newWindow = window.open(deeplink, '_blank');
+      if (!newWindow) {
+        navigator.clipboard.writeText(deeplink);
+        alert('Pop-up geblokkeerd! URL is gekopieerd naar clipboard. Plak in nieuwe tab.');
+      }
     } catch (err) {
       console.error('Error generating deeplink:', err);
       alert('Failed to generate builder link');
@@ -101,8 +100,6 @@ export function NewsManagement() {
 
   const handleEditNews = async (news: NewsItem) => {
     try {
-      alert(`🚀 Edit News clicked!\nSlug: ${news.slug}\nTitle: ${news.title}`);
-
       if (!user?.id) {
         alert('User not authenticated');
         return;
@@ -113,8 +110,6 @@ export function NewsManagement() {
         return;
       }
 
-      alert('✅ Validation passed, generating JWT...');
-
       const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], {
         forceBrandId: true,
         newsSlug: news.slug,
@@ -123,17 +118,20 @@ export function NewsManagement() {
         mode: 'news',
       });
 
-      alert('✅ JWT generated, opening builder...');
-
       const builderBaseUrl = 'https://www.ai-websitestudio.nl';
       const apiBaseUrl = jwtResponse.api_url || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
       const apiKey = jwtResponse.api_key || import.meta.env.VITE_SUPABASE_ANON_KEY;
-      const returnUrl = `${window.location.origin}/#/admin/news`;
+      const returnUrl = 'https://www.ai-travelstudio.nl/#/admin/news';
 
       const deeplink = `${builderBaseUrl}?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${SYSTEM_BRAND_ID}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&news_slug=${encodeURIComponent(news.slug)}&author_type=admin&author_id=${user.id}&content_type=news_items&return_url=${encodeURIComponent(returnUrl)}&mode=news`;
 
       console.log('🔗 Opening news edit deeplink:', deeplink);
-      window.open(deeplink, '_blank');
+
+      const newWindow = window.open(deeplink, '_blank');
+      if (!newWindow) {
+        navigator.clipboard.writeText(deeplink);
+        alert('Pop-up geblokkeerd! URL is gekopieerd naar clipboard. Plak in nieuwe tab.');
+      }
     } catch (err) {
       console.error('Error generating deeplink:', err);
       alert('Failed to generate builder link');
