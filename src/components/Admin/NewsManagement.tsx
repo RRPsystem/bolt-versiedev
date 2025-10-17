@@ -63,7 +63,7 @@ export function NewsManagement() {
     }
   };
 
-  const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000001';
+  const SYSTEM_BRAND_ID = '00000000-0000-0000-0000-000000000999';
 
   const handleCreateNews = async () => {
     try {
