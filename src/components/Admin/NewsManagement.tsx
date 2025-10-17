@@ -67,10 +67,14 @@ export function NewsManagement() {
 
   const handleCreateNews = async () => {
     try {
+      alert('🚀 Create News clicked!');
+
       if (!user?.id) {
         alert('User not authenticated');
         return;
       }
+
+      alert('✅ User authenticated, generating JWT...');
 
       const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], {
         forceBrandId: true,
@@ -78,6 +82,8 @@ export function NewsManagement() {
         authorId: user.id,
         mode: 'news',
       });
+
+      alert('✅ JWT generated, opening builder...');
 
       const builderBaseUrl = 'https://www.ai-websitestudio.nl';
       const apiBaseUrl = jwtResponse.api_url || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
@@ -95,6 +101,8 @@ export function NewsManagement() {
 
   const handleEditNews = async (news: NewsItem) => {
     try {
+      alert(`🚀 Edit News clicked!\nSlug: ${news.slug}\nTitle: ${news.title}`);
+
       if (!user?.id) {
         alert('User not authenticated');
         return;
@@ -105,6 +113,8 @@ export function NewsManagement() {
         return;
       }
 
+      alert('✅ Validation passed, generating JWT...');
+
       const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], {
         forceBrandId: true,
         newsSlug: news.slug,
@@ -112,6 +122,8 @@ export function NewsManagement() {
         authorId: user.id,
         mode: 'news',
       });
+
+      alert('✅ JWT generated, opening builder...');
 
       const builderBaseUrl = 'https://www.ai-websitestudio.nl';
       const apiBaseUrl = jwtResponse.api_url || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
