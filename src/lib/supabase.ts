@@ -20,6 +20,7 @@ export const supabase = hasValidSupabaseConfig
 
 // Helper functions for database operations
 export const db = {
+  supabase,
   // Brands
   async getBrands() {
     console.log('📊 getBrands called, supabase available:', !!supabase);
