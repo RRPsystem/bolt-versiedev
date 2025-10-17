@@ -403,10 +403,10 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error("Error:", error);
 
-    if (error.message?.includes("JWT")) {
+    if (error.message?.includes("JWT") || error.message?.includes("token")) {
       return new Response(
         JSON.stringify({ error: { code: "INVALID_TOKEN", message: error.message } }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 401, headers: withCORS(req, { headers: { "Content-Type": "application/json" } }) }
       );
     }
 
