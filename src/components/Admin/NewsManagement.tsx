@@ -107,6 +107,8 @@ export function NewsManagement() {
         return;
       }
 
+      console.log('✅ news.slug validated:', news.slug, 'type:', typeof news.slug);
+
       const jwtResponse = await generateBuilderJWT(SYSTEM_BRAND_ID, user.id, ['content:read', 'content:write'], {
         forceBrandId: true,
         newsSlug: news.slug,
@@ -120,18 +122,23 @@ export function NewsManagement() {
       const apiKey = jwtResponse.api_key || import.meta.env.VITE_SUPABASE_ANON_KEY;
       const returnUrl = `${window.location.origin}/#/admin/news`;
 
+      const newsSlugParam = news.slug;
+      console.log('🔍 About to add news_slug to params:', newsSlugParam);
+
       const params = new URLSearchParams({
         api: apiBaseUrl,
         brand_id: SYSTEM_BRAND_ID,
         token: jwtResponse.token,
         apikey: apiKey,
-        news_slug: news.slug,
+        news_slug: newsSlugParam,
         author_type: 'admin',
         author_id: user.id,
         content_type: 'news_items',
         return_url: returnUrl,
         mode: 'news'
       });
+
+      console.log('🔍 URLSearchParams created, has news_slug?', params.has('news_slug'), 'value:', params.get('news_slug'));
 
       const deeplink = `${builderBaseUrl}/?${params.toString()}#/mode/news`;
 
