@@ -413,7 +413,10 @@ export function NewsManagement() {
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleEditNews(item)}
+                      onClick={() => {
+                        alert(`🔍 Clicked Edit button\nitem.id: ${item.id}\nitem.slug: "${item.slug}"\nitem.title: "${item.title}"`);
+                        handleEditNews(item);
+                      }}
                       className="text-orange-600 hover:text-orange-800"
                       title="Bewerken"
                     >
