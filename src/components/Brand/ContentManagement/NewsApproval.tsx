@@ -70,9 +70,9 @@ export function NewsApproval() {
       }));
 
       const { data: brandNewsData, error: brandNewsError } = await supabase
-        .from('news_items')
-        .select('id, title, slug, excerpt, featured_image, created_at, published_at, status, tags')
-        .eq('author_type', 'brand')
+        .from('pages')
+        .select('id, title, slug, content_json, created_at, published_at, status')
+        .eq('content_type', 'news')
         .eq('brand_id', user.brand_id)
         .order('created_at', { ascending: false });
 
@@ -89,11 +89,11 @@ export function NewsApproval() {
           id: item.id,
           title: item.title,
           slug: item.slug,
-          excerpt: item.excerpt || '',
-          featured_image: item.featured_image || '',
+          excerpt: '',
+          featured_image: '',
           is_mandatory: false,
           published_at: item.published_at,
-          tags: item.tags || []
+          tags: []
         }
       }));
 
@@ -111,11 +111,11 @@ export function NewsApproval() {
 
   const handleTogglePublish = async (assignmentId: string, currentValue: boolean, assignment: NewsAssignment) => {
     try {
-      if (assignment.status === 'brand' && assignment.news_id) {
+      if (assignment.status === 'brand' && assignment.page_id) {
         const { error } = await supabase
-          .from('news_items')
+          .from('pages')
           .update({ status: !currentValue ? 'published' : 'draft' })
-          .eq('id', assignment.news_id);
+          .eq('id', assignment.page_id);
 
         if (error) throw error;
       } else {
@@ -165,25 +165,20 @@ export function NewsApproval() {
 
     try {
       console.log('Opening builder for news item:', assignment.news_item);
-      const jwtResponse = await generateBuilderJWT(
-        user.brand_id,
-        user.id,
-        [
-          'pages:read',
-          'pages:write',
-          'content:read',
-          'content:write',
-          'news:write'
-        ],
-        {
-          newsSlug: assignment.news_item.slug,
-          contentType: 'news_items',
-          authorType: 'brand',
-          authorId: user.id,
-          mode: 'news',
-          forceBrandId: true
-        }
-      );
+
+      const pageId = assignment.page_id || assignment.news_id;
+      if (!pageId) {
+        alert('Geen pagina ID gevonden voor dit nieuwsitem');
+        return;
+      }
+
+      const returnUrl = `${window.location.origin}/#/brand/content/news`;
+      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, undefined, {
+        pageId: pageId,
+        slug: assignment.news_item.slug,
+        forceBrandId: true,
+        returnUrl: returnUrl,
+      });
 
       if (jwtResponse.url) {
         window.open(jwtResponse.url, '_blank');
@@ -191,8 +186,8 @@ export function NewsApproval() {
         const builderBaseUrl = 'https://www.ai-websitestudio.nl';
         const apiBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
         const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        const returnUrl = `${window.location.origin}/#/brand/content/news`;
-        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&content_type=news_items&news_slug=${assignment.news_item.slug}&return_url=${encodeURIComponent(returnUrl)}&mode=news#/mode/news`;
+        const encodedReturnUrl = encodeURIComponent(returnUrl.replace('#', '%23'));
+        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&page_id=${pageId}&return_url=${encodedReturnUrl}#/mode/page`;
         window.open(deeplink, '_blank');
       }
     } catch (error) {
@@ -207,11 +202,11 @@ export function NewsApproval() {
     }
 
     try {
-      if (assignment.status === 'brand' && assignment.news_id) {
+      if (assignment.status === 'brand' && assignment.page_id) {
         const { error } = await supabase
-          .from('news_items')
+          .from('pages')
           .delete()
-          .eq('id', assignment.news_id);
+          .eq('id', assignment.page_id);
 
         if (error) throw error;
       } else {
@@ -233,11 +228,11 @@ export function NewsApproval() {
     if (!user?.brand_id || !user?.id) return;
 
     try {
-      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, ['content:read', 'content:write'], {
-        contentType: 'news_items',
-        authorType: 'brand',
-        authorId: user.id,
-        mode: 'news',
+      const returnUrl = `${window.location.origin}/#/brand/content/news`;
+      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, undefined, {
+        contentType: 'news',
+        forceBrandId: true,
+        returnUrl: returnUrl,
       });
 
       if (jwtResponse.url) {
@@ -246,8 +241,8 @@ export function NewsApproval() {
         const builderBaseUrl = 'https://www.ai-websitestudio.nl';
         const apiBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
         const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        const returnUrl = `${window.location.origin}/#/brand/content/news`;
-        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&content_type=news_items&return_url=${encodeURIComponent(returnUrl)}&mode=news#/mode/news`;
+        const encodedReturnUrl = encodeURIComponent(returnUrl.replace('#', '%23'));
+        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&content_type=news&return_url=${encodedReturnUrl}#/mode/page`;
         window.open(deeplink, '_blank');
       }
     } catch (error) {

@@ -142,7 +142,7 @@ Deno.serve(async (req: Request) => {
       const claims = await verifyBearerToken(req, supabase, "content:write", ["pages:write"]);
       console.log("[DEBUG] Claims verified:", { brand_id: claims.brand_id, sub: claims.sub });
 
-      const { brand_id, page_id, title, slug, is_template, template_category, preview_image_url } = body;
+      const { brand_id, page_id, title, slug, is_template, template_category, preview_image_url, content_type } = body;
 
       let content_json = body.content_json || body.json || body.content || body.layout || {};
 
@@ -268,7 +268,7 @@ Deno.serve(async (req: Request) => {
           content_json,
           status: "draft",
           version: 1,
-          content_type: "page",
+          content_type: content_type || "page",
           show_in_menu: false,
           menu_order: 0,
           parent_slug: null,
