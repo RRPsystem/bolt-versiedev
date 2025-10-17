@@ -187,7 +187,7 @@ export function NewsApproval() {
         const apiBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
         const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         const encodedReturnUrl = encodeURIComponent(returnUrl.replace('#', '%23'));
-        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&page_id=${pageId}&return_url=${encodedReturnUrl}#/mode/page`;
+        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&page_id=${pageId}&return_url=${encodedReturnUrl}#/mode/news`;
         window.open(deeplink, '_blank');
       }
     } catch (error) {
@@ -242,7 +242,7 @@ export function NewsApproval() {
         const apiBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
         const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         const encodedReturnUrl = encodeURIComponent(returnUrl.replace('#', '%23'));
-        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&content_type=news&return_url=${encodedReturnUrl}#/mode/page`;
+        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&content_type=news&return_url=${encodedReturnUrl}#/mode/news`;
         window.open(deeplink, '_blank');
       }
     } catch (error) {
