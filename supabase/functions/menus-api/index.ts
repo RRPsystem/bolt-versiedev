@@ -13,13 +13,22 @@ interface JWTPayload {
 }
 
 async function verifyBearerToken(req: Request): Promise<JWTPayload> {
+  const url = new URL(req.url);
   const authHeader = req.headers.get("Authorization");
+  const tokenFromQuery = url.searchParams.get("token");
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    throw new Error("Missing or invalid Authorization header");
+  let token: string | null = null;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.substring(7);
+  } else if (tokenFromQuery) {
+    token = tokenFromQuery;
   }
 
-  const token = authHeader.substring(7);
+  if (!token) {
+    throw new Error("Missing authentication token");
+  }
+
   const jwtSecret = Deno.env.get("JWT_SECRET");
 
   if (!jwtSecret) {
