@@ -28,24 +28,33 @@ export function BrandDashboard() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.includes('/brand/website/pages')) {
-      console.log('Hash routing: Navigating to pages section');
-      setActiveSection('pages');
-      setShowWebsiteSubmenu(true);
-    } else if (hash.includes('/brand/website/menu')) {
-      console.log('Hash routing: Navigating to menu section');
-      setActiveSection('menu');
-      setShowWebsiteSubmenu(true);
-    } else if (hash.includes('/brand/website/footer')) {
-      console.log('Hash routing: Navigating to footer section');
-      setActiveSection('footer');
-      setShowWebsiteSubmenu(true);
-    } else if (hash.includes('/brand/content/news')) {
-      console.log('Hash routing: Navigating to news section');
-      setActiveSection('news');
-      setShowContentSubmenu(true);
-    }
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.includes('/brand/website/pages')) {
+        console.log('Hash routing: Navigating to pages section');
+        setActiveSection('pages');
+        setShowWebsiteSubmenu(true);
+      } else if (hash.includes('/brand/website/menu')) {
+        console.log('Hash routing: Navigating to menu section');
+        setActiveSection('menus');
+        setShowWebsiteSubmenu(true);
+      } else if (hash.includes('/brand/website/footer')) {
+        console.log('Hash routing: Navigating to footer section');
+        setActiveSection('footers');
+        setShowWebsiteSubmenu(true);
+      } else if (hash.includes('/brand/content/news')) {
+        console.log('Hash routing: Navigating to news section');
+        setActiveSection('nieuwsbeheer');
+        setShowContentSubmenu(true);
+      }
+    };
+
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
 
   useEffect(() => {
