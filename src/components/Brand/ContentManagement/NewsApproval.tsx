@@ -190,8 +190,18 @@ export function NewsApproval() {
       console.log('[NewsApproval] Current origin:', window.location.origin);
       console.log('[NewsApproval] Current href:', window.location.href);
 
-      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, undefined, {
-        pageId: pageId,
+      const jwtResponse = await generateBuilderJWT(user.brand_id, user.id, [
+        'pages:read',
+        'pages:write',
+        'layouts:read',
+        'layouts:write',
+        'menus:read',
+        'menus:write',
+        'content:read',
+        'content:write',
+        'news:write'
+      ], {
+        newsSlug: assignment.news_item.slug,
         slug: assignment.news_item.slug,
         forceBrandId: true,
         returnUrl: returnUrl,

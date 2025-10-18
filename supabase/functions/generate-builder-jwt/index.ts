@@ -118,6 +118,38 @@ Deno.serve(async (req: Request) => {
       console.log('[JWT] Including return_url in response:', requestBody.return_url);
     }
 
+    if (requestBody.page_id || requestBody.template_id || requestBody.menu_id || requestBody.footer_id || requestBody.news_slug || requestBody.slug) {
+      const builderBaseUrl = 'https://www.ai-websitestudio.nl';
+      const params = new URLSearchParams({
+        api: apiUrl,
+        brand_id: brandId,
+        token: jwt,
+        apikey: apiKey
+      });
+
+      if (requestBody.mode === 'news' || requestBody.content_type === 'news') {
+        params.append('content_type', 'news_items');
+        if (requestBody.news_slug) {
+          params.append('news_slug', requestBody.news_slug);
+        } else if (requestBody.slug) {
+          params.append('slug', requestBody.slug);
+        }
+        if (requestBody.return_url) params.append('return_url', requestBody.return_url);
+        responseData.url = `${builderBaseUrl}/?${params.toString()}#/mode/news`;
+        console.log('[JWT] Generated NEWS deeplink URL:', responseData.url);
+      } else {
+        if (requestBody.page_id) params.append('page_id', requestBody.page_id);
+        if (requestBody.template_id) params.append('template_id', requestBody.template_id);
+        if (requestBody.menu_id) params.append('menu_id', requestBody.menu_id);
+        if (requestBody.footer_id) params.append('footer_id', requestBody.footer_id);
+        if (requestBody.content_type) params.append('content_type', requestBody.content_type);
+        if (requestBody.mode) params.append('mode', requestBody.mode);
+        if (requestBody.return_url) params.append('return_url', requestBody.return_url);
+        responseData.url = `${builderBaseUrl}/?${params.toString()}`;
+        console.log('[JWT] Generated PAGE deeplink URL:', responseData.url);
+      }
+    }
+
     return new Response(
       JSON.stringify(responseData),
       {
