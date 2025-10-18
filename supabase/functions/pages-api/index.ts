@@ -167,6 +167,16 @@ Deno.serve(async (req: Request) => {
       if (body.htmlSnapshot) {
         content_json.htmlSnapshot = body.htmlSnapshot;
 
+        if (!content_type) {
+          if (body.htmlSnapshot.includes('na-title') || body.htmlSnapshot.includes('na-content') || body.htmlSnapshot.includes('na-author')) {
+            content_type = 'news';
+            console.log("[DEBUG] Detected news content from HTML structure");
+          } else {
+            content_type = 'page';
+            console.log("[DEBUG] Detected page content (no news markers found)");
+          }
+        }
+
         if (content_type === 'news' && title === 'Pagina') {
           const titleMatch = body.htmlSnapshot.match(/class="na-title"[^>]*>([^<]+)</);
           if (titleMatch && titleMatch[1]) {
