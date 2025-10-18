@@ -140,9 +140,19 @@ Deno.serve(async (req: Request) => {
       });
 
       const claims = await verifyBearerToken(req, supabase, "content:write", ["pages:write"]);
-      console.log("[DEBUG] Claims verified:", { brand_id: claims.brand_id, sub: claims.sub });
+      console.log("[DEBUG] Claims verified:", { brand_id: claims.brand_id, sub: claims.sub, has_content_type: !!(claims as any).content_type });
 
       let { brand_id, page_id, title, slug, is_template, template_category, preview_image_url, content_type } = body;
+
+      if (!content_type && (claims as any).content_type) {
+        content_type = (claims as any).content_type;
+        console.log("[DEBUG] Using content_type from JWT:", content_type);
+      }
+
+      if (!content_type && (claims as any).mode === 'news') {
+        content_type = 'news';
+        console.log("[DEBUG] Detected news mode from JWT");
+      }
 
       if (!content_type) {
         const referer = req.headers.get('Referer') || req.headers.get('Origin') || '';

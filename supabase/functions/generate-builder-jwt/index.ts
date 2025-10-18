@@ -84,11 +84,21 @@ Deno.serve(async (req: Request) => {
 
     console.log('[JWT] Final brand ID:', { brandId, user_role: userData.role, forced: !!requestBody.forceBrandId });
 
-    const payload = {
+    const payload: any = {
       brand_id: brandId,
       sub: user.id,
       scope: requestedScopes,
     };
+
+    if (requestBody.content_type) {
+      payload.content_type = requestBody.content_type;
+      console.log('[JWT] Including content_type in payload:', requestBody.content_type);
+    }
+
+    if (requestBody.mode) {
+      payload.mode = requestBody.mode;
+      console.log('[JWT] Including mode in payload:', requestBody.mode);
+    }
 
     const jwt = await signJWT(payload);
     console.log("[JWT] Token generated:", { length: jwt.length, first30: jwt.substring(0, 30), scopes: requestedScopes });
