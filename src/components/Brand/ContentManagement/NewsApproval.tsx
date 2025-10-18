@@ -201,12 +201,9 @@ export function NewsApproval() {
         'content:write',
         'news:write'
       ], {
-        newsSlug: assignment.news_item.slug,
-        slug: assignment.news_item.slug,
+        pageId: pageId,
         forceBrandId: true,
         returnUrl: returnUrl,
-        contentType: 'news',
-        mode: 'news',
       });
 
       console.log('[NewsApproval] JWT Response:', {
