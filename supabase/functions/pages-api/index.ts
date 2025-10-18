@@ -166,13 +166,23 @@ Deno.serve(async (req: Request) => {
 
       if (body.htmlSnapshot) {
         content_json.htmlSnapshot = body.htmlSnapshot;
+
+        if (content_type === 'news' && title === 'Pagina') {
+          const titleMatch = body.htmlSnapshot.match(/class="na-title"[^>]*>([^<]+)</);
+          if (titleMatch && titleMatch[1]) {
+            title = titleMatch[1].trim();
+            content_json.title = title;
+            console.log("[DEBUG] Extracted title from htmlSnapshot:", title);
+          }
+        }
       }
 
       console.log("[DEBUG] Extracted content_json:", {
         keys: Object.keys(content_json),
         has_layout: !!content_json.layout,
         has_json: !!content_json.json,
-        has_htmlSnapshot: !!content_json.htmlSnapshot
+        has_htmlSnapshot: !!content_json.htmlSnapshot,
+        final_title: title
       });
 
       const isTemplateFromJWT = claims.is_template === true;
@@ -450,6 +460,15 @@ Deno.serve(async (req: Request) => {
             JSON.stringify({ error: "Unauthorized" }),
             { status: 403, headers: corsHeaders() }
           );
+        }
+
+        if (data.content_json && data.content_json.htmlSnapshot && !data.content_json.layout && !data.content_json.json) {
+          console.log("[DEBUG] Converting htmlSnapshot to layout for builder");
+          data.content_json.layout = {
+            html: data.content_json.htmlSnapshot,
+            css: "",
+            js: ""
+          };
         }
 
         return new Response(JSON.stringify(data), { status: 200, headers: corsHeaders() });
