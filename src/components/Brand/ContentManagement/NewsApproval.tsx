@@ -32,6 +32,17 @@ export function NewsApproval() {
     loadAssignments();
   }, [user]);
 
+  useEffect(() => {
+    const handleFocus = () => {
+      loadAssignments();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user]);
+
   const loadAssignments = async () => {
     if (!user?.brand_id) return;
 
