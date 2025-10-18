@@ -285,11 +285,7 @@ export function NewsApproval() {
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Newspaper className="w-8 h-8 text-orange-600" />
-          <h1 className="text-2xl font-bold">Nieuwsbeheer</h1>
-        </div>
+      <div className="flex items-center justify-end mb-6">
         <button
           onClick={createNewArticle}
           className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
