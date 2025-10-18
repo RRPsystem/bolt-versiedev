@@ -212,8 +212,8 @@ export function NewsApproval() {
         const builderBaseUrl = 'https://www.ai-websitestudio.nl';
         const apiBaseUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
         const apiKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        const encodedReturnUrl = encodeURIComponent(returnUrl.replace('#', '%23'));
-        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&page_id=${pageId}&content_type=news&mode=news&return_url=${encodedReturnUrl}#/mode/news`;
+        const encodedReturnUrl = encodeURIComponent(returnUrl);
+        const deeplink = `${builderBaseUrl}/?api=${encodeURIComponent(apiBaseUrl)}&brand_id=${user.brand_id}&token=${jwtResponse.token}&apikey=${encodeURIComponent(apiKey)}&page_id=${pageId}&content_type=news&mode=news&return_url=${encodedReturnUrl}`;
         console.log('[NewsApproval] Generated deeplink:', deeplink);
         window.open(deeplink, '_blank');
       }
