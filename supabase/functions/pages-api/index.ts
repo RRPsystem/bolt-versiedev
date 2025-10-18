@@ -142,7 +142,15 @@ Deno.serve(async (req: Request) => {
       const claims = await verifyBearerToken(req, supabase, "content:write", ["pages:write"]);
       console.log("[DEBUG] Claims verified:", { brand_id: claims.brand_id, sub: claims.sub });
 
-      const { brand_id, page_id, title, slug, is_template, template_category, preview_image_url, content_type } = body;
+      let { brand_id, page_id, title, slug, is_template, template_category, preview_image_url, content_type } = body;
+
+      if (!content_type) {
+        const referer = req.headers.get('Referer') || req.headers.get('Origin') || '';
+        if (referer.includes('content_type=news') || referer.includes('mode=news')) {
+          content_type = 'news';
+          console.log("[DEBUG] Detected news content from referer");
+        }
+      }
 
       let content_json = body.content_json || body.json || body.content || body.layout || {};
 
@@ -209,6 +217,10 @@ Deno.serve(async (req: Request) => {
           version: (currentPage?.version || 0) + 1,
           updated_at: new Date().toISOString(),
         };
+
+        if (content_type) {
+          updateData.content_type = content_type;
+        }
 
         if (isTemplateMode) {
           updateData.is_template = true;
